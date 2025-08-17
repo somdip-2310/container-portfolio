@@ -1,8 +1,6 @@
 package dev.somdip.containerplatform.repository;
 
 import dev.somdip.containerplatform.model.Deployment;
-import lombok.RequiredArgsConstructor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
@@ -19,19 +18,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Repository
-@RequiredArgsConstructor
 public class DeploymentRepository {
 
-	private static final Logger log = LoggerFactory.getLogger(DeploymentRepository.class);
-    private final DynamoDbEnhancedClient enhancedClient;
+    private static final Logger log = LoggerFactory.getLogger(DeploymentRepository.class);
     
-    @Qualifier("deploymentsTableName")
+    private final DynamoDbEnhancedClient enhancedClient;
     private final String tableName;
 
+    public DeploymentRepository(DynamoDbEnhancedClient enhancedClient,
+                               @Qualifier("deploymentsTableName") String tableName) {
+        this.enhancedClient = enhancedClient;
+        this.tableName = tableName;
+    }
+
     private DynamoDbTable<Deployment> getTable() {
-        return enhancedClient.table(tableName, Deployment.class);
+        return enhancedClient.table(tableName, TableSchema.fromBean(Deployment.class));
     }
 
     public Deployment save(Deployment deployment) {
@@ -66,9 +70,8 @@ public class DeploymentRepository {
                 .scanIndexForward(false) // Sort by newest first
                 .build();
         
-        return containerIdIndex.query(queryRequest)
-                .items()
-                .stream()
+        return StreamSupport.stream(containerIdIndex.query(queryRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .collect(Collectors.toList());
     }
 
@@ -85,9 +88,9 @@ public class DeploymentRepository {
                 .limit(limit)
                 .build();
         
-        return containerIdIndex.query(queryRequest)
-                .items()
-                .stream()
+        return StreamSupport.stream(containerIdIndex.query(queryRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
+                .limit(limit)
                 .collect(Collectors.toList());
     }
 
@@ -99,11 +102,8 @@ public class DeploymentRepository {
     public List<Deployment> findByStatus(Deployment.DeploymentStatus status) {
         log.debug("Finding deployments by status: {}", status);
         
-        // Note: This requires a scan since status is not indexed
-        // In production, consider adding a GSI for status if this query is frequent
-        return getTable().scan()
-                .items()
-                .stream()
+        return StreamSupport.stream(getTable().scan().spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .filter(deployment -> deployment.getStatus() == status)
                 .collect(Collectors.toList());
     }
@@ -111,9 +111,8 @@ public class DeploymentRepository {
     public List<Deployment> findActiveDeployments() {
         log.debug("Finding active deployments");
         
-        return getTable().scan()
-                .items()
-                .stream()
+        return StreamSupport.stream(getTable().scan().spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .filter(deployment -> 
                     deployment.getStatus() == Deployment.DeploymentStatus.PENDING ||
                     deployment.getStatus() == Deployment.DeploymentStatus.IN_PROGRESS)
@@ -166,11 +165,8 @@ public class DeploymentRepository {
     public List<Deployment> findByUserIdInTimeRange(String userId, Instant startTime, Instant endTime) {
         log.debug("Finding deployments for user {} between {} and {}", userId, startTime, endTime);
         
-        // This requires a scan with filtering
-        // In production, consider a compound key or GSI for userId+timestamp
-        return getTable().scan()
-                .items()
-                .stream()
+        return StreamSupport.stream(getTable().scan().spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .filter(deployment -> 
                     deployment.getUserId().equals(userId) &&
                     deployment.getStartedAt() != null &&

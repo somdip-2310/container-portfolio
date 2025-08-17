@@ -1,6 +1,6 @@
 package dev.somdip.containerplatform.controller;
 
-import lombok.RequiredArgsConstructor;
+// import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,10 +25,31 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/health")
-@RequiredArgsConstructor
+// @RequiredArgsConstructor - TODO: Generate constructor
 
 public class HealthController {
 	
+	/**
+	 * @param dynamoDbClient
+	 * @param ecsClient
+	 * @param s3Client
+	 * @param applicationName
+	 * @param awsRegion
+	 * @param ecsCluster
+	 * @param s3LogsBucket
+	 */
+	public HealthController(DynamoDbClient dynamoDbClient, EcsClient ecsClient, S3Client s3Client,
+			String applicationName, String awsRegion, String ecsCluster, String s3LogsBucket) {
+		super();
+		this.dynamoDbClient = dynamoDbClient;
+		this.ecsClient = ecsClient;
+		this.s3Client = s3Client;
+		this.applicationName = applicationName;
+		this.awsRegion = awsRegion;
+		this.ecsCluster = ecsCluster;
+		this.s3LogsBucket = s3LogsBucket;
+	}
+
 	private static final Logger log = LoggerFactory.getLogger(HealthController.class);
 
     private final DynamoDbClient dynamoDbClient;

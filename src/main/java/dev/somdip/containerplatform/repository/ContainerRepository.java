@@ -1,42 +1,46 @@
 package dev.somdip.containerplatform.repository;
 
-import dev.somdip.containerplatform.config.DynamoDbConfig;
 import dev.somdip.containerplatform.model.Container;
-import lombok.RequiredArgsConstructor;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Repository
-@RequiredArgsConstructor
-
 public class ContainerRepository {
-	
-	private static final Logger log = LoggerFactory.getLogger(ContainerRepository.class);
+
+    private static final Logger log = LoggerFactory.getLogger(ContainerRepository.class);
 
     private final DynamoDbEnhancedClient enhancedClient;
-    
-    @Qualifier("containersTableName")
     private final String tableName;
 
+    public ContainerRepository(DynamoDbEnhancedClient enhancedClient,
+                              @Qualifier("containersTableName") String tableName) {
+        this.enhancedClient = enhancedClient;
+        this.tableName = tableName;
+    }
+
     private DynamoDbTable<Container> getTable() {
-        return enhancedClient.table(tableName, Container.class);
+        return enhancedClient.table(tableName, TableSchema.fromBean(Container.class));
     }
 
     public Container save(Container container) {
@@ -74,9 +78,8 @@ public class ContainerRepository {
                 .queryConditional(queryConditional)
                 .build();
         
-        return userIdIndex.query(queryRequest)
-                .items()
-                .stream()
+        return StreamSupport.stream(userIdIndex.query(queryRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .collect(Collectors.toList());
     }
 
@@ -89,32 +92,40 @@ public class ContainerRepository {
     public Optional<Container> findBySubdomain(String subdomain) {
         log.debug("Finding container by subdomain: {}", subdomain);
         
-        // Since subdomain is not indexed, we need to scan
-        // In production, consider adding a GSI for subdomain
-        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
-                .filterExpression(expression -> expression
-                        .attributeEquals("subdomain", subdomain))
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+        expressionValues.put(":subdomain", AttributeValue.builder().s(subdomain).build());
+        
+        Expression filterExpression = Expression.builder()
+                .expression("subdomain = :subdomain")
+                .expressionValues(expressionValues)
                 .build();
         
-        return getTable().scan(scanRequest)
-                .items()
-                .stream()
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
+                .filterExpression(filterExpression)
+                .build();
+        
+        return StreamSupport.stream(getTable().scan(scanRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .findFirst();
     }
 
     public Optional<Container> findByCustomDomain(String customDomain) {
         log.debug("Finding container by custom domain: {}", customDomain);
         
-        // Since customDomain is not indexed, we need to scan
-        // In production, consider adding a GSI for customDomain
-        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
-                .filterExpression(expression -> expression
-                        .attributeEquals("customDomain", customDomain))
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+        expressionValues.put(":customDomain", AttributeValue.builder().s(customDomain).build());
+        
+        Expression filterExpression = Expression.builder()
+                .expression("customDomain = :customDomain")
+                .expressionValues(expressionValues)
                 .build();
         
-        return getTable().scan(scanRequest)
-                .items()
-                .stream()
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
+                .filterExpression(filterExpression)
+                .build();
+        
+        return StreamSupport.stream(getTable().scan(scanRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .findFirst();
     }
 
@@ -156,7 +167,9 @@ public class ContainerRepository {
 
     public List<Container> findAll() {
         log.debug("Finding all containers");
-        return getTable().scan().items().stream().collect(Collectors.toList());
+        return StreamSupport.stream(getTable().scan().spliterator(), false)
+                .flatMap(page -> page.items().stream())
+                .collect(Collectors.toList());
     }
 
     public long countByUserId(String userId) {

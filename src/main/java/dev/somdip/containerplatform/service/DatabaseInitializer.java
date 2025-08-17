@@ -3,46 +3,49 @@ package dev.somdip.containerplatform.service;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.model.User;
-import dev.somdip.containerplatform.repository.ContainerRepository;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.EnhancedGlobalSecondaryIndex;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
-@RequiredArgsConstructor
-
 @Profile("!test") // Don't run in test environment
 public class DatabaseInitializer {
-	private static final Logger log = LoggerFactory.getLogger(DatabaseInitializer.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(DatabaseInitializer.class);
 
     private final DynamoDbClient dynamoDbClient;
     private final DynamoDbEnhancedClient enhancedClient;
-    
-    @Qualifier("usersTableName")
     private final String usersTableName;
-    
-    @Qualifier("containersTableName")
     private final String containersTableName;
-    
-    @Qualifier("deploymentsTableName")
     private final String deploymentsTableName;
 
     @Value("${aws.dynamodb.initialize:true}")
     private boolean initializeTables;
+
+    public DatabaseInitializer(DynamoDbClient dynamoDbClient, 
+                              DynamoDbEnhancedClient enhancedClient,
+                              @Qualifier("usersTableName") String usersTableName, 
+                              @Qualifier("containersTableName") String containersTableName, 
+                              @Qualifier("deploymentsTableName") String deploymentsTableName) {
+        this.dynamoDbClient = dynamoDbClient;
+        this.enhancedClient = enhancedClient;
+        this.usersTableName = usersTableName;
+        this.containersTableName = containersTableName;
+        this.deploymentsTableName = deploymentsTableName;
+    }
 
     @PostConstruct
     public void initialize() {
@@ -70,7 +73,7 @@ public class DatabaseInitializer {
 
         log.info("Creating table: {}", usersTableName);
         
-        DynamoDbTable<User> table = enhancedClient.table(usersTableName, User.class);
+        DynamoDbTable<User> table = enhancedClient.table(usersTableName, TableSchema.fromBean(User.class));
         
         CreateTableEnhancedRequest createTableRequest = CreateTableEnhancedRequest.builder()
                 .globalSecondaryIndices(
@@ -116,7 +119,7 @@ public class DatabaseInitializer {
 
         log.info("Creating table: {}", containersTableName);
         
-        DynamoDbTable<Container> table = enhancedClient.table(containersTableName, Container.class);
+        DynamoDbTable<Container> table = enhancedClient.table(containersTableName, TableSchema.fromBean(Container.class));
         
         CreateTableEnhancedRequest createTableRequest = CreateTableEnhancedRequest.builder()
                 .globalSecondaryIndices(
@@ -155,7 +158,7 @@ public class DatabaseInitializer {
 
         log.info("Creating table: {}", deploymentsTableName);
         
-        DynamoDbTable<Deployment> table = enhancedClient.table(deploymentsTableName, Deployment.class);
+        DynamoDbTable<Deployment> table = enhancedClient.table(deploymentsTableName, TableSchema.fromBean(Deployment.class));
         
         CreateTableEnhancedRequest createTableRequest = CreateTableEnhancedRequest.builder()
                 .globalSecondaryIndices(

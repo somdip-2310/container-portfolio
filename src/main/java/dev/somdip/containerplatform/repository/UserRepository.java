@@ -1,9 +1,6 @@
 package dev.somdip.containerplatform.repository;
 
-import dev.somdip.containerplatform.config.DynamoDbConfig;
 import dev.somdip.containerplatform.model.User;
-import lombok.RequiredArgsConstructor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,26 +9,32 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @Repository
-@RequiredArgsConstructor
 public class UserRepository {
-	
-	private static final Logger log = LoggerFactory.getLogger(UserRepository.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(UserRepository.class);
 
     private final DynamoDbEnhancedClient enhancedClient;
-    
-    @Qualifier("usersTableName")
     private final String tableName;
 
+    public UserRepository(DynamoDbEnhancedClient enhancedClient, 
+                         @Qualifier("usersTableName") String tableName) {
+        this.enhancedClient = enhancedClient;
+        this.tableName = tableName;
+    }
+
     private DynamoDbTable<User> getTable() {
-        return enhancedClient.table(tableName, User.class);
+        return enhancedClient.table(tableName, TableSchema.fromBean(User.class));
     }
 
     public User save(User user) {
@@ -70,9 +73,8 @@ public class UserRepository {
                 .limit(1)
                 .build();
         
-        return emailIndex.query(queryRequest)
-                .items()
-                .stream()
+        return StreamSupport.stream(emailIndex.query(queryRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .findFirst();
     }
 
@@ -88,9 +90,8 @@ public class UserRepository {
                 .limit(1)
                 .build();
         
-        return apiKeyIndex.query(queryRequest)
-                .items()
-                .stream()
+        return StreamSupport.stream(apiKeyIndex.query(queryRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
                 .findFirst();
     }
 
