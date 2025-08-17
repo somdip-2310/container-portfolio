@@ -1,0 +1,274 @@
+# Authentication API Documentation
+
+## Base URL
+- Local: `http://localhost:8085/api/auth`
+- Production: `https://platform.somdip.dev/api/auth`
+
+## Authentication Methods
+
+The platform supports two authentication methods:
+
+1. **JWT Token** - For web applications and user sessions
+2. **API Key** - For CLI tools and programmatic access
+
+## Endpoints
+
+### 1. Register User
+
+**POST** `/api/auth/register`
+
+Create a new user account.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "fullName": "John Doe",
+  "username": "johndoe" // optional
+}
+```
+
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "type": "Bearer",
+  "userId": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "apiKey": "sk_a1b2c3d4e5f6..."
+}
+```
+
+### 2. Login
+
+**POST** `/api/auth/login`
+
+Authenticate user and receive JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "type": "Bearer",
+  "userId": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "apiKey": "sk_a1b2c3d4e5f6..."
+}
+```
+
+### 3. Logout
+
+**POST** `/api/auth/logout`
+
+Logout current user (clears server-side context).
+
+**Headers:**
+```
+Authorization: Bearer <jwt-token>
+```
+
+**Response:**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+### 4. Regenerate API Key
+
+**POST** `/api/auth/api-key/regenerate`
+
+Generate a new API key for the authenticated user.
+
+**Headers:**
+```
+Authorization: Bearer <jwt-token>
+```
+
+**Response:**
+```json
+{
+  "apiKey": "sk_new1234567890...",
+  "message": "API key regenerated successfully"
+}
+```
+
+### 5. Verify Email
+
+**GET** `/api/auth/verify-email?token=<verification-token>`
+
+Verify user email address.
+
+**Response:**
+```json
+{
+  "message": "Email verified successfully"
+}
+```
+
+## Authentication Headers
+
+### JWT Authentication
+
+For JWT authentication, include the token in the Authorization header:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
+```
+
+### API Key Authentication
+
+For API key authentication, you can use any of these methods:
+
+1. **Header (Recommended):**
+```
+X-API-Key: sk_a1b2c3d4e5f6...
+```
+
+2. **Authorization Header:**
+```
+Authorization: ApiKey sk_a1b2c3d4e5f6...
+```
+
+3. **Query Parameter (Not recommended for production):**
+```
+GET /api/containers?api_key=sk_a1b2c3d4e5f6...
+```
+
+## Rate Limiting
+
+The API implements rate limiting to prevent abuse:
+
+- **Per Minute:** 60 requests
+- **Per Hour:** 1000 requests
+
+Rate limits are applied per authenticated user or API key. Anonymous requests are rate-limited by IP address.
+
+When rate limit is exceeded, the API returns:
+
+```json
+{
+  "status": 429,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Please try again later."
+}
+```
+
+## Error Responses
+
+### 400 Bad Request
+```json
+{
+  "message": "Error: Email already registered"
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Full authentication is required to access this resource",
+  "path": "/api/containers"
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "status": 403,
+  "error": "Forbidden",
+  "message": "Access is denied"
+}
+```
+
+## Security Headers
+
+All API responses include the following security headers:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: SAMEORIGIN`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Content-Security-Policy: default-src 'self'`
+
+## CORS Configuration
+
+CORS is enabled for the following origins:
+- `http://localhost:3000` (development)
+- `https://containers.somdip.dev` (production)
+
+Allowed methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
+
+## Testing with cURL
+
+### Register:
+```bash
+curl -X POST http://localhost:8085/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123",
+    "fullName": "Test User"
+  }'
+```
+
+### Login:
+```bash
+curl -X POST http://localhost:8085/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+```
+
+### Authenticated Request:
+```bash
+# With JWT
+curl -X GET http://localhost:8085/api/test/me \
+  -H "Authorization: Bearer <jwt-token>"
+
+# With API Key
+curl -X GET http://localhost:8085/api/test/me \
+  -H "X-API-Key: <api-key>"
+  
+  
+  _________________________________
+  _________________________________
+  
+  
+  Start the application and test:
+
+Register a new user:
+
+bashcurl -X POST http://localhost:8085/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123",
+    "fullName": "Test User"
+  }'
+
+Login:
+
+bashcurl -X POST http://localhost:8085/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+
+Test authenticated endpoint:
+
+bashcurl -X GET http://localhost:8085/api/test/me \
+  -H "Authorization: Bearer <jwt-token-from-login>"
+```

@@ -1,13 +1,11 @@
 package dev.somdip.containerplatform.controller;
 
-// import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import dev.somdip.containerplatform.repository.ContainerRepository;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesRequest;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
@@ -25,48 +23,33 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/health")
-// @RequiredArgsConstructor - TODO: Generate constructor
-
 public class HealthController {
 	
-	/**
-	 * @param dynamoDbClient
-	 * @param ecsClient
-	 * @param s3Client
-	 * @param applicationName
-	 * @param awsRegion
-	 * @param ecsCluster
-	 * @param s3LogsBucket
-	 */
-	public HealthController(DynamoDbClient dynamoDbClient, EcsClient ecsClient, S3Client s3Client,
-			String applicationName, String awsRegion, String ecsCluster, String s3LogsBucket) {
-		super();
-		this.dynamoDbClient = dynamoDbClient;
-		this.ecsClient = ecsClient;
-		this.s3Client = s3Client;
-		this.applicationName = applicationName;
-		this.awsRegion = awsRegion;
-		this.ecsCluster = ecsCluster;
-		this.s3LogsBucket = s3LogsBucket;
-	}
-
 	private static final Logger log = LoggerFactory.getLogger(HealthController.class);
 
     private final DynamoDbClient dynamoDbClient;
     private final EcsClient ecsClient;
     private final S3Client s3Client;
-
-    @Value("${spring.application.name}")
-    private String applicationName;
-
-    @Value("${aws.region}")
-    private String awsRegion;
-
-    @Value("${aws.ecs.cluster}")
-    private String ecsCluster;
-
-    @Value("${aws.s3.bucket.logs}")
-    private String s3LogsBucket;
+    private final String applicationName;
+    private final String awsRegion;
+    private final String ecsCluster;
+    private final String s3LogsBucket;
+    
+    public HealthController(DynamoDbClient dynamoDbClient, 
+                          EcsClient ecsClient, 
+                          S3Client s3Client,
+                          @Value("${spring.application.name}") String applicationName,
+                          @Value("${aws.region}") String awsRegion,
+                          @Value("${aws.ecs.cluster}") String ecsCluster,
+                          @Value("${aws.s3.bucket.logs}") String s3LogsBucket) {
+        this.dynamoDbClient = dynamoDbClient;
+        this.ecsClient = ecsClient;
+        this.s3Client = s3Client;
+        this.applicationName = applicationName;
+        this.awsRegion = awsRegion;
+        this.ecsCluster = ecsCluster;
+        this.s3LogsBucket = s3LogsBucket;
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> health() {
