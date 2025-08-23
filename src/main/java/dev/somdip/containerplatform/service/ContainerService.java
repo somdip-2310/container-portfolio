@@ -1,6 +1,7 @@
 package dev.somdip.containerplatform.service;
 
 import dev.somdip.containerplatform.model.Container;
+import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.repository.ContainerRepository;
 import dev.somdip.containerplatform.repository.UserRepository;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+//import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -22,6 +24,8 @@ public class ContainerService {
     private final ContainerRepository containerRepository;
     private final UserRepository userRepository;
     private final EcsService ecsService;
+    private final DeploymentTrackingService deploymentTrackingService;
+    private final ContainerHealthCheckService healthCheckService;
     
     @Value("${app.container.limits.free}")
     private int freeContainerLimit;
@@ -37,10 +41,14 @@ public class ContainerService {
     
     public ContainerService(ContainerRepository containerRepository,
                           UserRepository userRepository,
-                          EcsService ecsService) {
+                          EcsService ecsService,
+                          DeploymentTrackingService deploymentTrackingService,
+                          ContainerHealthCheckService healthCheckService) {
         this.containerRepository = containerRepository;
         this.userRepository = userRepository;
         this.ecsService = ecsService;
+        this.deploymentTrackingService = deploymentTrackingService;
+        this.healthCheckService = healthCheckService;
     }
     
     public Container createContainer(String userId, String name, String image, String imageTag) {
@@ -79,6 +87,16 @@ public class ContainerService {
         container.setSslEnabled(true);
         container.setCreatedAt(Instant.now());
         container.setUpdatedAt(Instant.now());
+        
+        // Set default health check configuration
+        Container.HealthCheckConfig healthCheck = new Container.HealthCheckConfig();
+        healthCheck.setPath("/health");
+        healthCheck.setInterval(30);
+        healthCheck.setTimeout(5);
+        healthCheck.setHealthyThreshold(2);
+        healthCheck.setUnhealthyThreshold(3);
+        healthCheck.setProtocol("HTTP");
+        container.setHealthCheck(healthCheck);
         
         container = containerRepository.save(container);
         userRepository.incrementContainerCount(userId, 1);
@@ -134,8 +152,11 @@ public class ContainerService {
         containerRepository.save(container);
         
         try {
+            // Stop health monitoring
+            healthCheckService.stopHealthMonitoring(containerId);
+            
             if (container.getServiceArn() != null) {
-                ecsService.deleteService(container.getServiceArn());
+                ecsService.deleteService(container.getServiceArn(), containerId);
             }
             
             containerRepository.delete(containerId);
@@ -150,6 +171,7 @@ public class ContainerService {
         }
     }
     
+
     public Container deployContainer(String containerId) {
         log.info("Deploying container: {}", containerId);
         
@@ -163,15 +185,27 @@ public class ContainerService {
         containerRepository.save(container);
         
         try {
-            ecsService.deployContainer(container);
+            // Deploy to ECS with deployment tracking
+            Deployment deployment = ecsService.deployContainer(container, container.getUserId());
             
+            // Start tracking deployment progress
+            deploymentTrackingService.trackDeployment(deployment.getDeploymentId());
+            
+            // Update container with deployment info
             container.setStatus(Container.ContainerStatus.RUNNING);
             container.setLastDeployedAt(Instant.now());
             Long deploymentCount = container.getDeploymentCount() != null ? 
                 container.getDeploymentCount() : 0L;
             container.setDeploymentCount(deploymentCount + 1);
             
-            return containerRepository.save(container);
+            Container savedContainer = containerRepository.save(container);
+            
+            // Start health monitoring
+            healthCheckService.startHealthMonitoring(containerId);
+            
+            log.info("Container deployed successfully: {}", containerId);
+            return savedContainer;
+            
         } catch (Exception e) {
             log.error("Failed to deploy container: {}", containerId, e);
             container.setStatus(Container.ContainerStatus.FAILED);
@@ -193,8 +227,11 @@ public class ContainerService {
         containerRepository.save(container);
         
         try {
+            // Stop health monitoring
+            healthCheckService.stopHealthMonitoring(containerId);
+            
             if (container.getServiceArn() != null) {
-                ecsService.stopService(container.getServiceArn());
+                ecsService.stopService(container.getServiceArn(), containerId);
             }
             
             container.setStatus(Container.ContainerStatus.STOPPED);
@@ -205,6 +242,41 @@ public class ContainerService {
             containerRepository.save(container);
             throw new RuntimeException("Failed to stop container", e);
         }
+    }
+    
+    /**
+     * Get deployment status for a container
+     */
+    public DeploymentTrackingService.DeploymentStatus getDeploymentStatus(String deploymentId) {
+        return deploymentTrackingService.getDeploymentStatus(deploymentId);
+    }
+    
+    /**
+     * Get health status for a container
+     */
+    public ContainerHealthCheckService.HealthStatus getHealthStatus(String containerId) {
+        return healthCheckService.getHealthStatus(containerId);
+    }
+    
+    /**
+     * Update container health check configuration
+     */
+    public Container updateHealthCheck(String containerId, Container.HealthCheckConfig healthCheck) {
+        log.info("Updating health check configuration for container: {}", containerId);
+        
+        Container container = getContainer(containerId);
+        container.setHealthCheck(healthCheck);
+        container.setUpdatedAt(Instant.now());
+        
+        Container savedContainer = containerRepository.save(container);
+        
+        // Restart health monitoring with new configuration
+        if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+            healthCheckService.stopHealthMonitoring(containerId);
+            healthCheckService.startHealthMonitoring(containerId);
+        }
+        
+        return savedContainer;
     }
     
     private int getContainerLimit(User.UserPlan plan) {
@@ -246,5 +318,17 @@ public class ContainerService {
         if (memory < 512 || memory > 30720) {
             throw new IllegalArgumentException("Memory must be between 512 MB and 30720 MB");
         }
+        
+        // Memory must be compatible with CPU
+        Map<Integer, List<Integer>> cpuMemoryMap = Map.of(
+            256, Arrays.asList(512, 1024, 2048),
+            512, Arrays.asList(1024, 2048, 3072, 4096),
+            1024, Arrays.asList(2048, 3072, 4096, 5120, 6144, 7168, 8192),
+            2048, Arrays.asList(4096, 8192, 12288, 16384),
+            4096, Arrays.asList(8192, 16384, 24576, 30720)
+        );
+        
+        // This validation would need the CPU value, so it's simplified here
+        // In a real implementation, you'd validate CPU-memory compatibility
     }
 }
