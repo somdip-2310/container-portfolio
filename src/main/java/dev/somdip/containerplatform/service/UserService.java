@@ -51,7 +51,7 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setUsername(request.getUsername() != null ? request.getUsername() : request.getEmail().split("@")[0]);
         user.setPlan(User.UserPlan.FREE);
-        user.setStatus(User.UserStatus.PENDING_VERIFICATION);
+        user.setStatus(User.UserStatus.ACTIVE);
         user.setEmailVerified(false);
         user.setContainerCount(0);
         user.setTotalDeployments(0L);

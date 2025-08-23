@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Container Platform - Simple Container Hosting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .subtitle {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: white;
+            color: #007bff;
+            border: 2px solid #007bff;
+        }
+        .btn-secondary:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        .feature {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .feature h3 {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Container Platform</h2>
+    </div>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>Deploy Containers in 60 Seconds</h1>
+            <p class="subtitle">Simple, fast, and reliable container hosting on AWS</p>
+            
+            <div class="cta-buttons">
+                <a href="/register" class="btn btn-primary">Get Started</a>
+                <a href="/login" class="btn btn-secondary">Login</a>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>⚡ Lightning Fast</h3>
+                <p>Deploy any Docker container in under 60 seconds. From code to production instantly.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>💰 50% Cheaper</h3>
+                <p>Half the cost of Heroku. Transparent pricing. No surprise bills.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>🔒 Enterprise Security</h3>
+                <p>Built on AWS. Your data is safer than Fort Knox.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
