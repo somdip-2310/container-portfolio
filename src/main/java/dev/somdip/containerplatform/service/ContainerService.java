@@ -51,7 +51,7 @@ public class ContainerService {
         this.healthCheckService = healthCheckService;
     }
     
-    public Container createContainer(String userId, String name, String image, String imageTag) {
+    public Container createContainer(String userId, String name, String image, String imageTag, Integer port) {
         log.info("Creating container for user: {} with image: {}:{}", userId, image, imageTag);
         
         User user = userRepository.findById(userId)
@@ -81,7 +81,7 @@ public class ContainerService {
         container.setImageTag(imageTag != null ? imageTag : "latest");
         container.setSubdomain(subdomain);
         container.setStatus(Container.ContainerStatus.CREATING);
-        container.setPort(8080);
+        container.setPort(port != null ? port : getDefaultPortForImage(image));
         container.setCpu(256);
         container.setMemory(512);
         container.setSslEnabled(true);
@@ -330,5 +330,27 @@ public class ContainerService {
         
         // This validation would need the CPU value, so it's simplified here
         // In a real implementation, you'd validate CPU-memory compatibility
+    }
+    
+    private Integer getDefaultPortForImage(String image) {
+        if (image == null) return 80;
+        
+        switch (image.toLowerCase()) {
+            case "nginx":
+            case "httpd":
+            case "apache":
+                return 80;
+            case "tomcat":
+                return 8080;
+            case "node":
+            case "nodejs":
+                return 3000;
+            case "python":
+            case "django":
+            case "flask":
+                return 8000;
+            default:
+                return 80;
+        }
     }
 }

@@ -42,11 +42,12 @@ public class ContainerController {
         try {
             String userId = authentication.getName();
             Container container = containerService.createContainer(
-                userId, 
-                request.getName(), 
-                request.getImage(), 
-                request.getImageTag()
-            );
+                    userId,
+                    request.getName(),
+                    request.getImage(),
+                    request.getImageTag(),
+                    request.getPort()
+                );
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ContainerResponse.from(container));
         } catch (IllegalArgumentException e) {

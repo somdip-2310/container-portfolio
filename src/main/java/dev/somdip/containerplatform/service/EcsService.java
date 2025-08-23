@@ -46,6 +46,9 @@ public class EcsService {
     @Value("${aws.alb.targetGroup.arn}")
     private String targetGroupArn;
     
+    @Value("${aws.alb.targetGroup.users.arn}")
+    private String userContainersTargetGroupArn;
+    
     @Value("${aws.cloudwatch.logGroup.users}")
     private String logGroup;
     
@@ -91,7 +94,7 @@ public class EcsService {
             
             // Step 5: Register with target group
             updateDeploymentStep(deployment, "REGISTER_TARGET_GROUP", Deployment.DeploymentStep.StepStatus.IN_PROGRESS);
-            targetGroupService.registerTaskWithTargetGroup(targetGroupArn, taskArn);
+            targetGroupService.registerTaskWithTargetGroup(userContainersTargetGroupArn, taskArn);
             container.setTargetGroupArn(targetGroupArn);
             updateDeploymentStep(deployment, "REGISTER_TARGET_GROUP", Deployment.DeploymentStep.StepStatus.COMPLETED);
             
@@ -357,10 +360,10 @@ public class EcsService {
                     .build())
                 .build())
             .loadBalancers(LoadBalancer.builder()
-                .targetGroupArn(targetGroupArn)
-                .containerName(container.getContainerName())
-                .containerPort(container.getPort())
-                .build())
+                    .targetGroupArn(userContainersTargetGroupArn)
+                    .containerName(container.getContainerName())
+                    .containerPort(container.getPort())
+                    .build())
             .healthCheckGracePeriodSeconds(60)
             .deploymentConfiguration(DeploymentConfiguration.builder()
                 .maximumPercent(200)
