@@ -3,7 +3,6 @@ package dev.somdip.containerplatform.config;
 import dev.somdip.containerplatform.security.ApiKeyAuthenticationFilter;
 import dev.somdip.containerplatform.security.JwtAuthenticationFilter;
 import dev.somdip.containerplatform.security.JwtAuthenticationEntryPoint;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,14 +24,11 @@ import java.util.Arrays;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @Autowired
-    private ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
+    public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -40,7 +36,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain apiFilterChain(HttpSecurity http, 
+                                             JwtAuthenticationFilter jwtAuthenticationFilter,
+                                             ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) throws Exception {
         http
             .securityMatcher("/api/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))

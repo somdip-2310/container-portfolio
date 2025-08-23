@@ -1,5 +1,6 @@
 package dev.somdip.containerplatform.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -43,7 +44,7 @@ public class TestAuthController {
         if (authentication == null || !authentication.isAuthenticated()) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Not authenticated");
-            return ResponseEntity.unauthorized().body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         Map<String, Object> response = new HashMap<>();

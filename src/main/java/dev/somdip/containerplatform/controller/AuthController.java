@@ -5,6 +5,7 @@ import dev.somdip.containerplatform.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,8 +60,8 @@ public class AuthController {
         // Get current authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.unauthorized()
-                    .body(new MessageResponse("Not authenticated"));
+        	return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        	        .body(new MessageResponse("Not authenticated"));
         }
 
         // In a real implementation, you would validate the refresh token
@@ -71,8 +72,8 @@ public class AuthController {
     @PostMapping("/api-key/regenerate")
     public ResponseEntity<?> regenerateApiKey(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.unauthorized()
-                    .body(new MessageResponse("Not authenticated"));
+        	return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        	        .body(new MessageResponse("Not authenticated"));
         }
 
         String userId = authentication.getName();

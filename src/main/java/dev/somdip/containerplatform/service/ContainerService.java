@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -17,7 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class ContainerService {
     private static final Logger log = LoggerFactory.getLogger(ContainerService.class);
     

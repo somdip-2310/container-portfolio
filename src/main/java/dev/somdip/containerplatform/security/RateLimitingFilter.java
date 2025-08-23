@@ -3,7 +3,6 @@ package dev.somdip.containerplatform.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -66,7 +65,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         Bandwidth hourLimit = Bandwidth.classic(requestsPerHour, 
             Refill.intervally(requestsPerHour, Duration.ofHours(1)));
         
-        return Bucket4j.builder()
+        return Bucket.builder()
             .addLimit(minuteLimit)
             .addLimit(hourLimit)
             .build();
@@ -80,7 +79,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         // Try to get API key
         String apiKey = request.getHeader("X-API-Key");
-        if (apiKey != null) {
+        if (apiKey != null && !apiKey.isEmpty()) {
             return "api:" + apiKey;
         }
 
@@ -106,11 +105,17 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        // Don't rate limit health checks and static resources
         String path = request.getRequestURI();
-        return path.startsWith("/health") || 
+        
+        // Exclude these paths from rate limiting
+        return path.equals("/") ||
+               path.startsWith("/health") || 
                path.startsWith("/static") || 
                path.startsWith("/css") || 
-               path.startsWith("/js");
+               path.startsWith("/js") ||
+               path.startsWith("/favicon.ico") ||
+               path.equals("/login") ||
+               path.equals("/register") ||
+               path.startsWith("/api/auth/");  // Allow auth endpoints without rate limiting
     }
 }
