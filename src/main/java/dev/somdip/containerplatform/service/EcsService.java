@@ -2,6 +2,7 @@ package dev.somdip.containerplatform.service;
 
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
+import dev.somdip.containerplatform.repository.ContainerRepository;
 import dev.somdip.containerplatform.repository.DeploymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class EcsService {
     private final ElasticLoadBalancingV2Client elbClient;
     private final TargetGroupService targetGroupService;
     private final DeploymentRepository deploymentRepository;
+    private final ContainerRepository containerRepository;
     
     @Value("${aws.ecs.cluster}")
     private String clusterName;
@@ -55,11 +57,13 @@ public class EcsService {
     public EcsService(EcsClient ecsClient, 
                      ElasticLoadBalancingV2Client elbClient,
                      TargetGroupService targetGroupService,
-                     DeploymentRepository deploymentRepository) {
+                     DeploymentRepository deploymentRepository,
+                     ContainerRepository containerRepository) {
         this.ecsClient = ecsClient;
         this.elbClient = elbClient;
         this.targetGroupService = targetGroupService;
         this.deploymentRepository = deploymentRepository;
+        this.containerRepository = containerRepository;
     }
     
     public Deployment deployContainer(Container container, String userId) {
@@ -92,10 +96,10 @@ public class EcsService {
             container.setTaskArn(taskArn);
             updateDeploymentStep(deployment, "GET_TASK_INFO", Deployment.DeploymentStep.StepStatus.COMPLETED);
             
-            // Step 5: Register with target group
+            // Step 5: Register with target group (without port parameter)
             updateDeploymentStep(deployment, "REGISTER_TARGET_GROUP", Deployment.DeploymentStep.StepStatus.IN_PROGRESS);
             targetGroupService.registerTaskWithTargetGroup(userContainersTargetGroupArn, taskArn);
-            container.setTargetGroupArn(targetGroupArn);
+            container.setTargetGroupArn(userContainersTargetGroupArn);
             updateDeploymentStep(deployment, "REGISTER_TARGET_GROUP", Deployment.DeploymentStep.StepStatus.COMPLETED);
             
             // Step 6: Configure health check
@@ -381,12 +385,13 @@ public class EcsService {
     }
     
     public void stopService(String serviceArn, String containerId) {
-        log.info("Stopping ECS service: {}", serviceArn);
+        log.info("Stopping ECS service: {} for container: {}", serviceArn, containerId);
         
-        // First deregister from target group
+        // First deregister from target group (without port parameter)
         try {
             String taskArn = getRunningTaskArn(serviceArn);
-            targetGroupService.deregisterTaskFromTargetGroup(targetGroupArn, taskArn);
+            targetGroupService.deregisterTaskFromTargetGroup(userContainersTargetGroupArn, taskArn);
+            log.info("Deregistered task {} from target group", taskArn);
         } catch (Exception e) {
             log.warn("Failed to deregister from target group: {}", e.getMessage());
         }
