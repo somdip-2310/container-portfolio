@@ -179,4 +179,12 @@ public class ContainerRepository {
     public long countActiveByUserId(String userId) {
         return findByUserIdAndStatus(userId, Container.ContainerStatus.RUNNING).size();
     }
+    
+    public long countNonDeletedByUserId(String userId) {
+        // Since containers in DELETING status are being deleted, we shouldn't count them
+        return findByUserId(userId).stream()
+                .filter(container -> 
+                    container.getStatus() != Container.ContainerStatus.DELETING)
+                .count();
+    }
 }

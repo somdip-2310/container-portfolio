@@ -57,7 +57,7 @@ public class ContainerService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
             
-        long currentContainers = containerRepository.countActiveByUserId(userId);
+        long currentContainers = containerRepository.countNonDeletedByUserId(userId);
         int limit = getContainerLimit(user.getPlan());
         
         if (currentContainers >= limit) {
@@ -115,6 +115,8 @@ public class ContainerService {
         return containerRepository.findByUserId(userId);
     }
     
+    
+    
     public Container updateContainer(String containerId, Integer cpu, Integer memory, 
                                    Map<String, String> environmentVariables) {
         log.info("Updating container: {}", containerId);
@@ -143,30 +145,82 @@ public class ContainerService {
         log.info("Deleting container: {}", containerId);
         
         Container container = getContainer(containerId);
+        String userId = container.getUserId();
         
+        // Only stop if container is running
         if (container.getStatus() == Container.ContainerStatus.RUNNING) {
-            stopContainer(containerId);
+            try {
+                stopContainer(containerId);
+            } catch (Exception e) {
+                log.warn("Failed to stop container before deletion: {}", e.getMessage());
+                // Continue with deletion anyway
+            }
+        }
+        
+        // Skip if already being deleted
+        if (container.getStatus() == Container.ContainerStatus.DELETING) {
+            log.warn("Container {} is already being deleted", containerId);
+            return;
         }
         
         container.setStatus(Container.ContainerStatus.DELETING);
         containerRepository.save(container);
         
+        boolean shouldDecrementCount = true;
+        
         try {
-            // Stop health monitoring
-            healthCheckService.stopHealthMonitoring(containerId);
-            
-            if (container.getServiceArn() != null) {
-                ecsService.deleteService(container.getServiceArn(), containerId);
+            // Step 1: Stop health monitoring (non-critical)
+            try {
+                healthCheckService.stopHealthMonitoring(containerId);
+            } catch (Exception e) {
+                log.warn("Failed to stop health monitoring: {}", e.getMessage());
             }
             
+            // Step 2: Delete ECS resources (non-critical)
+            if (container.getServiceArn() != null && !container.getServiceArn().isEmpty()) {
+                try {
+                    ecsService.deleteService(container.getServiceArn(), containerId);
+                } catch (Exception e) {
+                    log.warn("Failed to delete ECS service: {}", e.getMessage());
+                }
+            }
+            
+            // Step 3: Delete from repository
             containerRepository.delete(containerId);
-            userRepository.incrementContainerCount(container.getUserId(), -1);
+            
+            // Step 4: Decrement user container count
+            userRepository.incrementContainerCount(userId, -1);
+            shouldDecrementCount = false;
             
             log.info("Container deleted successfully: {}", containerId);
+            
         } catch (Exception e) {
-            log.error("Error deleting container: {}", containerId, e);
-            container.setStatus(Container.ContainerStatus.FAILED);
-            containerRepository.save(container);
+            log.error("Error during container deletion: {}", e.getMessage(), e);
+            
+            // If we haven't decremented the count yet and container was actually deleted, do it now
+            if (shouldDecrementCount) {
+                try {
+                    // Check if container still exists
+                    containerRepository.findById(containerId).ifPresentOrElse(
+                        c -> {
+                            // Container still exists, mark as failed
+                            c.setStatus(Container.ContainerStatus.FAILED);
+                            containerRepository.save(c);
+                        },
+                        () -> {
+                            // Container was deleted, decrement count
+                            try {
+                                userRepository.incrementContainerCount(userId, -1);
+                            } catch (Exception ex) {
+                                log.error("Failed to decrement container count: {}", ex.getMessage());
+                            }
+                        }
+                    );
+                } catch (Exception ex) {
+                    log.error("Error during cleanup: {}", ex.getMessage());
+                }
+            }
+            
             throw new RuntimeException("Failed to delete container", e);
         }
     }
