@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Containers')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+    
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Containers</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your deployed containers</p>
+                </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Deploy New Container
+                </button>
+            </div>
+            
+            <!-- Filters and View Toggle -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <!-- Search and Filters -->
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 flex-1">
+                        <!-- Search -->
+                        <div class="relative flex-1 max-w-md">
+                            <input type="text" placeholder="Search containers..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <select class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Status</option>
+                            <option value="running">Running</option>
+                            <option value="stopped">Stopped</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        
+                        <!-- Sort -->
+                        <select class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="name">Name</option>
+                            <option value="created">Created Date</option>
+                            <option value="status">Status</option>
+                            <option value="cpu">CPU Usage</option>
+                            <option value="memory">Memory Usage</option>
+                        </select>
+                    </div>
+                    
+                    <!-- View Toggle -->
+                    <div class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                        <button id="gridView" class="px-3 py-1 rounded bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 shadow-sm">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button id="listView" class="px-3 py-1 rounded text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container Grid View -->
+            <div id="containerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Container Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">api-server</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">node:18-alpine</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Running</span>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>CPU</span>
+                                    <span>45%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Memory</span>
+                                    <span>256MB / 512MB</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            <span><i class="fas fa-globe mr-1"></i> api.containers.somdip.dev</span>
+                            <span><i class="fas fa-clock mr-1"></i> 2 days</span>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
+                                <i class="fas fa-terminal mr-1"></i> Logs
+                            </button>
+                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
+                                <i class="fas fa-cog mr-1"></i> Manage
+                            </button>
+                            <button class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Container Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">web-frontend</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">nginx:latest</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Running</span>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>CPU</span>
+                                    <span>12%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 12%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Memory</span>
+                                    <span>128MB / 256MB</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            <span><i class="fas fa-globe mr-1"></i> app.containers.somdip.dev</span>
+                            <span><i class="fas fa-clock mr-1"></i> 5 days</span>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
+                                <i class="fas fa-terminal mr-1"></i> Logs
+                            </button>
+                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
+                                <i class="fas fa-cog mr-1"></i> Manage
+                            </button>
+                            <button class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Container Card - Stopped -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow opacity-75">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">test-service</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">python:3.9</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">Stopped</span>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>CPU</span>
+                                    <span>0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Memory</span>
+                                    <span>0MB / 512MB</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            <span><i class="fas fa-globe mr-1"></i> test.containers.somdip.dev</span>
+                            <span><i class="fas fa-clock mr-1"></i> Stopped</span>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded text-sm">
+                                <i class="fas fa-play mr-1"></i> Start
+                            </button>
+                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
+                                <i class="fas fa-cog mr-1"></i> Manage
+                            </button>
+                            <button class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container List View (Hidden by default) -->
+            <div id="containerList" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Name
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Image
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    CPU
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Memory
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Domain
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">api-server</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Running</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    node:18-alpine
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mr-2">
+                                            <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                                        </div>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">45%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    256MB / 512MB
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    api.containers.somdip.dev
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-3">
+                                        <i class="fas fa-terminal"></i>
+                                    </button>
+                                    <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-3">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- More rows... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-6 flex justify-between items-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    Showing 1 to 10 of 32 containers
+                </div>
+                <div class="flex space-x-2">
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Previous
+                    </button>
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">1</button>
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">2</button>
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">3</button>
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+    
+    <!-- Container List specific scripts -->
+    <script>
+        // View toggle functionality
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        const containerGrid = document.getElementById('containerGrid');
+        const containerList = document.getElementById('containerList');
+        
+        gridView.addEventListener('click', () => {
+            gridView.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
+            gridView.classList.remove('text-gray-500', 'dark:text-gray-400');
+            
+            listView.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
+            listView.classList.add('text-gray-500', 'dark:text-gray-400');
+            
+            containerGrid.classList.remove('hidden');
+            containerList.classList.add('hidden');
+        });
+        
+        listView.addEventListener('click', () => {
+            listView.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
+            listView.classList.remove('text-gray-500', 'dark:text-gray-400');
+            
+            gridView.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
+            gridView.classList.add('text-gray-500', 'dark:text-gray-400');
+            
+            containerList.classList.remove('hidden');
+            containerGrid.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

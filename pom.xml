@@ -158,6 +158,32 @@
         </dependency>
         -->
         
+        <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+</dependency>
+
+<!-- SockJS for WebSocket fallback -->
+<dependency>
+    <groupId>org.webjars</groupId>
+    <artifactId>sockjs-client</artifactId>
+    <version>1.5.1</version>
+</dependency>
+
+<!-- STOMP WebSocket -->
+<dependency>
+    <groupId>org.webjars</groupId>
+    <artifactId>stomp-websocket</artifactId>
+    <version>2.3.4</version>
+</dependency>
+
+<!-- AWS CloudWatch Logs SDK (if not already included) -->
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>cloudwatchlogs</artifactId>
+    <version>${aws.sdk.version}</version>
+</dependency>
+        
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
