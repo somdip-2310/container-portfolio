@@ -97,8 +97,9 @@ public class EcsService {
             updateDeploymentStep(deployment, "GET_TASK_INFO", Deployment.DeploymentStep.StepStatus.COMPLETED);
             
             // Step 5: Register with target group (without port parameter)
+         // Step 5: Register with target group with port
             updateDeploymentStep(deployment, "REGISTER_TARGET_GROUP", Deployment.DeploymentStep.StepStatus.IN_PROGRESS);
-            targetGroupService.registerTaskWithTargetGroup(userContainersTargetGroupArn, taskArn);
+            targetGroupService.registerTaskWithTargetGroup(userContainersTargetGroupArn, taskArn, container.getPort());
             container.setTargetGroupArn(userContainersTargetGroupArn);
             updateDeploymentStep(deployment, "REGISTER_TARGET_GROUP", Deployment.DeploymentStep.StepStatus.COMPLETED);
             
@@ -387,46 +388,110 @@ public class EcsService {
     public void stopService(String serviceArn, String containerId) {
         log.info("Stopping ECS service: {} for container: {}", serviceArn, containerId);
         
-        // First deregister from target group (without port parameter)
         try {
-            String taskArn = getRunningTaskArn(serviceArn);
-            targetGroupService.deregisterTaskFromTargetGroup(userContainersTargetGroupArn, taskArn);
-            log.info("Deregistered task {} from target group", taskArn);
+            // Check service status first
+            DescribeServicesRequest describeRequest = DescribeServicesRequest.builder()
+                .cluster(clusterName)
+                .services(serviceArn)
+                .build();
+            
+            DescribeServicesResponse describeResponse = ecsClient.describeServices(describeRequest);
+            
+            if (describeResponse.services().isEmpty()) {
+                log.warn("Service not found: {}", serviceArn);
+                return;
+            }
+            
+            software.amazon.awssdk.services.ecs.model.Service service = describeResponse.services().get(0);
+            String serviceStatus = service.status();
+            
+            // Only proceed if service is ACTIVE
+            if (!"ACTIVE".equals(serviceStatus)) {
+                log.info("Service is not active (status: {}), skipping stop operation", serviceStatus);
+                return;
+            }
+            
+            // Get container to know the port
+            Container container = containerRepository.findById(containerId)
+                .orElseThrow(() -> new RuntimeException("Container not found: " + containerId));
+            
+            // First deregister from target group with port
+            try {
+                String taskArn = getRunningTaskArn(serviceArn);
+                targetGroupService.deregisterTaskFromTargetGroup(userContainersTargetGroupArn, taskArn, container.getPort());
+                log.info("Deregistered task {} from target group on port {}", taskArn, container.getPort());
+            } catch (Exception e) {
+                log.warn("Failed to deregister from target group: {}", e.getMessage());
+            }
+            
+            // Then scale down service
+            UpdateServiceRequest request = UpdateServiceRequest.builder()
+                .cluster(clusterName)
+                .service(serviceArn)
+                .desiredCount(0)
+                .build();
+            
+            ecsClient.updateService(request);
+            log.info("Service scaled down to 0");
+            
         } catch (Exception e) {
-            log.warn("Failed to deregister from target group: {}", e.getMessage());
+            log.error("Error stopping service: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to stop service", e);
         }
-        
-        // Then scale down service
-        UpdateServiceRequest request = UpdateServiceRequest.builder()
-            .cluster(clusterName)
-            .service(serviceArn)
-            .desiredCount(0)
-            .build();
-        
-        ecsClient.updateService(request);
     }
     
     public void deleteService(String serviceArn, String containerId) {
         log.info("Deleting ECS service: {}", serviceArn);
         
-        // Stop service first
-        stopService(serviceArn, containerId);
-        
-        // Wait for tasks to stop
         try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            // Check if service exists and its status
+            DescribeServicesRequest describeRequest = DescribeServicesRequest.builder()
+                .cluster(clusterName)
+                .services(serviceArn)
+                .build();
+            
+            DescribeServicesResponse describeResponse = ecsClient.describeServices(describeRequest);
+            
+            if (describeResponse.services().isEmpty()) {
+                log.info("Service not found, nothing to delete");
+                return;
+            }
+            
+            software.amazon.awssdk.services.ecs.model.Service service = describeResponse.services().get(0);
+            String serviceStatus = service.status();
+            
+            // If service is ACTIVE, stop it first
+            if ("ACTIVE".equals(serviceStatus)) {
+                log.info("Service is active, stopping it first");
+                stopService(serviceArn, containerId);
+                
+                // Wait for tasks to stop
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                log.info("Service is not active (status: {}), proceeding with deletion", serviceStatus);
+            }
+            
+            // Delete service
+            DeleteServiceRequest deleteRequest = DeleteServiceRequest.builder()
+                .cluster(clusterName)
+                .service(serviceArn)
+                .force(true)
+                .build();
+            
+            ecsClient.deleteService(deleteRequest);
+            log.info("Service deletion initiated");
+            
+        } catch (Exception e) {
+            log.error("Error deleting service: {}", e.getMessage(), e);
+            // Don't throw exception if service is already gone
+            if (!e.getMessage().contains("ServiceNotFoundException")) {
+                throw new RuntimeException("Failed to delete service", e);
+            }
         }
-        
-        // Delete service
-        DeleteServiceRequest request = DeleteServiceRequest.builder()
-            .cluster(clusterName)
-            .service(serviceArn)
-            .force(true)
-            .build();
-        
-        ecsClient.deleteService(request);
     }
     
     private Collection<KeyValuePair> convertEnvironmentVariables(Map<String, String> envVars) {
@@ -440,5 +505,34 @@ public class EcsService {
                 .value(entry.getValue())
                 .build())
             .collect(Collectors.toList());
+    }
+    
+    private Task getTaskDetails(String taskArn) {
+        try {
+            DescribeTasksRequest request = DescribeTasksRequest.builder()
+                .cluster(clusterName)
+                .tasks(taskArn)
+                .build();
+            
+            DescribeTasksResponse response = ecsClient.describeTasks(request);
+            return response.tasks().isEmpty() ? null : response.tasks().get(0);
+        } catch (Exception e) {
+            log.error("Failed to describe task: {}", taskArn, e);
+            return null;
+        }
+    }
+
+    private String extractPrivateIpFromTask(Task task) {
+        if (task == null || task.attachments() == null || task.attachments().isEmpty()) {
+            return null;
+        }
+        
+        return task.attachments().stream()
+            .filter(att -> "ElasticNetworkInterface".equals(att.type()))
+            .flatMap(att -> att.details().stream())
+            .filter(detail -> "privateIPv4Address".equals(detail.name()))
+            .map(detail -> detail.value())
+            .findFirst()
+            .orElse(null);
     }
 }

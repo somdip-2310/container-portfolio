@@ -87,8 +87,8 @@ public class TargetGroupService {
     /**
      * Registers ECS task IPs with the target group
      */
-    public void registerTaskWithTargetGroup(String targetGroupArn, String taskArn) {
-        log.info("Registering task {} with target group {}", taskArn, targetGroupArn);
+    public void registerTaskWithTargetGroup(String targetGroupArn, String taskArn, Integer port) {
+        log.info("Registering task {} with target group {} on port {}", taskArn, targetGroupArn, port);
         
         try {
             // Wait for task to be running
@@ -113,10 +113,10 @@ public class TargetGroupService {
             }
             
             // Register the IP with target group
-            registerTargets(targetGroupArn, privateIp);
+            registerTargets(targetGroupArn, privateIp, port);
             
             // Wait for target to become healthy
-            waitForTargetHealthy(targetGroupArn, privateIp);
+            waitForTargetHealthy(targetGroupArn, privateIp,port);
             
         } catch (Exception e) {
             log.error("Failed to register task with target group", e);
@@ -127,8 +127,8 @@ public class TargetGroupService {
     /**
      * Deregisters targets from target group
      */
-    public void deregisterTaskFromTargetGroup(String targetGroupArn, String taskArn) {
-        log.info("Deregistering task {} from target group {}", taskArn, targetGroupArn);
+    public void deregisterTaskFromTargetGroup(String targetGroupArn, String taskArn, Integer port) {
+        log.info("Deregistering task {} from target group {} on port {}", taskArn, targetGroupArn, port);
         
         try {
             Task task = getTaskDetails(taskArn);
@@ -141,7 +141,7 @@ public class TargetGroupService {
             if (eniId != null) {
                 String privateIp = getPrivateIpFromEni(eniId);
                 if (privateIp != null) {
-                    deregisterTargets(targetGroupArn, privateIp);
+                    deregisterTargets(targetGroupArn, privateIp, port);
                 }
             }
         } catch (Exception e) {
@@ -236,12 +236,12 @@ public class TargetGroupService {
         return null;
     }
     
-    private void registerTargets(String targetGroupArn, String privateIp) {
+    private void registerTargets(String targetGroupArn, String privateIp, Integer port) {
         RegisterTargetsRequest request = RegisterTargetsRequest.builder()
             .targetGroupArn(targetGroupArn)
             .targets(TargetDescription.builder()
                 .id(privateIp)
-                .port(8080) // Container port
+                .port(port != null ? port : 8080) // Use actual port
                 .build())
             .build();
         
@@ -249,11 +249,12 @@ public class TargetGroupService {
         log.info("Registered IP {} with target group", privateIp);
     }
     
-    private void deregisterTargets(String targetGroupArn, String privateIp) {
+    private void deregisterTargets(String targetGroupArn, String privateIp, Integer port) {
         DeregisterTargetsRequest request = DeregisterTargetsRequest.builder()
             .targetGroupArn(targetGroupArn)
             .targets(TargetDescription.builder()
                 .id(privateIp)
+                .port(port) //port for deregistration
                 .build())
             .build();
         
@@ -261,7 +262,7 @@ public class TargetGroupService {
         log.info("Deregistered IP {} from target group", privateIp);
     }
     
-    private void waitForTargetHealthy(String targetGroupArn, String privateIp) throws InterruptedException {
+    private void waitForTargetHealthy(String targetGroupArn, String privateIp, Integer port) throws InterruptedException {
         int maxAttempts = 30;
         int attempt = 0;
         
@@ -270,6 +271,7 @@ public class TargetGroupService {
                 .targetGroupArn(targetGroupArn)
                 .targets(TargetDescription.builder()
                     .id(privateIp)
+                    .port(port)
                     .build())
                 .build();
             
