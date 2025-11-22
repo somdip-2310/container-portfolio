@@ -147,9 +147,9 @@ public class DashboardService {
                 activities.add(RecentActivity.builder()
                     .type("deployment")
                     .containerName(deployment.getContainerName())
-                    .action(deployment.getStatus())
+                    .action(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
                     .timestamp(deployment.getCreatedAt())
-                    .status(deployment.getStatus())
+                    .status(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
                     .build());
             }
             
@@ -208,7 +208,7 @@ public class DashboardService {
                 .containerName(d.getContainerName())
                 .action("Deployed")
                 .timestamp(d.getCreatedAt())
-                .status(d.getStatus())
+                .status(d.getStatus() != null ? d.getStatus().name() : "UNKNOWN")
                 .build())
             .collect(Collectors.toList());
     }

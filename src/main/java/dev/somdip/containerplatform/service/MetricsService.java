@@ -154,7 +154,7 @@ public class MetricsService {
             .cpuLimit(container.getCpu())
             .memoryLimit(container.getMemory())
             .timestamp(Instant.now())
-            .status(container.getStatus())
+            .status(container.getStatus() != null ? container.getStatus().name() : "UNKNOWN")
             .build();
     }
     
