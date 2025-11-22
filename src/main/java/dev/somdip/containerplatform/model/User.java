@@ -58,6 +58,21 @@ public class User {
 		this.fullName = fullName;
 	}
 
+	// Alias for getUsername() - commonly used in views
+	public String getName() {
+		return username != null ? username : fullName;
+	}
+
+	// Alias for getPlan() - subscription plan
+	public UserPlan getSubscriptionPlan() {
+		return plan;
+	}
+
+	// Alias for getStatus() - subscription status
+	public UserStatus getSubscriptionStatus() {
+		return status;
+	}
+
 	public Instant getLastLoginAt() {
 		return lastLoginAt;
 	}

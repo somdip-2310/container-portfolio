@@ -164,14 +164,32 @@ public class DeploymentRepository {
 
     public List<Deployment> findByUserIdInTimeRange(String userId, Instant startTime, Instant endTime) {
         log.debug("Finding deployments for user {} between {} and {}", userId, startTime, endTime);
-        
+
         return StreamSupport.stream(getTable().scan().spliterator(), false)
                 .flatMap(page -> page.items().stream())
-                .filter(deployment -> 
+                .filter(deployment ->
                     deployment.getUserId().equals(userId) &&
                     deployment.getStartedAt() != null &&
                     deployment.getStartedAt().isAfter(startTime) &&
                     deployment.getStartedAt().isBefore(endTime))
+                .collect(Collectors.toList());
+    }
+
+    public List<Deployment> findRecentByUserId(String userId, int limit) {
+        log.debug("Finding {} recent deployments for user: {}", limit, userId);
+
+        return StreamSupport.stream(getTable().scan().spliterator(), false)
+                .flatMap(page -> page.items().stream())
+                .filter(deployment -> deployment.getUserId().equals(userId))
+                .sorted((d1, d2) -> {
+                    Instant t1 = d1.getCreatedAt() != null ? d1.getCreatedAt() : d1.getStartedAt();
+                    Instant t2 = d2.getCreatedAt() != null ? d2.getCreatedAt() : d2.getStartedAt();
+                    if (t1 == null && t2 == null) return 0;
+                    if (t1 == null) return 1;
+                    if (t2 == null) return -1;
+                    return t2.compareTo(t1); // Descending order (newest first)
+                })
+                .limit(limit)
                 .collect(Collectors.toList());
     }
 }

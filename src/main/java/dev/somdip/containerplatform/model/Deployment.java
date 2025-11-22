@@ -12,6 +12,7 @@ public class Deployment {
     
     private String deploymentId;
     private String containerId;
+    private String containerName; // Container name for easy reference
     private String userId;
     private String previousTaskDefinitionArn;
     private String newTaskDefinitionArn;
@@ -20,6 +21,7 @@ public class Deployment {
     private DeploymentStatus status;
     private DeploymentType type;
     private String initiatedBy; // User ID or "system"
+    private Instant createdAt; // When deployment was created
     private Instant startedAt;
     private Instant completedAt;
     private Long durationMillis;
@@ -32,7 +34,23 @@ public class Deployment {
 
     
     
-    public String getUserId() {
+    public String getContainerName() {
+		return containerName;
+	}
+
+	public void setContainerName(String containerName) {
+		this.containerName = containerName;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(Instant createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public String getUserId() {
 		return userId;
 	}
 

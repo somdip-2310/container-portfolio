@@ -332,7 +332,26 @@ public class ContainerService {
         
         return savedContainer;
     }
-    
+
+    /**
+     * Get all containers for a user (alias for listUserContainers)
+     */
+    public List<Container> getUserContainers(String userId) {
+        return listUserContainers(userId);
+    }
+
+    /**
+     * Check if a user owns a specific container
+     */
+    public boolean isOwner(String userId, String containerId) {
+        try {
+            Container container = getContainer(containerId);
+            return container.getUserId().equals(userId);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private int getContainerLimit(User.UserPlan plan) {
         switch (plan) {
             case FREE:

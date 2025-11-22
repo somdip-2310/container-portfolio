@@ -44,8 +44,17 @@ public class Container {
 		return containerName;
 	}
 
+	// Alias for getContainerName() - used by some services
+	public String getName() {
+		return containerName;
+	}
+
 	public void setContainerName(String containerName) {
 		this.containerName = containerName;
+	}
+
+	public void setName(String name) {
+		this.containerName = name;
 	}
 
 	public String getImage() {
