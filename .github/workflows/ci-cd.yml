@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  security-events: write
+
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: somdip/container-platform
