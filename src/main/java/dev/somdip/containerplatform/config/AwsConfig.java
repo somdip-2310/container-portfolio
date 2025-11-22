@@ -9,6 +9,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
+import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ecr.EcrClient;
@@ -82,6 +83,15 @@ public class AwsConfig {
     public CloudWatchClient cloudWatchClient(AwsCredentialsProvider credentialsProvider, Region region) {
         log.info("Creating CloudWatch client for region: {}", region);
         return CloudWatchClient.builder()
+                .region(region)
+                .credentialsProvider(credentialsProvider)
+                .build();
+    }
+
+    @Bean
+    public CloudWatchLogsClient cloudWatchLogsClient(AwsCredentialsProvider credentialsProvider, Region region) {
+        log.info("Creating CloudWatch Logs client for region: {}", region);
+        return CloudWatchLogsClient.builder()
                 .region(region)
                 .credentialsProvider(credentialsProvider)
                 .build();
