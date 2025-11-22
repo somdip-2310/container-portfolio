@@ -113,8 +113,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Scan Docker image for vulnerabilities
         uses: aquasecurity/trivy-action@master
