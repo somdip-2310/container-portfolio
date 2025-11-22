@@ -1,0 +1,46 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDE files
+.idea
+.vscode
+*.iml
+.eclipse
+.settings
+
+# Build artifacts
+target/
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+
+# Test files
+src/test/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Maven wrapper (already in image)
+.mvn/
+mvnw
+mvnw.cmd
