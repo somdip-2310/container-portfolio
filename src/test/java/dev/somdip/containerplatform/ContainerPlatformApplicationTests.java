@@ -1,4 +1,4 @@
-package dev.somdip.container_platform;
+package dev.somdip.containerplatform;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
