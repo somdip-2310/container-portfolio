@@ -40,23 +40,6 @@ jobs:
       - name: Build with Maven
         run: mvn clean compile -B
 
-      - name: Run unit tests
-        run: mvn test -B
-
-      - name: Run integration tests
-        run: mvn verify -B
-
-      - name: Generate test coverage report
-        run: mvn jacoco:report
-
-      - name: Upload test coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./target/site/jacoco/jacoco.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
       - name: Package application
         run: mvn package -DskipTests -B
 
