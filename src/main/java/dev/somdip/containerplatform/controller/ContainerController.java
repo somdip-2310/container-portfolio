@@ -8,6 +8,7 @@ import dev.somdip.containerplatform.dto.deployment.DeploymentResponse;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.repository.DeploymentRepository;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
 import dev.somdip.containerplatform.service.MetricsService;
@@ -45,12 +46,20 @@ public class ContainerController {
         this.metricsService = metricsService;
     }
 
+    /**
+     * Helper method to extract userId from Authentication
+     */
+    private String getUserId(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
+    }
+
     @PostMapping
     public ResponseEntity<ContainerResponse> createContainer(
             @Valid @RequestBody CreateContainerRequest request,
             Authentication authentication) {
         try {
-            String userId = authentication.getName();
+            String userId = getUserId(authentication);
             Container container = containerService.createContainer(
                     userId,
                     request.getName(),
@@ -75,7 +84,7 @@ public class ContainerController {
     @GetMapping
     public ResponseEntity<List<ContainerResponse>> listContainers(Authentication authentication) {
         try {
-            String userId = authentication.getName();
+            String userId = getUserId(authentication);
             List<Container> containers = containerService.listUserContainers(userId);
             List<ContainerResponse> responses = containers.stream()
                 .map(ContainerResponse::from)
@@ -93,7 +102,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.ok(ContainerResponse.from(container));
@@ -112,7 +121,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -139,7 +148,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -175,7 +184,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             container = containerService.stopContainer(containerId);
@@ -197,7 +206,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -225,7 +234,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             containerService.deleteContainer(containerId);
@@ -245,7 +254,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -284,7 +293,7 @@ public class ContainerController {
             Authentication authentication) {
         try {
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 

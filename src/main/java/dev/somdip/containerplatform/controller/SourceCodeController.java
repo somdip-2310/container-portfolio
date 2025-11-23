@@ -4,6 +4,7 @@ import dev.somdip.containerplatform.dto.container.CreateContainerRequest;
 import dev.somdip.containerplatform.dto.container.DeployContainerResponse;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.SourceDeployment;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,9 @@ public class SourceCodeController {
             Authentication authentication) {
 
         try {
-            String userId = authentication.getName();
+            // Get the actual userId from CustomUserDetails
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            String userId = userDetails.getUserId();
             log.info("Deploying from source for user: {}, container: {}", userId, containerName);
 
             // Validate file
@@ -202,7 +205,8 @@ public class SourceCodeController {
             Authentication authentication) {
 
         try {
-            String userId = authentication.getName();
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            String userId = userDetails.getUserId();
             log.info("Analyzing project for user: {}", userId);
 
             // Validate file
@@ -258,6 +262,9 @@ public class SourceCodeController {
             @PathVariable String deploymentId,
             Authentication authentication) {
         try {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            String userId = userDetails.getUserId();
+
             SourceDeployment deployment = deploymentTrackingService.getDeployment(deploymentId);
 
             if (deployment == null) {
@@ -265,7 +272,7 @@ public class SourceCodeController {
             }
 
             // Verify ownership
-            if (!deployment.getUserId().equals(authentication.getName())) {
+            if (!deployment.getUserId().equals(userId)) {
                 return ResponseEntity.status(403).build();
             }
 

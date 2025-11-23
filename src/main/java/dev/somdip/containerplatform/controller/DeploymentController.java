@@ -5,6 +5,7 @@ import dev.somdip.containerplatform.dto.deployment.DeploymentStatusResponse;
 import dev.somdip.containerplatform.dto.deployment.HealthStatusResponse;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.repository.DeploymentRepository;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.DeploymentTrackingService;
 import dev.somdip.containerplatform.service.ContainerHealthCheckService;
@@ -31,7 +32,15 @@ public class DeploymentController {
         this.deploymentRepository = deploymentRepository;
         this.containerService = containerService;
     }
-    
+
+    /**
+     * Helper method to extract userId from Authentication
+     */
+    private String getUserId(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
+    }
+
     @GetMapping("/{deploymentId}")
     public ResponseEntity<DeploymentResponse> getDeployment(
             @PathVariable String deploymentId,
@@ -42,9 +51,9 @@ public class DeploymentController {
         if (deployment == null) {
             return ResponseEntity.notFound().build();
         }
-        
+
         // Check if user owns this deployment
-        if (!deployment.getUserId().equals(authentication.getName())) {
+        if (!deployment.getUserId().equals(getUserId(authentication))) {
             return ResponseEntity.status(403).build();
         }
         
@@ -82,8 +91,8 @@ public class DeploymentController {
         if (deployment == null) {
             return ResponseEntity.notFound().build();
         }
-        
-        if (!deployment.getUserId().equals(authentication.getName())) {
+
+        if (!deployment.getUserId().equals(getUserId(authentication))) {
             return ResponseEntity.status(403).build();
         }
         
