@@ -150,12 +150,15 @@ public class SourceCodeController {
                 if ("BUILD_COMPLETED".equals(status.getStatus())) {
                     log.info("Build completed successfully for deployment: {}", deploymentId);
 
-                    // Extract image name and tag from imageUri
-                    String[] parts = imageUri.split("/");
-                    String imageWithTag = parts[parts.length - 1];
-                    String[] imageParts = imageWithTag.split(":");
-                    String image = imageParts[0];
-                    String imageTag = imageParts.length > 1 ? imageParts[1] : "latest";
+                    // Use the full ECR image URI (e.g., 257394460825.dkr.ecr.us-east-1.amazonaws.com/somdip-app-nginx:latest)
+                    // Extract repository and tag from full URI
+                    String imageWithoutTag = imageUri.substring(0, imageUri.lastIndexOf(':'));
+                    String imageTag = imageUri.substring(imageUri.lastIndexOf(':') + 1);
+
+                    // For ECR images, we need the full registry path
+                    String image = imageWithoutTag;
+
+                    log.info("Using ECR image: {}:{}", image, imageTag);
 
                     // Create and deploy container
                     Container container = containerService.createContainer(

@@ -259,9 +259,14 @@
                             Container Name *
                         </label>
                         <input type="text" id="containerName" name="containerName" required
+                               pattern="^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+                               minlength="2"
+                               maxlength="63"
                                placeholder="my-awesome-app"
+                               oninput="validateContainerName(this)"
                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Lowercase letters, numbers, and hyphens only</p>
+                        <p id="containerNameError" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden"></p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Must start and end with lowercase letter or number. Can contain hyphens in the middle. 2-63 characters.</p>
                     </div>
 
                     <!-- Container Image -->
@@ -345,9 +350,14 @@
                             Container Name *
                         </label>
                         <input type="text" id="sourceContainerName" name="containerName" required
+                               pattern="^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+                               minlength="2"
+                               maxlength="63"
                                placeholder="my-awesome-app"
+                               oninput="validateContainerName(this)"
                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Lowercase letters, numbers, and hyphens only</p>
+                        <p id="sourceContainerNameError" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden"></p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Must start and end with lowercase letter or number. Can contain hyphens in the middle. 2-63 characters.</p>
                     </div>
 
                     <!-- File Upload -->
@@ -642,6 +652,60 @@
         }
 
         // Update file name display
+        // Validate container name as user types
+        function validateContainerName(input) {
+            const value = input.value;
+            const errorId = input.id + 'Error';
+            const errorEl = document.getElementById(errorId);
+
+            // Clear previous error
+            input.setCustomValidity('');
+            if (errorEl) {
+                errorEl.classList.add('hidden');
+                errorEl.textContent = '';
+            }
+
+            if (!value) return; // Don't show error for empty field (required will handle this)
+
+            let errorMessage = '';
+
+            // Check length
+            if (value.length < 2) {
+                errorMessage = 'Container name must be at least 2 characters long';
+            } else if (value.length > 63) {
+                errorMessage = 'Container name must be 63 characters or less';
+            }
+            // Check if starts or ends with hyphen
+            else if (value.startsWith('-') || value.endsWith('-')) {
+                errorMessage = 'Container name cannot start or end with a hyphen';
+            }
+            // Check for uppercase letters
+            else if (/[A-Z]/.test(value)) {
+                errorMessage = 'Container name must be lowercase only';
+            }
+            // Check for invalid characters
+            else if (!/^[a-z0-9-]+$/.test(value)) {
+                errorMessage = 'Container name can only contain lowercase letters, numbers, and hyphens';
+            }
+            // Check consecutive hyphens
+            else if (/--/.test(value)) {
+                errorMessage = 'Container name cannot contain consecutive hyphens';
+            }
+
+            if (errorMessage) {
+                input.setCustomValidity(errorMessage);
+                if (errorEl) {
+                    errorEl.textContent = errorMessage;
+                    errorEl.classList.remove('hidden');
+                }
+                input.classList.add('border-red-500');
+                input.classList.remove('border-gray-300', 'dark:border-gray-600');
+            } else {
+                input.classList.remove('border-red-500');
+                input.classList.add('border-gray-300', 'dark:border-gray-600');
+            }
+        }
+
         function updateFileName(input) {
             const fileName = input.files[0]?.name || '';
             document.getElementById('selectedFileName').textContent = fileName;
