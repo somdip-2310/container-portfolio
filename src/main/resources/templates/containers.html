@@ -183,28 +183,32 @@
                             </span>
                         </div>
 
-                        <div class="flex space-x-2">
-                            <button th:data-container-id="${container.containerId}"
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" th:data-container-id="${container.containerId}"
                                     onclick="viewLogs(this.getAttribute('data-container-id'))"
-                                    class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm transition">
-                                <i class="fas fa-terminal mr-1"></i> Logs
+                                    class="flex items-center justify-center bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800/30 dark:hover:to-purple-700/30 text-purple-700 dark:text-purple-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                <i class="fas fa-terminal mr-1.5"></i>
+                                <span>Logs</span>
                             </button>
-                            <button th:if="${container.status == 'STOPPED'}"
+                            <button type="button" th:if="${container.status == 'STOPPED'}"
                                     th:data-container-id="${container.containerId}"
                                     onclick="startContainer(this.getAttribute('data-container-id'))"
-                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded text-sm transition">
-                                <i class="fas fa-play mr-1"></i> Start
+                                    class="flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                <i class="fas fa-play mr-1.5"></i>
+                                <span>Start</span>
                             </button>
-                            <button th:if="${container.status == 'RUNNING'}"
+                            <button type="button" th:if="${container.status == 'RUNNING'}"
                                     th:data-container-id="${container.containerId}"
                                     onclick="stopContainer(this.getAttribute('data-container-id'))"
-                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-3 rounded text-sm transition">
-                                <i class="fas fa-stop mr-1"></i> Stop
+                                    class="flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                <i class="fas fa-stop mr-1.5"></i>
+                                <span>Stop</span>
                             </button>
-                            <button th:data-container-id="${container.containerId}"
+                            <button type="button" th:data-container-id="${container.containerId}"
                                     onclick="showContainerMenu(this.getAttribute('data-container-id'))"
-                                    class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded transition">
-                                <i class="fas fa-ellipsis-v"></i>
+                                    class="flex items-center justify-center bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 text-gray-700 dark:text-gray-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                <i class="fas fa-ellipsis-v mr-1.5"></i>
+                                <span>More</span>
                             </button>
                         </div>
                     </div>
@@ -418,7 +422,7 @@
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">Container Actions</h3>
-                    <button onclick="hideContainerActionsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <button type="button" onclick="hideContainerActionsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -460,6 +464,28 @@
             </div>
         </div>
     </div>
+
+    <!-- Progress/Loading Modal -->
+    <div id="progressModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="text-center">
+                <div class="mb-4">
+                    <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600"></div>
+                </div>
+                <h3 id="progressTitle" class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Processing...</h3>
+                <p id="progressMessage" class="text-gray-600 dark:text-gray-400 mb-4">Please wait while we process your request</p>
+
+                <!-- Progress bar -->
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                    <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p id="progressPercent" class="text-sm text-gray-500 dark:text-gray-400">0%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
     <footer th:replace="~{fragments/base :: footer}"></footer>
     <div th:replace="~{fragments/base :: scripts}"></div>
@@ -769,9 +795,11 @@
 
         // Delete container
         async function deleteContainer(containerId) {
-            if (!confirm('Are you sure you want to delete this container? This action cannot be undone.')) return;
-
             try {
+                // Show progress modal
+                showProgressModal('Deleting Container', 'Removing container and associated resources...');
+                updateProgress(10);
+
                 const response = await fetch(`/api/containers/${containerId}`, {
                     method: 'DELETE',
                     credentials: 'same-origin',
@@ -780,24 +808,34 @@
                     }
                 });
 
+                updateProgress(60);
+
                 if (response.ok) {
-                    showNotification('Container deleted successfully', 'success');
-                    setTimeout(() => location.reload(), 1500);
+                    updateProgress(100);
+                    setTimeout(() => {
+                        hideProgressModal();
+                        showToast('Container deleted successfully', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }, 500);
                 } else {
+                    hideProgressModal();
                     const error = await response.text();
-                    showNotification('Failed to delete container: ' + error, 'error');
+                    showToast('Failed to delete container: ' + error, 'error');
                 }
             } catch (error) {
+                hideProgressModal();
                 console.error('Error deleting container:', error);
-                showNotification('Error deleting container', 'error');
+                showToast('Error deleting container', 'error');
             }
         }
 
         // Restart container
         async function restartContainer(containerId) {
-            if (!confirm('Restart this container?')) return;
-
             try {
+                // Show progress modal
+                showProgressModal('Restarting Container', 'Stopping current tasks...');
+                updateProgress(10);
+
                 const response = await fetch(`/api/containers/${containerId}/restart`, {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -807,23 +845,96 @@
                     }
                 });
 
+                updateProgressWithMessage(40, 'Starting new tasks...');
+
                 if (response.ok) {
-                    showNotification('Container restarting...', 'success');
-                    setTimeout(() => location.reload(), 2000);
+                    updateProgressWithMessage(80, 'Waiting for healthy status...');
+                    setTimeout(() => {
+                        updateProgress(100);
+                        setTimeout(() => {
+                            hideProgressModal();
+                            showToast('Container restarted successfully', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        }, 500);
+                    }, 1500);
                 } else {
+                    hideProgressModal();
                     const error = await response.text();
-                    showNotification('Failed to restart container: ' + error, 'error');
+                    showToast('Failed to restart container: ' + error, 'error');
                 }
             } catch (error) {
+                hideProgressModal();
                 console.error('Error restarting container:', error);
-                showNotification('Error restarting container', 'error');
+                showToast('Error restarting container', 'error');
             }
         }
 
-        // Show notification
+        // Progress modal functions
+        function showProgressModal(title, message) {
+            const modal = document.getElementById('progressModal');
+            document.getElementById('progressTitle').textContent = title;
+            document.getElementById('progressMessage').textContent = message;
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressPercent').textContent = '0%';
+            modal.classList.remove('hidden');
+        }
+
+        function hideProgressModal() {
+            const modal = document.getElementById('progressModal');
+            modal.classList.add('hidden');
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent + '%';
+        }
+
+        function updateProgressWithMessage(percent, message) {
+            updateProgress(percent);
+            document.getElementById('progressMessage').textContent = message;
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const bgColors = {
+                'success': 'bg-green-500',
+                'error': 'bg-red-500',
+                'info': 'bg-blue-500',
+                'warning': 'bg-yellow-500'
+            };
+
+            const icons = {
+                'success': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'info': 'fa-info-circle',
+                'warning': 'fa-exclamation-triangle'
+            };
+
+            toast.className = `${bgColors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-80 transform transition-all duration-300 translate-x-0`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} text-xl"></i>
+                <span class="flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateX(400px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Show notification (backward compatibility)
         function showNotification(message, type = 'info') {
-            // Simple alert for now - can be replaced with toast notifications
-            alert(message);
+            showToast(message, type);
         }
     </script>
 </body>

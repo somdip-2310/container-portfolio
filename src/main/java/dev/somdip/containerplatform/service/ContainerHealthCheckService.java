@@ -343,31 +343,33 @@ public class ContainerHealthCheckService {
     }
     
     private void updateContainerHealthStatus(Container container, HealthStatus status) {
-        // Update container status based on health check results
+        // Initialize resource usage if not present
+        if (container.getResourceUsage() == null) {
+            container.setResourceUsage(new Container.ResourceUsage());
+            container.getResourceUsage().setMeasurementPeriodStart(Instant.now());
+        }
+
+        Container.ResourceUsage usage = container.getResourceUsage();
+        usage.setMeasurementPeriodEnd(Instant.now());
+
+        // Update with latest metrics (for both healthy and unhealthy containers)
+        if (status.getResourceMetrics() != null) {
+            usage.setAvgCpuPercent(status.getResourceMetrics().getCpuUtilization());
+            usage.setAvgMemoryPercent(status.getResourceMetrics().getMemoryUtilization());
+        }
+
+        // Save updated resource usage
+        containerRepository.save(container);
+
+        // Log warning for unhealthy containers
         Container.HealthCheckConfig config = container.getHealthCheck();
-        int unhealthyThreshold = config != null && config.getUnhealthyThreshold() != null ? 
+        int unhealthyThreshold = config != null && config.getUnhealthyThreshold() != null ?
             config.getUnhealthyThreshold() : 3;
-        
+
         if (!status.isHealthy() && status.getConsecutiveFailures() >= unhealthyThreshold) {
-            log.warn("Container {} is unhealthy after {} consecutive failures", 
+            log.warn("Container {} is unhealthy after {} consecutive failures",
                 container.getContainerId(), status.getConsecutiveFailures());
-            
             // You might want to trigger alerts or auto-recovery here
-            // For now, we'll just update the resource usage stats
-            if (container.getResourceUsage() == null) {
-                container.setResourceUsage(new Container.ResourceUsage());
-            }
-            
-            Container.ResourceUsage usage = container.getResourceUsage();
-            usage.setMeasurementPeriodEnd(Instant.now());
-            
-            // Update with latest metrics
-            if (status.getResourceMetrics() != null) {
-                usage.setAvgCpuPercent(status.getResourceMetrics().getCpuUtilization());
-                usage.setAvgMemoryPercent(status.getResourceMetrics().getMemoryUtilization());
-            }
-            
-            containerRepository.save(container);
         }
     }
     

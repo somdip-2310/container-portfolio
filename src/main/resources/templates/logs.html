@@ -139,7 +139,8 @@
 
         async function loadContainers() {
             try {
-                const response = await fetch('/api/containers', {
+                const response = await fetch('/web/api/containers', {
+                    credentials: 'same-origin',
                     headers: { [csrfHeader]: csrfToken }
                 });
 
@@ -177,7 +178,8 @@
             document.getElementById('logsContent').classList.add('hidden');
 
             try {
-                const response = await fetch(`/api/containers/${containerId}/logs?lines=${lineCount}`, {
+                const response = await fetch(`/web/api/containers/${containerId}/logs?lines=${lineCount}`, {
+                    credentials: 'same-origin',
                     headers: { [csrfHeader]: csrfToken }
                 });
 

@@ -56,11 +56,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain apiFilterChain(HttpSecurity http, 
+    public SecurityFilterChain apiFilterChain(HttpSecurity http,
                                              JwtAuthenticationFilter jwtAuthenticationFilter,
                                              ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) throws Exception {
         http
-            .securityMatcher("/api/**")
+            .securityMatcher("/api/containers/**", "/api/deployments/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception
@@ -86,13 +86,15 @@ public class SecurityConfig {
             .securityMatcher("/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**"))
+                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/deployments/**"))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/register", "/static/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/health", "/health/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
+                .requestMatchers("/api/source/**").authenticated()
+                .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

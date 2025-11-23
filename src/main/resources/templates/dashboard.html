@@ -40,7 +40,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Running</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">8</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${stats.runningContainers}">0</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 <span class="text-green-600">Active</span>
                             </p>
@@ -50,15 +50,16 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- CPU Usage -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">CPU Usage</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">45%</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${#numbers.formatDecimal(stats.cpuUsagePercent, 1, 1)} + '%'">0%</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                2.7 / 6.0 vCPU
+                                <span th:text="${#numbers.formatDecimal(stats.cpuUsagePercent * stats.totalCpuVCores / 100, 1, 1)}">0</span> /
+                                <span th:text="${#numbers.formatDecimal(stats.totalCpuVCores, 1, 1)}">0</span> vCPU
                             </p>
                         </div>
                         <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-lg">
@@ -66,15 +67,15 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Memory Usage -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Memory Usage</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">3.2GB</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${#numbers.formatDecimal(stats.memoryUsageGB, 1, 1)} + 'GB'">0GB</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                of 8GB total
+                                of <span th:text="${#numbers.formatDecimal(stats.totalMemoryGB, 1, 1)}">0</span>GB total
                             </p>
                         </div>
                         <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">

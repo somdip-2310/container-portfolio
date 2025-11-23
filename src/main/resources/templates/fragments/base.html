@@ -195,7 +195,9 @@
                 <a href="/containers" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
                     <i class="fas fa-cube mr-3 text-gray-400 group-hover:text-gray-500"></i>
                     Containers
-                    <span class="ml-auto bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium py-0.5 px-2 rounded">12</span>
+                    <span id="containerCount" class="ml-auto bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium py-0.5 px-2 rounded">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
                 </a>
                 
                 <a href="/deployments" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -340,6 +342,36 @@
                     }
                     return originalFetch.apply(this, args);
                 };
+            }
+
+            // Load container count for sidebar
+            async function loadContainerCount() {
+                const containerCountEl = document.getElementById('containerCount');
+                if (!containerCountEl) return;
+
+                try {
+                    const response = await fetch('/web/api/containers', {
+                        credentials: 'same-origin',
+                        headers: { [header]: token }
+                    });
+
+                    if (response.ok) {
+                        const containers = await response.json();
+                        containerCountEl.textContent = containers.length;
+                    } else {
+                        containerCountEl.textContent = '0';
+                    }
+                } catch (error) {
+                    console.error('Error loading container count:', error);
+                    containerCountEl.textContent = '0';
+                }
+            }
+
+            // Load on page ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadContainerCount);
+            } else {
+                loadContainerCount();
             }
         </script>
     </div>
