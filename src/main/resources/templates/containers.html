@@ -707,12 +707,21 @@
                 } else {
                     hideProgressModal();
                     let errorMessage = 'Unknown error';
-                    try {
-                        const error = await response.json();
-                        errorMessage = error.error || error.message || 'Unknown error';
-                    } catch (e) {
-                        // If JSON parsing fails, try text
-                        errorMessage = await response.text() || 'Server error';
+                    const contentType = response.headers.get('content-type');
+
+                    if (contentType && contentType.includes('application/json')) {
+                        try {
+                            const error = await response.json();
+                            errorMessage = error.error || error.message || 'Unknown error';
+                        } catch (e) {
+                            errorMessage = 'Failed to parse error response';
+                        }
+                    } else {
+                        try {
+                            errorMessage = await response.text() || 'Server error';
+                        } catch (e) {
+                            errorMessage = 'Failed to read error response';
+                        }
                     }
                     showToast('Deployment failed: ' + errorMessage, 'error');
                 }
