@@ -112,7 +112,7 @@ public class ContainerHealthCheckService {
                 if (!isEcsServiceActive(container)) {
                     log.warn("Container {} has RUNNING status but ECS service is not active. Deleting from database.",
                         container.getContainerId());
-                    containerRepository.delete(container);
+                    containerRepository.delete(container.getContainerId());
                     healthStatusCache.remove(container.getContainerId());
                     continue;
                 }
