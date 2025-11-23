@@ -408,6 +408,13 @@ public class ContainerHealthCheckService {
     }
     
     private void updateContainerHealthStatus(Container container, HealthStatus status) {
+        // Verify container still exists before updating (prevent race condition with cleanup)
+        if (!isEcsServiceActive(container)) {
+            log.debug("Skipping health status update for container {} - ECS service no longer active",
+                container.getContainerId());
+            return;
+        }
+
         // Initialize resource usage if not present
         if (container.getResourceUsage() == null) {
             container.setResourceUsage(new Container.ResourceUsage());
