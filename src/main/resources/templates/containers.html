@@ -85,10 +85,7 @@
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400" th:text="${container.image + ':' + container.imageTag}">image:tag</p>
                             </div>
-                            <span th:classappend="${container.status == 'RUNNING'} ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
-                                                   ${container.status == 'STOPPED'} ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
-                                                   'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'"
-                                  class="px-2 py-1 text-xs font-medium rounded"
+                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (container.status == 'STOPPED' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'))}"
                                   th:text="${container.status}">Status</span>
                         </div>
 
