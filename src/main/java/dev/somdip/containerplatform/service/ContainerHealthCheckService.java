@@ -103,11 +103,20 @@ public class ContainerHealthCheckService {
         List<Container> runningContainers = containerRepository.findAll().stream()
             .filter(c -> c.getStatus() == Container.ContainerStatus.RUNNING)
             .toList();
-        
+
         log.debug("Performing health checks for {} running containers", runningContainers.size());
-        
+
         for (Container container : runningContainers) {
             try {
+                // Verify ECS service exists and is active before performing health check
+                if (!isEcsServiceActive(container)) {
+                    log.warn("Container {} has RUNNING status but ECS service is not active. Deleting from database.",
+                        container.getContainerId());
+                    containerRepository.delete(container);
+                    healthStatusCache.remove(container.getContainerId());
+                    continue;
+                }
+
                 performHealthCheck(container);
             } catch (Exception e) {
                 log.error("Error performing health check for container: {}", container.getContainerId(), e);
@@ -115,36 +124,77 @@ public class ContainerHealthCheckService {
         }
     }
     
+    /**
+     * Check if the ECS service for this container is active
+     */
+    private boolean isEcsServiceActive(Container container) {
+        if (container.getServiceArn() == null) {
+            log.debug("Container {} has no service ARN", container.getContainerId());
+            return false;
+        }
+
+        try {
+            software.amazon.awssdk.services.ecs.model.DescribeServicesRequest request =
+                software.amazon.awssdk.services.ecs.model.DescribeServicesRequest.builder()
+                    .cluster(clusterName)
+                    .services(container.getServiceArn())
+                    .build();
+
+            software.amazon.awssdk.services.ecs.model.DescribeServicesResponse response =
+                ecsClient.describeServices(request);
+
+            if (response.services().isEmpty()) {
+                log.debug("No ECS service found for container {}", container.getContainerId());
+                return false;
+            }
+
+            software.amazon.awssdk.services.ecs.model.Service service = response.services().get(0);
+            String status = service.status();
+
+            // Only consider ACTIVE services as valid
+            boolean isActive = "ACTIVE".equals(status);
+            if (!isActive) {
+                log.debug("ECS service for container {} has status: {}", container.getContainerId(), status);
+            }
+
+            return isActive;
+
+        } catch (Exception e) {
+            log.error("Failed to check ECS service status for container: {}", container.getContainerId(), e);
+            return false;
+        }
+    }
+
     private void performHealthCheck(Container container) {
         HealthStatus status = healthStatusCache.computeIfAbsent(
-            container.getContainerId(), 
+            container.getContainerId(),
             k -> new HealthStatus(container.getContainerId())
         );
-        
+
         try {
             // 1. Check ECS task health
             boolean taskHealthy = checkTaskHealth(container);
-            
+
             // 2. Check HTTP endpoint health (if configured)
             boolean httpHealthy = true;
             if (container.getHealthCheck() != null && container.getHealthCheck().getPath() != null) {
                 httpHealthy = checkHttpHealth(container);
             }
-            
+
             // 3. Check resource utilization
             ResourceMetrics metrics = checkResourceMetrics(container);
             status.setResourceMetrics(metrics);
-            
+
             // Update overall health status
             boolean isHealthy = taskHealthy && httpHealthy;
             status.updateHealth(isHealthy);
-            
+
             // Send metrics to CloudWatch
             sendHealthMetrics(container, status);
-            
+
             // Update container status if health has changed
             updateContainerHealthStatus(container, status);
-            
+
         } catch (Exception e) {
             log.error("Health check failed for container: {}", container.getContainerId(), e);
             status.updateHealth(false);
