@@ -290,20 +290,22 @@ public class EcsService {
     
     private HealthCheck createHealthCheckConfig(Container container) {
         if (container.getHealthCheck() == null) {
-            // Default health check
+            // Detect container type and use appropriate health check
+            String healthCheckPath = detectHealthCheckPath(container);
+
             return HealthCheck.builder()
-                .command("CMD-SHELL", "curl -f http://localhost:" + container.getPort() + "/health || exit 1")
+                .command("CMD-SHELL", "curl -f http://localhost:" + container.getPort() + healthCheckPath + " || exit 1")
                 .interval(30)
                 .timeout(5)
                 .retries(3)
                 .startPeriod(60)
                 .build();
         }
-        
+
         Container.HealthCheckConfig hc = container.getHealthCheck();
         String command = String.format("CMD-SHELL, curl -f http://localhost:%d%s || exit 1",
             container.getPort(), hc.getPath() != null ? hc.getPath() : "/health");
-        
+
         return HealthCheck.builder()
             .command(command)
             .interval(hc.getInterval() != null ? hc.getInterval() : 30)
@@ -311,6 +313,78 @@ public class EcsService {
             .retries(hc.getHealthyThreshold() != null ? hc.getHealthyThreshold() : 3)
             .startPeriod(60)
             .build();
+    }
+
+    /**
+     * Detect appropriate health check path based on container image type
+     */
+    private String detectHealthCheckPath(Container container) {
+        String image = container.getImage().toLowerCase();
+
+        // Static site servers (nginx, apache, httpd)
+        if (image.contains("nginx") || image.contains("httpd") || image.contains("apache")) {
+            log.info("Detected static web server (nginx/apache) for container {}, using / health check", container.getContainerId());
+            return "/";
+        }
+
+        // Node.js applications
+        if (image.contains("node")) {
+            log.info("Detected Node.js application for container {}, using /health health check", container.getContainerId());
+            return "/health";
+        }
+
+        // Python applications (Flask, Django, FastAPI)
+        if (image.contains("python")) {
+            log.info("Detected Python application for container {}, using /health health check", container.getContainerId());
+            return "/health";
+        }
+
+        // Java applications (Spring Boot, Tomcat)
+        if (image.contains("java") || image.contains("temurin") || image.contains("openjdk") || image.contains("tomcat")) {
+            log.info("Detected Java application for container {}, using /actuator/health health check", container.getContainerId());
+            return "/actuator/health";
+        }
+
+        // Go applications
+        if (image.contains("golang") || image.contains("go:") || image.contains("/go")) {
+            log.info("Detected Go application for container {}, using /health health check", container.getContainerId());
+            return "/health";
+        }
+
+        // PHP applications
+        if (image.contains("php")) {
+            log.info("Detected PHP application for container {}, using / health check", container.getContainerId());
+            return "/";
+        }
+
+        // Ruby applications (Rails)
+        if (image.contains("ruby") || image.contains("rails")) {
+            log.info("Detected Ruby/Rails application for container {}, using /health health check", container.getContainerId());
+            return "/health";
+        }
+
+        // .NET applications
+        if (image.contains("dotnet") || image.contains("aspnet")) {
+            log.info("Detected .NET application for container {}, using /health health check", container.getContainerId());
+            return "/health";
+        }
+
+        // Apache (another static web server)
+        if (image.contains("httpd") || image.contains("apache2")) {
+            log.info("Detected Apache web server for container {}, using / health check", container.getContainerId());
+            return "/";
+        }
+
+        // Tomcat (Java application server)
+        if (image.contains("tomcat")) {
+            log.info("Detected Tomcat application server for container {}, using / health check", container.getContainerId());
+            return "/";
+        }
+
+        // If we reach here, it's an unsupported type that somehow passed validation
+        // This should not happen, but we'll log a warning and default to /health
+        log.warn("Unknown container type for {}, this should have been caught during validation. Defaulting to /health", container.getContainerId());
+        return "/health";
     }
     
     private String createOrUpdateService(Container container) {

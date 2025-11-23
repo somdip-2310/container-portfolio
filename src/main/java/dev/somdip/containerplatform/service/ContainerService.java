@@ -67,7 +67,12 @@ public class ContainerService {
         if (!isValidContainerName(name)) {
             throw new IllegalArgumentException("Invalid container name. Use only lowercase letters, numbers, and hyphens");
         }
-        
+
+        // Validate that the image is a supported technology stack
+        if (!isSupportedImageType(image)) {
+            throw new IllegalArgumentException("Unsupported container image type. Supported stacks: nginx, node, python, java, golang, php, ruby, dotnet");
+        }
+
         String subdomain = generateSubdomain(name);
         if (containerRepository.findBySubdomain(subdomain).isPresent()) {
             throw new IllegalArgumentException("Subdomain already in use");
@@ -370,12 +375,46 @@ public class ContainerService {
     }
     
     private boolean isValidContainerName(String name) {
-        return name != null && 
-               name.matches("^[a-z0-9][a-z0-9-]*[a-z0-9]$") && 
-               name.length() >= 3 && 
+        return name != null &&
+               name.matches("^[a-z0-9][a-z0-9-]*[a-z0-9]$") &&
+               name.length() >= 3 &&
                name.length() <= 63;
     }
-    
+
+    /**
+     * Validates if the container image is a supported technology stack
+     */
+    private boolean isSupportedImageType(String image) {
+        if (image == null || image.trim().isEmpty()) {
+            return false;
+        }
+
+        String imageLower = image.toLowerCase();
+
+        // List of supported technology stacks
+        List<String> supportedStacks = Arrays.asList(
+            "nginx", "httpd", "apache",      // Static web servers
+            "node",                          // Node.js
+            "python",                        // Python
+            "java", "temurin", "openjdk", "tomcat",  // Java
+            "golang", "go",                  // Go
+            "php",                           // PHP
+            "ruby", "rails",                 // Ruby
+            "dotnet", "aspnet"               // .NET
+        );
+
+        // Check if the image contains any supported stack identifier
+        for (String stack : supportedStacks) {
+            if (imageLower.contains(stack)) {
+                log.info("Validated supported image type: {} (detected: {})", image, stack);
+                return true;
+            }
+        }
+
+        log.warn("Unsupported image type detected: {}", image);
+        return false;
+    }
+
     private String generateSubdomain(String containerName) {
         return containerName.toLowerCase().replaceAll("[^a-z0-9-]", "-");
     }
