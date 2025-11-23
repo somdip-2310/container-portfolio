@@ -670,8 +670,20 @@
 
             try {
                 const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
+                const file = fileInput.files[0];
+
+                console.log('File to upload:', file);
+                console.log('File name:', file.name);
+                console.log('File size:', file.size);
+                console.log('File type:', file.type);
+
+                formData.append('file', file);
                 formData.append('containerName', containerName);
+
+                // Debug: Log formData contents
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ':', pair[1]);
+                }
 
                 updateProgressWithMessage(10, 'Uploading source code...');
 
