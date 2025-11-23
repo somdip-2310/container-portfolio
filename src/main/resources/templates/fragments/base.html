@@ -90,27 +90,73 @@
                 <!-- Right side items -->
                 <div class="flex items-center space-x-4">
                     <!-- Dark mode toggle -->
-                    <button id="theme-toggle" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                        <i class="fas fa-moon dark:hidden"></i>
-                        <i class="fas fa-sun hidden dark:block"></i>
+                    <button id="theme-toggle" type="button" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2">
+                        <i class="fas fa-moon dark:hidden text-lg"></i>
+                        <i class="fas fa-sun hidden dark:block text-lg"></i>
                     </button>
-                    
+
                     <!-- Notifications -->
-                    <button class="relative text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                        <i class="fas fa-bell"></i>
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                    <button id="notifications-toggle" type="button" class="relative text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
                     </button>
-                    
+
+                    <!-- Notifications Dropdown -->
+                    <div id="notifications-menu" class="hidden absolute right-0 top-16 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl py-2 z-50 border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
+                                <div class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900 dark:text-white">Deployment successful</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">my-web-app deployed successfully</p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">2 hours ago</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
+                                <div class="flex items-start">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 mt-1 mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900 dark:text-white">High CPU usage</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">api-backend using 85% CPU</p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">5 hours ago</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <div class="flex items-start">
+                                    <i class="fas fa-times-circle text-red-500 mt-1 mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-900 dark:text-white">Deployment failed</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">python-worker failed to start</p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">1 day ago</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-center">
+                            <a href="#" class="text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium">
+                                View all notifications
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- User dropdown -->
                     <div class="relative">
-                        <button class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                            <img class="h-8 w-8 rounded-full bg-gray-300" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" alt="User">
-                            <span class="ml-3" sec:authentication="name">User</span>
+                        <button id="user-menu-button" type="button" class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                            <img class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
+                                 th:src="'https://ui-avatars.com/api/?name=' + ${#strings.replace(#authentication.name, '@', '')} + '&background=8B5CF6&color=fff'"
+                                 alt="User Avatar">
+                            <span class="ml-3" th:text="${#authentication.name}">User</span>
                             <i class="fas fa-chevron-down ml-2 text-xs"></i>
                         </button>
-                        
+
                         <!-- Dropdown menu (hidden by default) -->
-                        <div class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
                             <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fas fa-user mr-2"></i>Profile
                             </a>
@@ -121,9 +167,11 @@
                                 <i class="fas fa-key mr-2"></i>API Keys
                             </a>
                             <hr class="my-1 border-gray-200 dark:border-gray-700">
-                            <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                            </a>
+                            <form th:action="@{/logout}" method="post" class="block">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -248,22 +296,58 @@
             // Dark mode toggle
             const themeToggle = document.getElementById('theme-toggle');
             const html = document.documentElement;
-            
-            themeToggle?.addEventListener('click', () => {
-                html.classList.toggle('dark');
-                localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
-            });
-            
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    html.classList.toggle('dark');
+                    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+                });
+            }
+
             // Load saved theme
-            if (localStorage.getItem('theme') === 'dark' || 
+            if (localStorage.getItem('theme') === 'dark' ||
                 (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 html.classList.add('dark');
             }
-            
+
+            // User dropdown toggle
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('hidden');
+                    notificationsMenu?.classList.add('hidden');
+                });
+            }
+
+            // Notifications dropdown toggle
+            const notificationsToggle = document.getElementById('notifications-toggle');
+            const notificationsMenu = document.getElementById('notifications-menu');
+
+            if (notificationsToggle && notificationsMenu) {
+                notificationsToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    notificationsMenu.classList.toggle('hidden');
+                    userMenu?.classList.add('hidden');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (userMenu && !userMenu.contains(e.target) && e.target !== userMenuButton) {
+                    userMenu.classList.add('hidden');
+                }
+                if (notificationsMenu && !notificationsMenu.contains(e.target) && e.target !== notificationsToggle) {
+                    notificationsMenu.classList.add('hidden');
+                }
+            });
+
             // CSRF token for AJAX requests
             const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
             const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-            
+
             // Set CSRF token for all AJAX requests
             if (token && header) {
                 const originalFetch = window.fetch;
