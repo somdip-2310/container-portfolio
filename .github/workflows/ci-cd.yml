@@ -191,16 +191,6 @@ jobs:
             --query 'services[0].[serviceName,status,runningCount,desiredCount]' \
             --output table
 
-      - name: Send deployment notification
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Deployment to ECS completed'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-
   # Job 5: Post-deployment Tests
   post-deployment-tests:
     name: Post-Deployment Tests
