@@ -122,9 +122,16 @@ public class SourceCodeDeploymentService {
             // Check if Dockerfile exists, if not generate one
             Path existingDockerfile = projectPath.resolve("Dockerfile");
             if (Files.exists(existingDockerfile)) {
-                log.info("Using existing Dockerfile");
-                result.setDockerfileContent(Files.readString(existingDockerfile));
+                log.info("Found existing Dockerfile - replacing Docker Hub base images with ECR");
+                String originalDockerfile = Files.readString(existingDockerfile);
+                String modifiedDockerfile = dockerfileGenerator.replaceBaseImages(originalDockerfile);
+
+                // Write the modified Dockerfile back
+                dockerfileGenerator.writeDockerfile(projectPath, modifiedDockerfile);
+
+                result.setDockerfileContent(modifiedDockerfile);
                 result.setDockerfileGenerated(false);
+                log.info("Dockerfile updated with ECR base images");
             } else {
                 log.info("Generating Dockerfile for project type: {}", projectInfo.getType());
                 String dockerfileContent = dockerfileGenerator.generateDockerfile(projectInfo);

@@ -3,6 +3,7 @@ package dev.somdip.containerplatform.controller;
 import dev.somdip.containerplatform.dto.container.ContainerResponse;
 import dev.somdip.containerplatform.dto.container.CreateContainerRequest;
 import dev.somdip.containerplatform.model.Container;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
 import jakarta.validation.Valid;
@@ -36,6 +37,14 @@ public class WebApiController {
     }
 
     /**
+     * Helper method to extract userId from Authentication
+     */
+    private String getUserId(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
+    }
+
+    /**
      * Create a new container
      */
     @PostMapping("/containers")
@@ -43,7 +52,7 @@ public class WebApiController {
             @Valid @RequestBody CreateContainerRequest request,
             Authentication authentication) {
         try {
-            String userId = authentication.getName();
+            String userId = getUserId(authentication);
             log.info("Creating container for user: {}, name: {}", userId, request.getName());
 
             Container container = containerService.createContainer(
@@ -74,7 +83,7 @@ public class WebApiController {
     @GetMapping("/containers")
     public ResponseEntity<List<ContainerResponse>> listContainers(Authentication authentication) {
         try {
-            String userId = authentication.getName();
+            String userId = getUserId(authentication);
             log.debug("Fetching containers for user: {}", userId);
 
             List<Container> containers = containerService.listUserContainers(userId);
@@ -100,7 +109,7 @@ public class WebApiController {
         try {
             // Verify ownership
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(403).build();
             }
 
@@ -129,7 +138,7 @@ public class WebApiController {
         try {
             // Verify ownership
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(403).build();
             }
 
@@ -164,7 +173,7 @@ public class WebApiController {
         try {
             // Verify ownership
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(403).build();
             }
 
@@ -190,7 +199,7 @@ public class WebApiController {
         try {
             // Verify ownership
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(403).build();
             }
 
@@ -216,7 +225,7 @@ public class WebApiController {
         try {
             // Verify ownership
             Container container = containerService.getContainer(containerId);
-            if (!container.getUserId().equals(authentication.getName())) {
+            if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(403).build();
             }
 

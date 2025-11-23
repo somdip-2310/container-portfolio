@@ -11,6 +11,54 @@ import java.nio.file.Path;
 @Service
 public class DockerfileGenerator {
     private static final Logger log = LoggerFactory.getLogger(DockerfileGenerator.class);
+    private static final String ECR_REGISTRY = "257394460825.dkr.ecr.us-east-1.amazonaws.com";
+
+    /**
+     * Replace Docker Hub base images with ECR equivalents in an existing Dockerfile
+     */
+    public String replaceBaseImages(String dockerfileContent) {
+        log.info("Replacing Docker Hub base images with ECR base images");
+
+        String modified = dockerfileContent;
+
+        // Map of Docker Hub images to ECR equivalents
+        // Format: "dockerhub-image" -> "ecr-path"
+        modified = modified.replaceAll("(?i)FROM\\s+nginx:alpine", "FROM " + ECR_REGISTRY + "/base-images/nginx:alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+nginx:latest", "FROM " + ECR_REGISTRY + "/base-images/nginx:alpine");
+
+        modified = modified.replaceAll("(?i)FROM\\s+node:18-alpine", "FROM " + ECR_REGISTRY + "/base-images/node:18-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+node:18", "FROM " + ECR_REGISTRY + "/base-images/node:18-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+node:latest", "FROM " + ECR_REGISTRY + "/base-images/node:18-alpine");
+
+        modified = modified.replaceAll("(?i)FROM\\s+python:3\\.11-slim", "FROM " + ECR_REGISTRY + "/base-images/python:3.11-slim");
+        modified = modified.replaceAll("(?i)FROM\\s+python:3-slim", "FROM " + ECR_REGISTRY + "/base-images/python:3.11-slim");
+        modified = modified.replaceAll("(?i)FROM\\s+python:latest", "FROM " + ECR_REGISTRY + "/base-images/python:3.11-slim");
+
+        modified = modified.replaceAll("(?i)FROM\\s+eclipse-temurin:17-jdk-alpine", "FROM " + ECR_REGISTRY + "/base-images/eclipse-temurin:17-jdk-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+eclipse-temurin:17-jre-alpine", "FROM " + ECR_REGISTRY + "/base-images/eclipse-temurin:17-jre-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+openjdk:17-alpine", "FROM " + ECR_REGISTRY + "/base-images/eclipse-temurin:17-jdk-alpine");
+
+        modified = modified.replaceAll("(?i)FROM\\s+golang:1\\.21-alpine", "FROM " + ECR_REGISTRY + "/base-images/golang:1.21-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+golang:alpine", "FROM " + ECR_REGISTRY + "/base-images/golang:1.21-alpine");
+
+        modified = modified.replaceAll("(?i)FROM\\s+alpine:latest", "FROM " + ECR_REGISTRY + "/base-images/alpine:latest");
+        modified = modified.replaceAll("(?i)FROM\\s+alpine", "FROM " + ECR_REGISTRY + "/base-images/alpine:latest");
+
+        modified = modified.replaceAll("(?i)FROM\\s+php:8\\.2-fpm-alpine", "FROM " + ECR_REGISTRY + "/base-images/php:8.2-fpm-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+php:fpm-alpine", "FROM " + ECR_REGISTRY + "/base-images/php:8.2-fpm-alpine");
+
+        modified = modified.replaceAll("(?i)FROM\\s+ruby:3\\.2-alpine", "FROM " + ECR_REGISTRY + "/base-images/ruby:3.2-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+ruby:alpine", "FROM " + ECR_REGISTRY + "/base-images/ruby:3.2-alpine");
+
+        modified = modified.replaceAll("(?i)FROM\\s+mcr\\.microsoft\\.com/dotnet/sdk:7\\.0-alpine", "FROM " + ECR_REGISTRY + "/base-images/dotnet-sdk:7.0-alpine");
+        modified = modified.replaceAll("(?i)FROM\\s+mcr\\.microsoft\\.com/dotnet/aspnet:7\\.0-alpine", "FROM " + ECR_REGISTRY + "/base-images/dotnet-aspnet:7.0-alpine");
+
+        // Handle COPY --from for composer
+        modified = modified.replaceAll("(?i)COPY\\s+--from=composer:latest", "COPY --from=" + ECR_REGISTRY + "/base-images/composer:latest");
+
+        log.info("Base image replacement completed");
+        return modified;
+    }
 
     public String generateDockerfile(ProjectAnalyzer.ProjectInfo projectInfo) {
         log.info("Generating Dockerfile for project type: {}", projectInfo.getType());

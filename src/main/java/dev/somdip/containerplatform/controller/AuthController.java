@@ -1,6 +1,7 @@
 package dev.somdip.containerplatform.controller;
 
 import dev.somdip.containerplatform.dto.auth.*;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -21,6 +22,14 @@ public class AuthController {
 
     public AuthController(UserService userService) {
         this.userService = userService;
+    }
+
+    /**
+     * Helper method to extract userId from Authentication
+     */
+    private String getUserId(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
     }
 
     @PostMapping("/register")
@@ -76,7 +85,7 @@ public class AuthController {
         	        .body(new MessageResponse("Not authenticated"));
         }
 
-        String userId = authentication.getName();
+        String userId = getUserId(authentication);
         try {
             ApiKeyResponse response = userService.regenerateApiKey(userId);
             return ResponseEntity.ok(response);

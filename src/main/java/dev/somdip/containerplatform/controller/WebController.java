@@ -4,6 +4,7 @@ import dev.somdip.containerplatform.dto.DashboardStats;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.User;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.DashboardService;
 import dev.somdip.containerplatform.service.UserService;
@@ -22,10 +23,18 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 public class WebController {
-    
+
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
+
+    /**
+     * Helper method to extract userId from Authentication
+     */
+    private String getUserId(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
+    }
 
     @GetMapping("/")
     public String home() {
@@ -50,10 +59,9 @@ public class WebController {
         
         try {
             // Get user ID from authentication
-            String username = authentication.getName();
-            User user = userService.findByEmail(username)
+            String userId = getUserId(authentication);
+            User user = userService.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-            String userId = user.getUserId();
             
             // Get dashboard statistics
             DashboardStats stats = dashboardService.getDashboardStats(userId);
