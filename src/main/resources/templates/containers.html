@@ -706,8 +706,15 @@
                     }
                 } else {
                     hideProgressModal();
-                    const error = await response.json();
-                    showToast('Deployment failed: ' + (error.error || 'Unknown error'), 'error');
+                    let errorMessage = 'Unknown error';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error || error.message || 'Unknown error';
+                    } catch (e) {
+                        // If JSON parsing fails, try text
+                        errorMessage = await response.text() || 'Server error';
+                    }
+                    showToast('Deployment failed: ' + errorMessage, 'error');
                 }
             } catch (error) {
                 hideProgressModal();
