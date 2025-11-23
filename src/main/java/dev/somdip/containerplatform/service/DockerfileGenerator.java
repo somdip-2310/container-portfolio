@@ -36,7 +36,7 @@ public class DockerfileGenerator {
 
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for Node.js application\n");
-        dockerfile.append("FROM node:18-alpine AS builder\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/node:18-alpine AS builder\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Copy package files
@@ -64,7 +64,7 @@ public class DockerfileGenerator {
 
         // Production stage
         dockerfile.append("# Production stage\n");
-        dockerfile.append("FROM node:18-alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/node:18-alpine\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Create non-root user
@@ -97,7 +97,7 @@ public class DockerfileGenerator {
     private String generatePythonDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Python application Dockerfile\n");
-        dockerfile.append("FROM python:3.11-slim\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/python:3.11-slim\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Install system dependencies
@@ -145,7 +145,7 @@ public class DockerfileGenerator {
     private String generateJavaMavenDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for Java Maven application\n");
-        dockerfile.append("FROM eclipse-temurin:17-jdk-alpine AS builder\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/eclipse-temurin:17-jdk-alpine AS builder\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Copy Maven files
@@ -163,7 +163,7 @@ public class DockerfileGenerator {
 
         // Production stage
         dockerfile.append("# Production stage\n");
-        dockerfile.append("FROM eclipse-temurin:17-jre-alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/eclipse-temurin:17-jre-alpine\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Create non-root user
@@ -189,7 +189,7 @@ public class DockerfileGenerator {
     private String generateJavaGradleDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for Java Gradle application\n");
-        dockerfile.append("FROM eclipse-temurin:17-jdk-alpine AS builder\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/eclipse-temurin:17-jdk-alpine AS builder\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Copy Gradle files
@@ -207,7 +207,7 @@ public class DockerfileGenerator {
 
         // Production stage
         dockerfile.append("# Production stage\n");
-        dockerfile.append("FROM eclipse-temurin:17-jre-alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/eclipse-temurin:17-jre-alpine\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Create non-root user
@@ -233,7 +233,7 @@ public class DockerfileGenerator {
     private String generateGoDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for Go application\n");
-        dockerfile.append("FROM golang:1.21-alpine AS builder\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/golang:1.21-alpine AS builder\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Copy go mod files
@@ -246,7 +246,7 @@ public class DockerfileGenerator {
 
         // Production stage
         dockerfile.append("# Production stage\n");
-        dockerfile.append("FROM alpine:latest\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/alpine:latest\n\n");
         dockerfile.append("RUN apk --no-cache add ca-certificates\n\n");
 
         dockerfile.append("WORKDIR /root/\n\n");
@@ -270,7 +270,7 @@ public class DockerfileGenerator {
     private String generatePhpDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# PHP application Dockerfile\n");
-        dockerfile.append("FROM php:8.2-fpm-alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/php:8.2-fpm-alpine\n\n");
         dockerfile.append("WORKDIR /var/www/html\n\n");
 
         // Install dependencies
@@ -280,7 +280,7 @@ public class DockerfileGenerator {
         dockerfile.append("RUN docker-php-ext-install pdo pdo_mysql\n\n");
 
         // Install Composer
-        dockerfile.append("COPY --from=composer:latest /usr/bin/composer /usr/bin/composer\n\n");
+        dockerfile.append("COPY --from=257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/composer:latest /usr/bin/composer /usr/bin/composer\n\n");
 
         // Copy application
         dockerfile.append("COPY . .\n");
@@ -299,7 +299,7 @@ public class DockerfileGenerator {
     private String generateRubyDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Ruby application Dockerfile\n");
-        dockerfile.append("FROM ruby:3.2-alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/ruby:3.2-alpine\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Install dependencies
@@ -327,7 +327,7 @@ public class DockerfileGenerator {
     private String generateDotNetDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for ASP.NET Core application\n");
-        dockerfile.append("FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS builder\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/dotnet-sdk:7.0-alpine AS builder\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         // Restore dependencies
@@ -340,7 +340,7 @@ public class DockerfileGenerator {
 
         // Production stage
         dockerfile.append("# Production stage\n");
-        dockerfile.append("FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/dotnet-aspnet:7.0-alpine\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
         dockerfile.append("COPY --from=builder /app/out .\n\n");
@@ -355,7 +355,7 @@ public class DockerfileGenerator {
     private String generateStaticHtmlDockerfile(ProjectAnalyzer.ProjectInfo info) {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Static HTML Dockerfile\n");
-        dockerfile.append("FROM nginx:alpine\n\n");
+        dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/nginx:alpine\n\n");
 
         // Copy custom nginx config if needed
         dockerfile.append("# Copy custom nginx configuration\n");
