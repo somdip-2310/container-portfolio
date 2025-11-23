@@ -63,6 +63,7 @@ public class SourceCodeController {
             }
 
             // Step 1: Analyze and upload source code to S3
+            log.info("Step 1: Starting source code analysis for user: {}, container: {}", userId, containerName);
             SourceCodeDeploymentService.DeploymentResult result =
                     sourceCodeDeploymentService.deployFromSource(file, containerName, userId);
 
@@ -71,8 +72,10 @@ public class SourceCodeController {
                     result.isDockerfileGenerated());
 
             // Step 2: Create deployment tracking record
+            log.info("Step 2: Creating deployment tracking record");
             SourceDeployment deployment = deploymentTrackingService.createDeployment(
                 userId, containerName, result.getProjectId(), result.getS3Key());
+            log.info("Created deployment with ID: {}", deployment.getDeploymentId());
 
             // Step 3: Start CodeBuild job asynchronously
             CompletableFuture.runAsync(() -> {
@@ -112,8 +115,12 @@ public class SourceCodeController {
 
         } catch (Exception e) {
             log.error("Error deploying from source", e);
+            String errorMessage = e.getMessage();
+            if (errorMessage == null || errorMessage.isEmpty()) {
+                errorMessage = e.getClass().getSimpleName() + ": " + (e.getCause() != null ? e.getCause().getMessage() : "Unknown error");
+            }
             return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Deployment failed: " + e.getMessage()));
+                    .body(Map.of("error", "Deployment failed: " + errorMessage));
         }
     }
 
