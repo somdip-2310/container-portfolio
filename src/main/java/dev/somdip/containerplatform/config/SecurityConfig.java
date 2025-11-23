@@ -86,7 +86,7 @@ public class SecurityConfig {
             .securityMatcher("/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/deployments/**"))
+                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/deployments/**", "/api/source/**"))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/register", "/static/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/health", "/health/**").permitAll()
