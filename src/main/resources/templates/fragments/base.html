@@ -149,9 +149,9 @@
                     <div class="relative">
                         <button id="user-menu-button" type="button" class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                             <img class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
-                                 th:src="'https://ui-avatars.com/api/?name=' + ${#strings.replace(#authentication.name, '@', '')} + '&background=8B5CF6&color=fff'"
+                                 th:src="|https://ui-avatars.com/api/?name=${#strings.replace(#authentication?.name ?: 'User', '@', '')}&background=8B5CF6&color=fff|"
                                  alt="User Avatar">
-                            <span class="ml-3" th:text="${#authentication.name}">User</span>
+                            <span class="ml-3" th:text="${#authentication?.name ?: 'User'}">User</span>
                             <i class="fas fa-chevron-down ml-2 text-xs"></i>
                         </button>
 
