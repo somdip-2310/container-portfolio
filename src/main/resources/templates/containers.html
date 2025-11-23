@@ -672,15 +672,13 @@
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
                 formData.append('containerName', containerName);
+                formData.append(csrfParameter, csrfToken);
 
                 updateProgressWithMessage(10, 'Uploading source code...');
 
                 const response = await fetch('/api/source/deploy', {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
                     body: formData
                 });
 
