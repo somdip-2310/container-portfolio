@@ -292,13 +292,17 @@
         memGradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
         memGradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
 
+        // Get actual data from Thymeleaf
+        const cpuData = /*[[${cpuData}]]*/ [0, 0, 0, 0, 0, 0, 0];
+        const memoryData = /*[[${memoryData}]]*/ [0, 0, 0, 0, 0, 0, 0];
+
         new Chart(resourceCtx, {
             type: 'line',
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
                     label: 'CPU %',
-                    data: [42, 48, 45, 50, 47, 45, 43],
+                    data: cpuData,
                     borderColor: 'rgb(139, 92, 246)',
                     backgroundColor: cpuGradient,
                     borderWidth: 2,
@@ -311,7 +315,7 @@
                     pointBorderWidth: 2
                 }, {
                     label: 'Memory %',
-                    data: [38, 42, 40, 45, 41, 40, 39],
+                    data: memoryData,
                     borderColor: 'rgb(59, 130, 246)',
                     backgroundColor: memGradient,
                     borderWidth: 2,
@@ -383,13 +387,16 @@
         barGradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
         barGradient.addColorStop(1, 'rgba(59, 130, 246, 0.8)');
 
+        // Request volume data - to be implemented with actual metrics
+        const requestData = [0, 0, 0, 0, 0, 0];
+
         new Chart(requestCtx, {
             type: 'bar',
             data: {
                 labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
                 datasets: [{
                     label: 'Requests',
-                    data: [150, 230, 450, 890, 1200, 650],
+                    data: requestData,
                     backgroundColor: barGradient,
                     borderRadius: 6,
                     borderSkipped: false

@@ -244,19 +244,21 @@
                     <div>
                         <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                             <span>Containers</span>
-                            <span>3/5</span>
+                            <span id="containerUsage">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: 60%"></div>
+                            <div id="containerUsageBar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                     <div>
                         <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                             <span>Storage</span>
-                            <span>2.4GB/10GB</span>
+                            <span id="storageUsage">0GB/0GB</span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: 24%"></div>
+                            <div id="storageUsageBar" class="bg-green-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -351,14 +353,14 @@
 
                 try {
                     const response = await fetch('/web/api/containers', {
-                        credentials: 'same-origin',
-                        headers: { [header]: token }
+                        credentials: 'same-origin'
                     });
 
                     if (response.ok) {
                         const containers = await response.json();
                         containerCountEl.textContent = containers.length;
                     } else {
+                        console.error('Failed to load container count, status:', response.status);
                         containerCountEl.textContent = '0';
                     }
                 } catch (error) {
@@ -367,11 +369,57 @@
                 }
             }
 
+            // Load resource usage widget
+            async function loadResourceUsage() {
+                const containerUsageEl = document.getElementById('containerUsage');
+                const containerUsageBarEl = document.getElementById('containerUsageBar');
+
+                if (!containerUsageEl || !containerUsageBarEl) return;
+
+                try {
+                    const response = await fetch('/web/api/containers', {
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const containers = await response.json();
+                        const currentCount = containers.length;
+
+                        // Get container limit based on plan (TODO: fetch from user profile)
+                        // For now, using FREE plan limit of 1
+                        const limit = 1;
+
+                        const percentage = limit > 0 ? (currentCount / limit) * 100 : 0;
+
+                        containerUsageEl.textContent = `${currentCount}/${limit}`;
+                        containerUsageBarEl.style.width = `${Math.min(percentage, 100)}%`;
+
+                        // Change color based on usage
+                        if (percentage >= 100) {
+                            containerUsageBarEl.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
+                        } else if (percentage >= 80) {
+                            containerUsageBarEl.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-500';
+                        } else {
+                            containerUsageBarEl.className = 'bg-blue-600 h-2 rounded-full transition-all duration-500';
+                        }
+                    } else {
+                        containerUsageEl.textContent = '0/1';
+                    }
+                } catch (error) {
+                    console.error('Error loading resource usage:', error);
+                    containerUsageEl.textContent = '0/1';
+                }
+            }
+
             // Load on page ready
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', loadContainerCount);
+                document.addEventListener('DOMContentLoaded', () => {
+                    loadContainerCount();
+                    loadResourceUsage();
+                });
             } else {
                 loadContainerCount();
+                loadResourceUsage();
             }
         </script>
     </div>

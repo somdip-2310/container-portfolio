@@ -1,11 +1,14 @@
 package dev.somdip.containerplatform.controller;
 
 import dev.somdip.containerplatform.dto.container.ContainerResponse;
+import dev.somdip.containerplatform.dto.container.CreateContainerRequest;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +33,39 @@ public class WebApiController {
                            LogStreamingService logStreamingService) {
         this.containerService = containerService;
         this.logStreamingService = logStreamingService;
+    }
+
+    /**
+     * Create a new container
+     */
+    @PostMapping("/containers")
+    public ResponseEntity<ContainerResponse> createContainer(
+            @Valid @RequestBody CreateContainerRequest request,
+            Authentication authentication) {
+        try {
+            String userId = authentication.getName();
+            log.info("Creating container for user: {}, name: {}", userId, request.getName());
+
+            Container container = containerService.createContainer(
+                    userId,
+                    request.getName(),
+                    request.getImage(),
+                    request.getImageTag(),
+                    request.getPort()
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ContainerResponse.from(container));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid request: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            log.error("Container limit reached: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (Exception e) {
+            log.error("Unexpected error creating container: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
@@ -79,6 +115,110 @@ public class WebApiController {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("Error fetching logs: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Restart a container
+     */
+    @PostMapping("/containers/{containerId}/restart")
+    public ResponseEntity<ContainerResponse> restartContainer(
+            @PathVariable String containerId,
+            Authentication authentication) {
+        try {
+            // Verify ownership
+            Container container = containerService.getContainer(containerId);
+            if (!container.getUserId().equals(authentication.getName())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            log.info("Restarting container: {}", containerId);
+            Container restartedContainer = containerService.restartContainer(containerId);
+            return ResponseEntity.ok(ContainerResponse.from(restartedContainer));
+        } catch (IllegalArgumentException e) {
+            log.error("Container not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error restarting container: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Delete a container
+     */
+    @DeleteMapping("/containers/{containerId}")
+    public ResponseEntity<Void> deleteContainer(
+            @PathVariable String containerId,
+            Authentication authentication) {
+        try {
+            // Verify ownership
+            Container container = containerService.getContainer(containerId);
+            if (!container.getUserId().equals(authentication.getName())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            log.info("Deleting container: {}", containerId);
+            containerService.deleteContainer(containerId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Container not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error deleting container: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Start/Deploy a container
+     */
+    @PostMapping("/containers/{containerId}/deploy")
+    public ResponseEntity<ContainerResponse> deployContainer(
+            @PathVariable String containerId,
+            Authentication authentication) {
+        try {
+            // Verify ownership
+            Container container = containerService.getContainer(containerId);
+            if (!container.getUserId().equals(authentication.getName())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            log.info("Starting/deploying container: {}", containerId);
+            Container deployedContainer = containerService.deployContainer(containerId);
+            return ResponseEntity.ok(ContainerResponse.from(deployedContainer));
+        } catch (IllegalArgumentException e) {
+            log.error("Container not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error deploying container: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Stop a container
+     */
+    @PostMapping("/containers/{containerId}/stop")
+    public ResponseEntity<ContainerResponse> stopContainer(
+            @PathVariable String containerId,
+            Authentication authentication) {
+        try {
+            // Verify ownership
+            Container container = containerService.getContainer(containerId);
+            if (!container.getUserId().equals(authentication.getName())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            log.info("Stopping container: {}", containerId);
+            Container stoppedContainer = containerService.stopContainer(containerId);
+            return ResponseEntity.ok(ContainerResponse.from(stoppedContainer));
+        } catch (IllegalArgumentException e) {
+            log.error("Container not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error stopping container: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
