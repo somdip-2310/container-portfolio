@@ -134,7 +134,16 @@ public class WebApiController {
             }
 
             log.info("Restarting container: {}", containerId);
-            Container restartedContainer = containerService.restartContainer(containerId);
+
+            // Stop the container if it's running
+            if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+                containerService.stopContainer(containerId);
+                // Wait a bit for clean shutdown
+                Thread.sleep(2000);
+            }
+
+            // Deploy it again
+            Container restartedContainer = containerService.deployContainer(containerId);
             return ResponseEntity.ok(ContainerResponse.from(restartedContainer));
         } catch (IllegalArgumentException e) {
             log.error("Container not found: {}", e.getMessage());
