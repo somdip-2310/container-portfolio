@@ -115,13 +115,8 @@
                             <!-- Deployment Item -->
                             <div th:each="activity : ${recentActivity}" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                                 <div class="flex items-center">
-                                    <div th:classappend="${activity.status == 'SUCCESS'} ? 'bg-green-100 dark:bg-green-900' :
-                                                         ${activity.status == 'RUNNING'} ? 'bg-blue-100 dark:bg-blue-900' :
-                                                         'bg-yellow-100 dark:bg-yellow-900'"
-                                         class="p-2 rounded-lg mr-4">
-                                        <i th:classappend="${activity.status == 'SUCCESS'} ? 'fas fa-check text-green-600 dark:text-green-400' :
-                                                           ${activity.status == 'RUNNING'} ? 'fas fa-sync-alt text-blue-600 dark:text-blue-400' :
-                                                           'fas fa-pause text-yellow-600 dark:text-yellow-400'"></i>
+                                    <div th:class="${'p-2 rounded-lg mr-4 ' + (activity.status == 'SUCCESS' ? 'bg-green-100 dark:bg-green-900' : (activity.status == 'RUNNING' ? 'bg-blue-100 dark:bg-blue-900' : 'bg-yellow-100 dark:bg-yellow-900'))}">
+                                        <i th:class="${activity.status == 'SUCCESS' ? 'fas fa-check text-green-600 dark:text-green-400' : (activity.status == 'RUNNING' ? 'fas fa-sync-alt text-blue-600 dark:text-blue-400' : 'fas fa-pause text-yellow-600 dark:text-yellow-400')}"></i>
                                     </div>
                                     <div>
                                         <h3 class="text-sm font-medium text-gray-900 dark:text-white" th:text="${activity.containerName}">Container</h3>
@@ -129,10 +124,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span th:classappend="${activity.status == 'SUCCESS' or activity.status == 'RUNNING'} ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
-                                                          ${activity.status == 'UPDATING'} ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
-                                                          'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'"
-                                          class="px-2 py-1 text-xs font-medium rounded"
+                                    <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + ((activity.status == 'SUCCESS' or activity.status == 'RUNNING') ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (activity.status == 'UPDATING' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'))}"
                                           th:text="${activity.status}">Status</span>
                                     <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                         <i class="fas fa-ellipsis-v"></i>
