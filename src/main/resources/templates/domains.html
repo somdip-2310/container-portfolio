@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Domains')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Custom Domains</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">Connect custom domains to your containers</p>
+                </div>
+                <button onclick="showAddDomainModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Domain
+                </button>
+            </div>
+
+            <!-- Info Banner -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-blue-900 dark:text-blue-200">How to add a custom domain</h4>
+                        <ol class="text-sm text-blue-800 dark:text-blue-300 mt-2 space-y-1 list-decimal list-inside">
+                            <li>Add your domain using the "Add Domain" button</li>
+                            <li>Create a CNAME record pointing to the provided DNS target</li>
+                            <li>Wait for DNS propagation (usually 5-60 minutes)</li>
+                            <li>Your domain will be automatically verified and secured with SSL</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domains List -->
+            <div class="space-y-4">
+                <!-- Domain Card 1 - Example -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    <i class="fas fa-globe text-purple-500 mr-2"></i>
+                                    api.example.com
+                                </h3>
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Active
+                                </span>
+                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                                    <i class="fas fa-lock mr-1"></i>
+                                    SSL Enabled
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                Connected to: <span class="font-medium">my-api-container</span>
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">DNS Target:</span>
+                                    <code class="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                                        somdip-dev-alb-856223136.us-east-1.elb.amazonaws.com
+                                    </code>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600 dark:text-gray-400">Added:</span>
+                                    <span class="ml-2 font-medium text-gray-900 dark:text-white">Jan 15, 2024</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 ml-6">
+                            <button onclick="editDomain('api.example.com')"
+                                    class="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteDomain('api.example.com')"
+                                    class="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Domain Card 2 - Pending Verification -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    <i class="fas fa-globe text-purple-500 mr-2"></i>
+                                    app.example.com
+                                </h3>
+                                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Pending Verification
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                Connected to: <span class="font-medium">web-app-container</span>
+                            </p>
+                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-3">
+                                <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    Waiting for DNS propagation. Please ensure you've created the CNAME record.
+                                </p>
+                                <button onclick="verifyDomain('app.example.com')"
+                                        class="mt-2 text-sm font-medium text-yellow-700 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300">
+                                    <i class="fas fa-sync-alt mr-1"></i>
+                                    Verify Now
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 ml-6">
+                            <button onclick="deleteDomain('app.example.com')"
+                                    class="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State (hidden when domains exist) -->
+                <div id="emptyState" class="hidden text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <i class="fas fa-globe text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No domains configured</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6">Add a custom domain to get started</p>
+                    <button onclick="showAddDomainModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Your First Domain
+                    </button>
+                </div>
+            </div>
+
+            <!-- DNS Configuration Help -->
+            <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-question-circle text-purple-500 mr-2"></i>
+                    DNS Configuration Guide
+                </h3>
+                <div class="space-y-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Popular DNS Providers</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <a href="https://support.cloudflare.com/hc/en-us/articles/360019093151" target="_blank"
+                               class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-500 transition">
+                                <i class="fab fa-cloudflare text-orange-500 text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Cloudflare</div>
+                                    <div class="text-xs text-gray-500">Setup Guide</div>
+                                </div>
+                            </a>
+                            <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/rrsets-working-with.html" target="_blank"
+                               class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-500 transition">
+                                <i class="fab fa-aws text-orange-400 text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Route 53</div>
+                                    <div class="text-xs text-gray-500">Setup Guide</div>
+                                </div>
+                            </a>
+                            <a href="https://www.namecheap.com/support/knowledgebase/article.aspx/9646/2237/how-to-create-a-cname-record-for-your-domain/" target="_blank"
+                               class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-500 transition">
+                                <i class="fas fa-server text-purple-500 text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Other Providers</div>
+                                    <div class="text-xs text-gray-500">Generic Guide</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Domain Modal -->
+    <div id="addDomainModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Add Custom Domain</h3>
+                    <button onclick="hideAddDomainModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form id="addDomainForm" onsubmit="addDomain(event)" class="p-6 space-y-6">
+                <div>
+                    <label for="domainName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Domain Name
+                    </label>
+                    <input type="text" id="domainName" name="domainName" required
+                           placeholder="api.yourdomain.com"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter your fully qualified domain name</p>
+                </div>
+
+                <div>
+                    <label for="targetContainer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Target Container
+                    </label>
+                    <select id="targetContainer" name="targetContainer" required
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">-- Select a container --</option>
+                    </select>
+                </div>
+
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 class="font-medium text-blue-900 dark:text-blue-200 mb-2">Next Steps</h4>
+                    <ol class="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
+                        <li>We'll provide you with a DNS target (CNAME value)</li>
+                        <li>Create a CNAME record in your DNS provider pointing to that target</li>
+                        <li>SSL certificate will be automatically provisioned once DNS is verified</li>
+                    </ol>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="submit"
+                            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Domain
+                    </button>
+                    <button type="button" onclick="hideAddDomainModal()"
+                            class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+
+        function showAddDomainModal() {
+            document.getElementById('addDomainModal').classList.remove('hidden');
+            loadContainersForDomain();
+        }
+
+        function hideAddDomainModal() {
+            document.getElementById('addDomainModal').classList.add('hidden');
+            document.getElementById('addDomainForm').reset();
+        }
+
+        async function loadContainersForDomain() {
+            try {
+                const response = await fetch('/api/containers', {
+                    headers: { [csrfHeader]: csrfToken }
+                });
+
+                if (response.ok) {
+                    const containers = await response.json();
+                    const select = document.getElementById('targetContainer');
+                    select.innerHTML = '<option value="">-- Select a container --</option>';
+
+                    containers.forEach(container => {
+                        const option = document.createElement('option');
+                        option.value = container.containerId;
+                        option.textContent = `${container.containerName} (${container.image}:${container.imageTag})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading containers:', error);
+            }
+        }
+
+        async function addDomain(event) {
+            event.preventDefault();
+
+            const domainName = document.getElementById('domainName').value;
+            const containerId = document.getElementById('targetContainer').value;
+
+            // This would call the backend API to add the domain
+            alert(`Domain "${domainName}" would be added to container. This feature requires backend implementation.`);
+            hideAddDomainModal();
+        }
+
+        async function editDomain(domain) {
+            alert(`Edit domain: ${domain}. This feature requires backend implementation.`);
+        }
+
+        async function deleteDomain(domain) {
+            if (confirm(`Are you sure you want to delete domain "${domain}"?`)) {
+                alert(`Domain "${domain}" would be deleted. This feature requires backend implementation.`);
+            }
+        }
+
+        async function verifyDomain(domain) {
+            alert(`Verifying domain: ${domain}. This feature requires backend implementation.`);
+        }
+    </script>
+</body>
+</html>

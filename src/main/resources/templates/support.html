@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Support')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">How can we help you?</h1>
+                <p class="text-lg text-gray-600 dark:text-gray-400">Get quick answers or reach out to our support team</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <!-- Contact Support -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition p-6 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full mb-4">
+                        <i class="fas fa-envelope text-3xl text-purple-600 dark:text-purple-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Contact Support</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Get help from our support team</p>
+                    <button onclick="showContactModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                        Send Message
+                    </button>
+                </div>
+
+                <!-- Documentation -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition p-6 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
+                        <i class="fas fa-book text-3xl text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Documentation</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Browse our comprehensive guides</p>
+                    <a href="/docs" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                        View Docs
+                    </a>
+                </div>
+
+                <!-- Community -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition p-6 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
+                        <i class="fas fa-users text-3xl text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Community</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Join our Discord community</p>
+                    <a href="https://discord.gg/snapdeploy" target="_blank" class="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                        Join Discord
+                    </a>
+                </div>
+            </div>
+
+            <!-- FAQs -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        <i class="fas fa-question-circle text-purple-500 mr-2"></i>
+                        Frequently Asked Questions
+                    </h2>
+                </div>
+                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <!-- FAQ Item 1 -->
+                    <div class="p-6">
+                        <button onclick="toggleFAQ(1)" class="w-full flex items-center justify-between text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">How do I deploy my first container?</h3>
+                            <i id="faqIcon1" class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="faqAnswer1" class="hidden mt-4 text-gray-600 dark:text-gray-400">
+                            <p class="mb-3">Deploying your first container is easy:</p>
+                            <ol class="list-decimal list-inside space-y-2 ml-4">
+                                <li>Click the "Deploy New Container" button on the Containers page</li>
+                                <li>Enter your container name and select a Docker image</li>
+                                <li>Configure the port and environment variables (optional)</li>
+                                <li>Click "Deploy" and wait for your container to start</li>
+                            </ol>
+                            <p class="mt-3">Your container will be accessible via the provided URL once deployment completes.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 2 -->
+                    <div class="p-6">
+                        <button onclick="toggleFAQ(2)" class="w-full flex items-center justify-between text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">How do I add a custom domain?</h3>
+                            <i id="faqIcon2" class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="faqAnswer2" class="hidden mt-4 text-gray-600 dark:text-gray-400">
+                            <p class="mb-3">To add a custom domain:</p>
+                            <ol class="list-decimal list-inside space-y-2 ml-4">
+                                <li>Navigate to the Domains page</li>
+                                <li>Click "Add Domain" and enter your domain name</li>
+                                <li>Select the container you want to connect</li>
+                                <li>Create a CNAME record at your DNS provider pointing to the provided target</li>
+                                <li>Wait for DNS propagation (5-60 minutes)</li>
+                            </ol>
+                            <p class="mt-3">SSL certificates are automatically provisioned once verification is complete.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 3 -->
+                    <div class="p-6">
+                        <button onclick="toggleFAQ(3)" class="w-full flex items-center justify-between text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">How do I view container logs?</h3>
+                            <i id="faqIcon3" class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="faqAnswer3" class="hidden mt-4 text-gray-600 dark:text-gray-400">
+                            <p class="mb-3">You can view container logs in two ways:</p>
+                            <ul class="list-disc list-inside space-y-2 ml-4">
+                                <li><strong>From Container Card:</strong> Click the "Logs" button on any container card</li>
+                                <li><strong>From Logs Page:</strong> Visit the Logs page and select a container from the dropdown</li>
+                            </ul>
+                            <p class="mt-3">You can filter logs by keyword, adjust the number of lines shown, and download logs for offline analysis.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 4 -->
+                    <div class="p-6">
+                        <button onclick="toggleFAQ(4)" class="w-full flex items-center justify-between text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">What's included in the free plan?</h3>
+                            <i id="faqIcon4" class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="faqAnswer4" class="hidden mt-4 text-gray-600 dark:text-gray-400">
+                            <p class="mb-3">The free plan includes:</p>
+                            <ul class="list-disc list-inside space-y-2 ml-4">
+                                <li>Up to 5 containers</li>
+                                <li>2 vCPU and 4GB RAM per container</li>
+                                <li>100GB bandwidth per month</li>
+                                <li>Community support</li>
+                                <li>Basic monitoring and logs</li>
+                            </ul>
+                            <p class="mt-3">Upgrade to Pro for more containers, resources, and priority support.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 5 -->
+                    <div class="p-6">
+                        <button onclick="toggleFAQ(5)" class="w-full flex items-center justify-between text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">How do I use the API?</h3>
+                            <i id="faqIcon5" class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="faqAnswer5" class="hidden mt-4 text-gray-600 dark:text-gray-400">
+                            <p class="mb-3">To use the SnapDeploy API:</p>
+                            <ol class="list-decimal list-inside space-y-2 ml-4">
+                                <li>Get your API key from Settings → API tab</li>
+                                <li>Include the key in the Authorization header: <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Authorization: Bearer YOUR_API_KEY</code></li>
+                                <li>Make requests to <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">https://api.snapdeploy.com/v1/</code></li>
+                            </ol>
+                            <p class="mt-3">Check out our <a href="/docs/api" class="text-purple-600 hover:text-purple-700">API documentation</a> for detailed endpoints and examples.</p>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 6 -->
+                    <div class="p-6">
+                        <button onclick="toggleFAQ(6)" class="w-full flex items-center justify-between text-left">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">How is billing calculated?</h3>
+                            <i id="faqIcon6" class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="faqAnswer6" class="hidden mt-4 text-gray-600 dark:text-gray-400">
+                            <p class="mb-3">Billing is based on:</p>
+                            <ul class="list-disc list-inside space-y-2 ml-4">
+                                <li><strong>Plan tier:</strong> Free, Pro ($29/mo), or Enterprise (custom)</li>
+                                <li><strong>Container hours:</strong> Charged per hour your containers are running</li>
+                                <li><strong>Bandwidth:</strong> Data transfer beyond your plan's limit</li>
+                                <li><strong>Additional resources:</strong> Extra CPU/memory if needed</li>
+                            </ul>
+                            <p class="mt-3">View detailed usage on the Billing page. We bill monthly and provide detailed invoices.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Options -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Email Support -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
+                            <i class="fas fa-envelope text-2xl text-purple-600 dark:text-purple-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Email Support</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Get help via email. We typically respond within 24 hours.</p>
+                            <a href="mailto:support@snapdeploy.com" class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium">
+                                support@snapdeploy.com
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Chat -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
+                            <i class="fas fa-comments text-2xl text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Live Chat</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Chat with our team in real-time during business hours.</p>
+                            <button onclick="openLiveChat()" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                                Start Chat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Banner -->
+            <div class="mt-8 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-green-900 dark:text-green-200">All Systems Operational</h4>
+                        <p class="text-sm text-green-800 dark:text-green-300">
+                            Check our <a href="/status" class="underline hover:no-underline">status page</a> for real-time service updates
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Contact Support</h3>
+                    <button onclick="hideContactModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form id="contactForm" onsubmit="submitContactForm(event)" class="p-6 space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Subject
+                    </label>
+                    <select required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Select a topic...</option>
+                        <option value="technical">Technical Issue</option>
+                        <option value="billing">Billing Question</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="account">Account Help</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Message
+                    </label>
+                    <textarea required rows="6" placeholder="Describe your issue or question..."
+                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Send me a copy of this message
+                        </span>
+                    </label>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="submit"
+                            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Send Message
+                    </button>
+                    <button type="button" onclick="hideContactModal()"
+                            class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleFAQ(id) {
+            const answer = document.getElementById('faqAnswer' + id);
+            const icon = document.getElementById('faqIcon' + id);
+
+            answer.classList.toggle('hidden');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        function showContactModal() {
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+
+        function hideContactModal() {
+            document.getElementById('contactModal').classList.add('hidden');
+            document.getElementById('contactForm').reset();
+        }
+
+        function submitContactForm(event) {
+            event.preventDefault();
+            alert('Thank you for contacting us! We\'ll get back to you within 24 hours.');
+            hideContactModal();
+        }
+
+        function openLiveChat() {
+            alert('Live chat feature would be integrated with a service like Intercom or Crisp.');
+        }
+    </script>
+</body>
+</html>

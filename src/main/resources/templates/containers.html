@@ -4,7 +4,7 @@
 <body>
     <header th:replace="~{fragments/base :: header}"></header>
     <aside th:replace="~{fragments/base :: sidebar}"></aside>
-    
+
     <!-- Main Content -->
     <main class="lg:ml-64 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -14,12 +14,12 @@
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Containers</h1>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your deployed containers</p>
                 </div>
-                <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                <button onclick="showDeployModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition">
                     <i class="fas fa-bolt mr-2"></i>
                     Deploy New Container
                 </button>
             </div>
-            
+
             <!-- Filters and View Toggle -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -27,30 +27,29 @@
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 flex-1">
                         <!-- Search -->
                         <div class="relative flex-1 max-w-md">
-                            <input type="text" placeholder="Search containers..." 
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="searchInput" placeholder="Search containers..."
+                                   onkeyup="filterContainers()"
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
-                        
+
                         <!-- Status Filter -->
-                        <select class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="statusFilter" onchange="filterContainers()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
                             <option value="">All Status</option>
-                            <option value="running">Running</option>
-                            <option value="stopped">Stopped</option>
-                            <option value="pending">Pending</option>
-                            <option value="failed">Failed</option>
+                            <option value="RUNNING">Running</option>
+                            <option value="STOPPED">Stopped</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="FAILED">Failed</option>
                         </select>
-                        
+
                         <!-- Sort -->
-                        <select class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="sortSelect" onchange="sortContainers()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
                             <option value="name">Name</option>
                             <option value="created">Created Date</option>
                             <option value="status">Status</option>
-                            <option value="cpu">CPU Usage</option>
-                            <option value="memory">Memory Usage</option>
                         </select>
                     </div>
-                    
+
                     <!-- View Toggle -->
                     <div class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                         <button id="gridView" class="px-3 py-1 rounded bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 shadow-sm">
@@ -62,290 +61,501 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(containers)}" class="text-center py-12">
+                <i class="fas fa-box-open text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No containers yet</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">Deploy your first container to get started</p>
+                <button onclick="showDeployModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition">
+                    <i class="fas fa-bolt mr-2"></i>
+                    Deploy New Container
+                </button>
+            </div>
+
             <!-- Container Grid View -->
-            <div id="containerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="containerGrid" th:if="${!#lists.isEmpty(containers)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Container Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <div th:each="container : ${containers}"
+                     th:attr="data-container-id=${container.containerId}, data-name=${container.containerName}, data-status=${container.status}"
+                     class="container-card bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
                     <div class="p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">api-server</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">node:18-alpine</p>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400" th:text="${container.image + ':' + container.imageTag}">image:tag</p>
                             </div>
-                            <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Running</span>
+                            <span th:classappend="${container.status == 'RUNNING'} ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                   ${container.status == 'STOPPED'} ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                   'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'"
+                                  class="px-2 py-1 text-xs font-medium rounded"
+                                  th:text="${container.status}">Status</span>
                         </div>
-                        
-                        <div class="space-y-3 mb-4">
+
+                        <div class="space-y-2 mb-4">
+                            <!-- CPU Usage -->
                             <div>
                                 <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>CPU</span>
-                                    <span>45%</span>
+                                    <span class="flex items-center">
+                                        <i class="fas fa-microchip text-purple-500 mr-1"></i>
+                                        CPU
+                                    </span>
+                                    <span th:if="${container.resourceUsage != null && container.resourceUsage.avgCpuPercent != null}"
+                                          th:text="${#numbers.formatDecimal(container.resourceUsage.avgCpuPercent, 1, 1)} + '%'"
+                                          class="font-semibold">0%</span>
+                                    <span th:unless="${container.resourceUsage != null && container.resourceUsage.avgCpuPercent != null}"
+                                          class="text-gray-400 text-xs">-</span>
                                 </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-1.5 rounded-full transition-all duration-500"
+                                         th:style="'width: ' + ${container.resourceUsage != null && container.resourceUsage.avgCpuPercent != null ? container.resourceUsage.avgCpuPercent : 0} + '%'"></div>
                                 </div>
                             </div>
-                            
+
+                            <!-- Memory Usage -->
                             <div>
                                 <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>Memory</span>
-                                    <span>256MB / 512MB</span>
+                                    <span class="flex items-center">
+                                        <i class="fas fa-memory text-blue-500 mr-1"></i>
+                                        RAM
+                                    </span>
+                                    <span th:if="${container.resourceUsage != null && container.resourceUsage.avgMemoryPercent != null}"
+                                          th:text="${#numbers.formatDecimal(container.resourceUsage.avgMemoryPercent, 1, 1)} + '%'"
+                                          class="font-semibold">0%</span>
+                                    <span th:unless="${container.resourceUsage != null && container.resourceUsage.avgMemoryPercent != null}"
+                                          class="text-gray-400 text-xs">-</span>
                                 </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 50%"></div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all duration-500"
+                                         th:style="'width: ' + ${container.resourceUsage != null && container.resourceUsage.avgMemoryPercent != null ? container.resourceUsage.avgMemoryPercent : 0} + '%'"></div>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <!-- Metrics Grid -->
+                        <div th:if="${container.resourceUsage != null}" class="grid grid-cols-2 gap-2 mb-4 text-xs">
+                            <div th:if="${container.resourceUsage.totalRequests != null && container.resourceUsage.totalRequests > 0}"
+                                 class="bg-purple-50 dark:bg-purple-900/20 rounded p-2">
+                                <div class="flex items-center text-gray-600 dark:text-gray-400 mb-1">
+                                    <i class="fas fa-chart-line text-purple-500 mr-1"></i>
+                                    Requests
+                                </div>
+                                <div class="font-semibold text-gray-900 dark:text-white"
+                                     th:text="${#numbers.formatInteger(container.resourceUsage.totalRequests, 0, 'COMMA')}">0</div>
+                            </div>
+                            <div th:if="${container.resourceUsage.totalBandwidthBytes != null && container.resourceUsage.totalBandwidthBytes > 0}"
+                                 class="bg-blue-50 dark:bg-blue-900/20 rounded p-2">
+                                <div class="flex items-center text-gray-600 dark:text-gray-400 mb-1">
+                                    <i class="fas fa-network-wired text-blue-500 mr-1"></i>
+                                    Bandwidth
+                                </div>
+                                <div class="font-semibold text-gray-900 dark:text-white"
+                                     th:text="${container.resourceUsage.totalBandwidthBytes / 1048576 > 1024 ?
+                                               #numbers.formatDecimal(container.resourceUsage.totalBandwidthBytes / 1073741824, 1, 2) + ' GB' :
+                                               #numbers.formatDecimal(container.resourceUsage.totalBandwidthBytes / 1048576, 1, 2) + ' MB'}">0 MB</div>
+                            </div>
+                        </div>
+
+                        <!-- Measurement Period -->
+                        <div th:if="${container.resourceUsage != null && container.resourceUsage.measurementPeriodStart != null}"
+                             class="text-xs text-gray-500 dark:text-gray-400 mb-3 text-center">
+                            <i class="fas fa-clock mr-1"></i>
+                            Metrics from
+                            <span th:text="${#temporals.format(container.resourceUsage.measurementPeriodStart, 'MMM dd HH:mm')}">date</span>
+                            <span th:if="${container.resourceUsage.measurementPeriodEnd != null}">
+                                to <span th:text="${#temporals.format(container.resourceUsage.measurementPeriodEnd, 'MMM dd HH:mm')}">date</span>
+                            </span>
+                        </div>
+
                         <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            <span><i class="fas fa-globe mr-1"></i> api.containers.somdip.dev</span>
-                            <span><i class="fas fa-clock mr-1"></i> 2 days</span>
+                            <span th:if="${container.domain != null}">
+                                <i class="fas fa-globe mr-1"></i>
+                                <span th:text="${container.domain}">domain</span>
+                            </span>
+                            <span th:unless="${container.domain != null}">
+                                <i class="fas fa-globe mr-1"></i>
+                                <span class="text-gray-400">No domain</span>
+                            </span>
+                            <span>
+                                <i class="fas fa-clock mr-1"></i>
+                                <span th:text="${#temporals.format(container.createdAt, 'MMM dd')}">date</span>
+                            </span>
                         </div>
-                        
+
                         <div class="flex space-x-2">
-                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
+                            <button th:onclick="'viewLogs(\'' + ${container.containerId} + '\')'"
+                                    class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm transition">
                                 <i class="fas fa-terminal mr-1"></i> Logs
                             </button>
-                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
-                                <i class="fas fa-cog mr-1"></i> Manage
-                            </button>
-                            <button class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Container Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">web-frontend</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">nginx:latest</p>
-                            </div>
-                            <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Running</span>
-                        </div>
-                        
-                        <div class="space-y-3 mb-4">
-                            <div>
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>CPU</span>
-                                    <span>12%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 12%"></div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>Memory</span>
-                                    <span>128MB / 256MB</span>
-                                </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 50%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            <span><i class="fas fa-globe mr-1"></i> app.containers.somdip.dev</span>
-                            <span><i class="fas fa-clock mr-1"></i> 5 days</span>
-                        </div>
-                        
-                        <div class="flex space-x-2">
-                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
-                                <i class="fas fa-terminal mr-1"></i> Logs
-                            </button>
-                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
-                                <i class="fas fa-cog mr-1"></i> Manage
-                            </button>
-                            <button class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Container Card - Stopped -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow opacity-75">
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">test-service</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">python:3.9</p>
-                            </div>
-                            <span class="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">Stopped</span>
-                        </div>
-                        
-                        <div class="space-y-3 mb-4">
-                            <div>
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>CPU</span>
-                                    <span>0%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                    <span>Memory</span>
-                                    <span>0MB / 512MB</span>
-                                </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            <span><i class="fas fa-globe mr-1"></i> test.containers.somdip.dev</span>
-                            <span><i class="fas fa-clock mr-1"></i> Stopped</span>
-                        </div>
-                        
-                        <div class="flex space-x-2">
-                            <button class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded text-sm">
+                            <button th:if="${container.status == 'STOPPED'}"
+                                    th:onclick="'startContainer(\'' + ${container.containerId} + '\')'"
+                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded text-sm transition">
                                 <i class="fas fa-play mr-1"></i> Start
                             </button>
-                            <button class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm">
-                                <i class="fas fa-cog mr-1"></i> Manage
+                            <button th:if="${container.status == 'RUNNING'}"
+                                    th:onclick="'stopContainer(\'' + ${container.containerId} + '\')'"
+                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-3 rounded text-sm transition">
+                                <i class="fas fa-stop mr-1"></i> Stop
                             </button>
-                            <button class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded">
+                            <button th:onclick="'showContainerMenu(\'' + ${container.containerId} + '\')'"
+                                    class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded transition">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Container List View (Hidden by default) -->
-            <div id="containerList" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Name
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Image
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    CPU
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Memory
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Domain
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">api-server</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Running</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    node:18-alpine
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mr-2">
-                                            <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
-                                        </div>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">45%</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    256MB / 512MB
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    api.containers.somdip.dev
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-3">
-                                        <i class="fas fa-terminal"></i>
-                                    </button>
-                                    <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-3">
-                                        <i class="fas fa-cog"></i>
-                                    </button>
-                                    <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <!-- More rows... -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Pagination -->
-            <div class="mt-6 flex justify-between items-center">
+
+            <!-- Pagination (if needed) -->
+            <div th:if="${totalContainers > 10}" class="mt-6 flex justify-between items-center">
                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                    Showing 1 to 10 of 32 containers
-                </div>
-                <div class="flex space-x-2">
-                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Previous
-                    </button>
-                    <button class="px-3 py-1 bg-purple-600 text-white rounded text-sm">1</button>
-                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">2</button>
-                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">3</button>
-                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Next
-                    </button>
+                    Showing <span th:text="${#lists.size(containers)}">0</span> of <span th:text="${totalContainers}">0</span> containers
                 </div>
             </div>
         </div>
     </main>
-    
+
+    <!-- Deploy Container Modal -->
+    <div id="deployModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        <i class="fas fa-bolt text-purple-600 mr-2"></i>
+                        Deploy New Container
+                    </h2>
+                    <button onclick="hideDeployModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <form id="deployForm" onsubmit="deployNewContainer(event)" class="space-y-6">
+                    <!-- Container Name -->
+                    <div>
+                        <label for="containerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Container Name *
+                        </label>
+                        <input type="text" id="containerName" name="containerName" required
+                               placeholder="my-awesome-app"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Lowercase letters, numbers, and hyphens only</p>
+                    </div>
+
+                    <!-- Container Image -->
+                    <div>
+                        <label for="containerImage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Docker Image *
+                        </label>
+                        <input type="text" id="containerImage" name="containerImage" required
+                               placeholder="nginx, node, python, etc."
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Docker Hub image name or full registry path</p>
+                    </div>
+
+                    <!-- Image Tag -->
+                    <div>
+                        <label for="imageTag" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Image Tag
+                        </label>
+                        <input type="text" id="imageTag" name="imageTag"
+                               placeholder="latest"
+                               value="latest"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Version tag (default: latest)</p>
+                    </div>
+
+                    <!-- Container Port -->
+                    <div>
+                        <label for="containerPort" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Container Port
+                        </label>
+                        <input type="number" id="containerPort" name="containerPort"
+                               placeholder="8080"
+                               value="8080"
+                               min="1" max="65535"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Port your application listens on (default: 8080)</p>
+                    </div>
+
+                    <!-- Popular Images Quick Select -->
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Popular Images:</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <button type="button" onclick="setQuickImage('nginx', 'latest', 80)"
+                                    class="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm hover:bg-purple-100 dark:hover:bg-purple-800 transition">
+                                nginx
+                            </button>
+                            <button type="button" onclick="setQuickImage('node', '18-alpine', 3000)"
+                                    class="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm hover:bg-purple-100 dark:hover:bg-purple-800 transition">
+                                node
+                            </button>
+                            <button type="button" onclick="setQuickImage('python', '3.11-slim', 8000)"
+                                    class="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm hover:bg-purple-100 dark:hover:bg-purple-800 transition">
+                                python
+                            </button>
+                            <button type="button" onclick="setQuickImage('redis', 'latest', 6379)"
+                                    class="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm hover:bg-purple-100 dark:hover:bg-purple-800 transition">
+                                redis
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button type="button" onclick="hideDeployModal()"
+                                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition transform hover:scale-105">
+                            <i class="fas fa-bolt mr-2"></i>
+                            Deploy Container
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <footer th:replace="~{fragments/base :: footer}"></footer>
     <div th:replace="~{fragments/base :: scripts}"></div>
-    
-    <!-- Container List specific scripts -->
-    <script>
+
+    <!-- Container Management Scripts -->
+    <script th:inline="javascript">
+        // Get CSRF token for API calls
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
         // View toggle functionality
         const gridView = document.getElementById('gridView');
         const listView = document.getElementById('listView');
         const containerGrid = document.getElementById('containerGrid');
-        const containerList = document.getElementById('containerList');
-        
-        gridView.addEventListener('click', () => {
-            gridView.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
-            gridView.classList.remove('text-gray-500', 'dark:text-gray-400');
-            
-            listView.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
-            listView.classList.add('text-gray-500', 'dark:text-gray-400');
-            
-            containerGrid.classList.remove('hidden');
-            containerList.classList.add('hidden');
-        });
-        
-        listView.addEventListener('click', () => {
-            listView.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
-            listView.classList.remove('text-gray-500', 'dark:text-gray-400');
-            
-            gridView.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-700', 'dark:text-gray-200', 'shadow-sm');
-            gridView.classList.add('text-gray-500', 'dark:text-gray-400');
-            
-            containerList.classList.remove('hidden');
-            containerGrid.classList.add('hidden');
-        });
+
+        if (gridView && listView) {
+            gridView.addEventListener('click', () => {
+                gridView.classList.add('bg-white', 'dark:bg-gray-600', 'shadow-sm');
+                listView.classList.remove('bg-white', 'dark:bg-gray-600', 'shadow-sm');
+                listView.classList.add('text-gray-500', 'dark:text-gray-400');
+            });
+
+            listView.addEventListener('click', () => {
+                listView.classList.add('bg-white', 'dark:bg-gray-600', 'shadow-sm');
+                gridView.classList.remove('bg-white', 'dark:bg-gray-600', 'shadow-sm');
+                gridView.classList.add('text-gray-500', 'dark:text-gray-400');
+            });
+        }
+
+        // Filter containers
+        function filterContainers() {
+            const searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('statusFilter')?.value || '';
+            const cards = document.querySelectorAll('.container-card');
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name')?.toLowerCase() || '';
+                const status = card.getAttribute('data-status') || '';
+
+                const matchesSearch = name.includes(searchText);
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                card.style.display = (matchesSearch && matchesStatus) ? 'block' : 'none';
+            });
+        }
+
+        // Sort containers
+        function sortContainers() {
+            // Implement sorting logic if needed
+            console.log('Sort functionality - to be implemented');
+        }
+
+        // Start container
+        async function startContainer(containerId) {
+            if (!confirm('Start this container?')) return;
+
+            try {
+                const response = await fetch(`/api/containers/${containerId}/deploy`, {
+                    method: 'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Container starting...', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showNotification('Failed to start container', 'error');
+                }
+            } catch (error) {
+                console.error('Error starting container:', error);
+                showNotification('Error starting container', 'error');
+            }
+        }
+
+        // Stop container
+        async function stopContainer(containerId) {
+            if (!confirm('Stop this container?')) return;
+
+            try {
+                const response = await fetch(`/api/containers/${containerId}/stop`, {
+                    method: 'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Container stopping...', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showNotification('Failed to stop container', 'error');
+                }
+            } catch (error) {
+                console.error('Error stopping container:', error);
+                showNotification('Error stopping container', 'error');
+            }
+        }
+
+        // View logs
+        function viewLogs(containerId) {
+            window.location.href = `/logs?containerId=${containerId}`;
+        }
+
+        // Show deploy modal
+        function showDeployModal() {
+            const modal = document.getElementById('deployModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        // Hide deploy modal
+        function hideDeployModal() {
+            const modal = document.getElementById('deployModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.getElementById('deployForm').reset();
+            }
+        }
+
+        // Set quick image preset
+        function setQuickImage(image, tag, port) {
+            document.getElementById('containerImage').value = image;
+            document.getElementById('imageTag').value = tag;
+            document.getElementById('containerPort').value = port;
+        }
+
+        // Deploy new container
+        async function deployNewContainer(event) {
+            event.preventDefault();
+
+            const formData = {
+                name: document.getElementById('containerName').value,
+                image: document.getElementById('containerImage').value,
+                imageTag: document.getElementById('imageTag').value || 'latest',
+                port: parseInt(document.getElementById('containerPort').value) || 8080
+            };
+
+            try {
+                const response = await fetch('/api/containers', {
+                    method: 'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Container created successfully!', 'success');
+                    hideDeployModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    const error = await response.text();
+                    showNotification('Failed to create container: ' + error, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating container:', error);
+                showNotification('Error creating container', 'error');
+            }
+        }
+
+        // Show container menu
+        function showContainerMenu(containerId) {
+            const actions = [
+                'View Details',
+                'Restart',
+                'View Metrics',
+                'Delete'
+            ];
+
+            const action = prompt('Choose action:\n' + actions.map((a, i) => `${i+1}. ${a}`).join('\n'));
+
+            if (action === '4') {
+                deleteContainer(containerId);
+            } else if (action === '2') {
+                restartContainer(containerId);
+            }
+        }
+
+        // Delete container
+        async function deleteContainer(containerId) {
+            if (!confirm('Are you sure you want to delete this container? This action cannot be undone.')) return;
+
+            try {
+                const response = await fetch(`/api/containers/${containerId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Container deleted successfully', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Failed to delete container', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting container:', error);
+                showNotification('Error deleting container', 'error');
+            }
+        }
+
+        // Restart container
+        async function restartContainer(containerId) {
+            if (!confirm('Restart this container?')) return;
+
+            try {
+                const response = await fetch(`/api/containers/${containerId}/restart`, {
+                    method: 'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Container restarting...', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showNotification('Failed to restart container', 'error');
+                }
+            } catch (error) {
+                console.error('Error restarting container:', error);
+                showNotification('Error restarting container', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Simple alert for now - can be replaced with toast notifications
+            alert(message);
+        }
     </script>
 </body>
 </html>

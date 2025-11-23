@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Billing')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Billing & Usage</h1>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your subscription and view usage details</p>
+            </div>
+
+            <!-- Current Plan -->
+            <div class="bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg shadow-xl p-8 text-white mb-8">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">
+                            <span th:text="${subscriptionPlan != null ? subscriptionPlan : 'Free'}">Free</span> Plan
+                        </h2>
+                        <p class="text-purple-100 mb-4">
+                            Status: <span class="font-semibold" th:text="${subscriptionStatus != null ? subscriptionStatus : 'Active'}">Active</span>
+                        </p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>5 Containers</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>2 vCPU, 4GB RAM per container</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>100GB Bandwidth/month</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>Community Support</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold mb-2">$0</div>
+                        <div class="text-purple-100 text-sm">per month</div>
+                        <button onclick="showUpgradeModal()"
+                                class="mt-4 bg-white text-purple-600 hover:bg-purple-50 font-semibold py-2 px-6 rounded-lg transition">
+                            Upgrade Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Containers Usage -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Containers</h3>
+                        <i class="fas fa-box text-purple-500 text-2xl"></i>
+                    </div>
+                    <div class="mb-2">
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <span>3 of 5 used</span>
+                            <span>60%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">2 more containers available</p>
+                </div>
+
+                <!-- Bandwidth Usage -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Bandwidth</h3>
+                        <i class="fas fa-network-wired text-blue-500 text-2xl"></i>
+                    </div>
+                    <div class="mb-2">
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <span>45.2 GB of 100 GB</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">54.8 GB remaining this month</p>
+                </div>
+
+                <!-- CPU Hours -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">CPU Hours</h3>
+                        <i class="fas fa-microchip text-green-500 text-2xl"></i>
+                    </div>
+                    <div class="mb-2">
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <span>720 hours used</span>
+                            <span>This month</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900 dark:text-white">720h</div>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Equivalent to 1 month runtime</p>
+                </div>
+            </div>
+
+            <!-- Billing History -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-8">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Billing History</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Jan 1, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Free Plan - January 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">$0.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
+                                        Paid
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
+                                        <i class="fas fa-download mr-1"></i>
+                                        Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Dec 1, 2023</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Free Plan - December 2023</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">$0.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
+                                        Paid
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
+                                        <i class="fas fa-download mr-1"></i>
+                                        Download
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method</h3>
+                <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded">
+                            <i class="fas fa-credit-card text-2xl text-gray-600 dark:text-gray-400"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900 dark:text-white">No payment method</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">You're on the free plan</div>
+                        </div>
+                    </div>
+                    <button onclick="addPaymentMethod()"
+                            class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                        Add Payment Method
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upgrade Modal -->
+    <div id="upgradeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-5xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Choose Your Plan</h3>
+                    <button onclick="hideUpgradeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Free Plan -->
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Free</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-4">$0<span class="text-sm text-gray-500">/mo</span></div>
+                        <ul class="space-y-3 mb-6">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">5 Containers</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">2 vCPU, 4GB RAM</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">100GB Bandwidth</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Community Support</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg" disabled>
+                            Current Plan
+                        </button>
+                    </div>
+
+                    <!-- Pro Plan -->
+                    <div class="border-2 border-purple-600 rounded-lg p-6 relative">
+                        <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pro</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-4">$29<span class="text-sm text-gray-500">/mo</span></div>
+                        <ul class="space-y-3 mb-6">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">25 Containers</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">4 vCPU, 8GB RAM</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">1TB Bandwidth</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Priority Support</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Custom Domains</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                            Upgrade to Pro
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Enterprise</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Custom</div>
+                        <ul class="space-y-3 mb-6">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Unlimited Containers</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Custom Resources</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Unlimited Bandwidth</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">24/7 Support</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">SLA Guarantee</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showUpgradeModal() {
+            document.getElementById('upgradeModal').classList.remove('hidden');
+        }
+
+        function hideUpgradeModal() {
+            document.getElementById('upgradeModal').classList.add('hidden');
+        }
+
+        function addPaymentMethod() {
+            alert('Payment method setup would be handled by a payment processor like Stripe.');
+        }
+    </script>
+</body>
+</html>

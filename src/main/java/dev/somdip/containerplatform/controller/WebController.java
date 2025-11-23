@@ -295,8 +295,18 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
         // Domain management page
         return "domains";
+    }
+
+    @GetMapping("/metrics")
+    public String metrics(Model model, Authentication authentication) {
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+
+        // Metrics page
+        return "metrics";
     }
 }

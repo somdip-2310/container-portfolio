@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Logs')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Container Logs</h1>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">View and search container logs in real-time</p>
+            </div>
+
+            <!-- Container Selection and Controls -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Container Selection -->
+                    <div>
+                        <label for="containerSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select Container
+                        </label>
+                        <select id="containerSelect" onchange="loadContainerLogs()"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">-- Select a container --</option>
+                        </select>
+                    </div>
+
+                    <!-- Line Count -->
+                    <div>
+                        <label for="lineCount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Number of Lines
+                        </label>
+                        <select id="lineCount" onchange="loadContainerLogs()"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="50">50 lines</option>
+                            <option value="100" selected>100 lines</option>
+                            <option value="200">200 lines</option>
+                            <option value="500">500 lines</option>
+                            <option value="1000">1000 lines</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-end space-x-2">
+                        <button onclick="loadContainerLogs()"
+                                class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Refresh
+                        </button>
+                        <button onclick="downloadLogs()"
+                                class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Filter -->
+                <div class="mt-4">
+                    <label for="logSearch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Search Logs
+                    </label>
+                    <input type="text" id="logSearch" placeholder="Filter logs by keyword..." onkeyup="filterLogs()"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+
+            <!-- Logs Display -->
+            <div class="bg-gray-900 rounded-lg shadow-xl p-6 font-mono text-sm overflow-hidden">
+                <!-- Loading State -->
+                <div id="logsLoading" class="text-center py-12 hidden">
+                    <i class="fas fa-spinner fa-spin text-4xl text-purple-500 mb-4"></i>
+                    <p class="text-gray-400">Loading logs...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="logsEmpty" class="text-center py-12">
+                    <i class="fas fa-terminal text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400">Select a container to view logs</p>
+                </div>
+
+                <!-- Logs Content -->
+                <div id="logsContent" class="hidden">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-700">
+                        <div class="text-green-400">
+                            <i class="fas fa-circle text-xs animate-pulse mr-2"></i>
+                            <span id="containerName">Container Logs</span>
+                        </div>
+                        <div class="text-gray-500 text-xs" id="lastUpdated">
+                            Last updated: Never
+                        </div>
+                    </div>
+
+                    <div id="logLines" class="space-y-1 max-h-[600px] overflow-y-auto">
+                        <!-- Log lines will be inserted here -->
+                    </div>
+
+                    <div id="noLogsMessage" class="text-yellow-400 text-center py-8 hidden">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        No logs available for this container
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Statistics -->
+            <div id="logStats" class="hidden mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Total Lines</div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="totalLines">0</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Error Count</div>
+                    <div class="text-2xl font-bold text-red-600" id="errorCount">0</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Warning Count</div>
+                    <div class="text-2xl font-bold text-yellow-600" id="warningCount">0</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Visible Lines</div>
+                    <div class="text-2xl font-bold text-purple-600" id="visibleLines">0</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+        let currentLogs = '';
+        let allLogLines = [];
+
+        // Load containers on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadContainers();
+        });
+
+        async function loadContainers() {
+            try {
+                const response = await fetch('/api/containers', {
+                    headers: { [csrfHeader]: csrfToken }
+                });
+
+                if (response.ok) {
+                    const containers = await response.json();
+                    const select = document.getElementById('containerSelect');
+                    select.innerHTML = '<option value="">-- Select a container --</option>';
+
+                    containers.forEach(container => {
+                        const option = document.createElement('option');
+                        option.value = container.containerId;
+                        option.textContent = `${container.containerName} (${container.status})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading containers:', error);
+                showNotification('Failed to load containers', 'error');
+            }
+        }
+
+        async function loadContainerLogs() {
+            const containerId = document.getElementById('containerSelect').value;
+            const lineCount = document.getElementById('lineCount').value;
+
+            if (!containerId) {
+                document.getElementById('logsEmpty').classList.remove('hidden');
+                document.getElementById('logsContent').classList.add('hidden');
+                document.getElementById('logStats').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('logsEmpty').classList.add('hidden');
+            document.getElementById('logsLoading').classList.remove('hidden');
+            document.getElementById('logsContent').classList.add('hidden');
+
+            try {
+                const response = await fetch(`/api/containers/${containerId}/logs?lines=${lineCount}`, {
+                    headers: { [csrfHeader]: csrfToken }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentLogs = data.logs || '';
+
+                    document.getElementById('logsLoading').classList.add('hidden');
+                    document.getElementById('logsContent').classList.remove('hidden');
+                    document.getElementById('logStats').classList.remove('hidden');
+
+                    document.getElementById('containerName').textContent = data.containerName || 'Container Logs';
+                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+
+                    displayLogs(currentLogs);
+                } else {
+                    throw new Error('Failed to fetch logs');
+                }
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsLoading').classList.add('hidden');
+                document.getElementById('logsContent').classList.remove('hidden');
+                document.getElementById('noLogsMessage').classList.remove('hidden');
+                showNotification('Failed to load logs', 'error');
+            }
+        }
+
+        function displayLogs(logs) {
+            const logLinesDiv = document.getElementById('logLines');
+            const noLogsMessage = document.getElementById('noLogsMessage');
+
+            if (!logs || logs.trim() === '') {
+                noLogsMessage.classList.remove('hidden');
+                logLinesDiv.innerHTML = '';
+                allLogLines = [];
+                updateStats();
+                return;
+            }
+
+            noLogsMessage.classList.add('hidden');
+            const lines = logs.split('\n').filter(line => line.trim());
+            allLogLines = lines;
+
+            logLinesDiv.innerHTML = lines.map((line, index) => {
+                const lineClass = getLogLineClass(line);
+                return `<div class="log-line ${lineClass} hover:bg-gray-800 px-2 py-1 rounded" data-line="${index}">
+                    <span class="text-gray-600 select-none mr-3">${(index + 1).toString().padStart(4, ' ')}</span>
+                    <span>${escapeHtml(line)}</span>
+                </div>`;
+            }).join('');
+
+            updateStats();
+        }
+
+        function getLogLineClass(line) {
+            const lower = line.toLowerCase();
+            if (lower.includes('error') || lower.includes('exception') || lower.includes('fatal')) {
+                return 'text-red-400';
+            } else if (lower.includes('warn')) {
+                return 'text-yellow-400';
+            } else if (lower.includes('info')) {
+                return 'text-blue-400';
+            } else if (lower.includes('debug')) {
+                return 'text-gray-500';
+            }
+            return 'text-green-400';
+        }
+
+        function updateStats() {
+            const errorCount = allLogLines.filter(line =>
+                line.toLowerCase().includes('error') || line.toLowerCase().includes('exception')).length;
+            const warningCount = allLogLines.filter(line =>
+                line.toLowerCase().includes('warn')).length;
+
+            document.getElementById('totalLines').textContent = allLogLines.length;
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('warningCount').textContent = warningCount;
+            document.getElementById('visibleLines').textContent = document.querySelectorAll('.log-line:not(.hidden)').length;
+        }
+
+        function filterLogs() {
+            const searchTerm = document.getElementById('logSearch').value.toLowerCase();
+            const logLines = document.querySelectorAll('.log-line');
+
+            logLines.forEach(line => {
+                const text = line.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    line.classList.remove('hidden');
+                } else {
+                    line.classList.add('hidden');
+                }
+            });
+
+            updateStats();
+        }
+
+        function downloadLogs() {
+            if (!currentLogs) {
+                showNotification('No logs to download', 'warning');
+                return;
+            }
+
+            const containerId = document.getElementById('containerSelect').value;
+            const containerName = document.getElementById('containerName').textContent;
+            const blob = new Blob([currentLogs], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${containerName}-${new Date().toISOString()}.log`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type) {
+            // Simple notification (you can enhance this)
+            alert(message);
+        }
+    </script>
+</body>
+</html>

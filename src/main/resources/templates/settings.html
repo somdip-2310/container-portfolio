@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Settings')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your account preferences and security</p>
+            </div>
+
+            <!-- Settings Tabs -->
+            <div class="mb-6">
+                <div class="border-b border-gray-200 dark:border-gray-700">
+                    <nav class="-mb-px flex space-x-8">
+                        <button onclick="switchTab('profile')" id="profileTab"
+                                class="tab-button active border-b-2 border-purple-600 text-purple-600 py-4 px-1 font-medium text-sm">
+                            <i class="fas fa-user mr-2"></i>
+                            Profile
+                        </button>
+                        <button onclick="switchTab('security')" id="securityTab"
+                                class="tab-button border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 py-4 px-1 font-medium text-sm">
+                            <i class="fas fa-lock mr-2"></i>
+                            Security
+                        </button>
+                        <button onclick="switchTab('notifications')" id="notificationsTab"
+                                class="tab-button border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 py-4 px-1 font-medium text-sm">
+                            <i class="fas fa-bell mr-2"></i>
+                            Notifications
+                        </button>
+                        <button onclick="switchTab('api')" id="apiTab"
+                                class="tab-button border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 py-4 px-1 font-medium text-sm">
+                            <i class="fas fa-code mr-2"></i>
+                            API
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profileContent" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Profile Information</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Update your account information</p>
+                    </div>
+                    <form class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Full Name
+                                </label>
+                                <input type="text" th:value="${user != null ? user.name : ''}" placeholder="John Doe"
+                                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Email Address
+                                </label>
+                                <input type="email" th:value="${user != null ? user.email : ''}" placeholder="john@example.com"
+                                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Company (Optional)
+                            </label>
+                            <input type="text" placeholder="Acme Inc."
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Bio
+                            </label>
+                            <textarea rows="4" placeholder="Tell us about yourself..."
+                                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div id="securityContent" class="tab-content hidden">
+                <!-- Change Password -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Update your password regularly for better security</p>
+                    </div>
+                    <form class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Current Password
+                            </label>
+                            <input type="password" placeholder="Enter current password"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                New Password
+                            </label>
+                            <input type="password" placeholder="Enter new password"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Confirm New Password
+                            </label>
+                            <input type="password" placeholder="Confirm new password"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Two-Factor Authentication -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Two-Factor Authentication</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Add an extra layer of security to your account</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-red-100 dark:bg-red-900 p-2 rounded">
+                                    <i class="fas fa-shield-alt text-red-600 dark:text-red-400"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">2FA is disabled</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">Enable for better security</div>
+                                </div>
+                            </div>
+                            <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                                Enable 2FA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Sessions -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Active Sessions</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage devices where you're currently logged in</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-laptop text-2xl text-purple-500"></i>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">MacBook Pro - Current</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">San Francisco, CA " Last active now</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
+                                Current
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div id="notificationsContent" class="tab-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Notification Preferences</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose what notifications you want to receive</p>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <!-- Email Notifications -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-4">Email Notifications</h4>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Container Status Updates</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Get notified when container status changes</div>
+                                    </div>
+                                    <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                                </label>
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Deployment Notifications</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Alerts for deployment successes and failures</div>
+                                    </div>
+                                    <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                                </label>
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Resource Alerts</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">High CPU/memory usage warnings</div>
+                                    </div>
+                                    <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                                </label>
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Security Alerts</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Unusual activity and security warnings</div>
+                                    </div>
+                                    <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                                </label>
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Marketing Emails</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Product updates and news</div>
+                                    </div>
+                                    <input type="checkbox" class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-4">Notification Channels</h4>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Slack Notifications</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Send alerts to Slack workspace</div>
+                                    </div>
+                                    <button class="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                                        Connect Slack
+                                    </button>
+                                </label>
+                                <label class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">Webhook Notifications</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">POST events to custom endpoint</div>
+                                    </div>
+                                    <button class="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                                        Configure
+                                    </button>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                                Save Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Tab -->
+            <div id="apiContent" class="tab-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">API Access</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage your API keys and access tokens</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Your API Key
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="password" id="apiKeyDisplay" value="snap_••••••••••••••••••••••••••" readonly
+                                       class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                <button onclick="toggleApiKey()" class="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600">
+                                    <i id="toggleIcon" class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="copyApiKey()" class="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                Keep your API key secret. Do not share it in publicly accessible areas.
+                            </p>
+                        </div>
+
+                        <div class="flex space-x-3">
+                            <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                                <i class="fas fa-sync-alt mr-2"></i>
+                                Regenerate Key
+                            </button>
+                            <button class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition">
+                                <i class="fas fa-book mr-2"></i>
+                                View API Docs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow border-2 border-red-200 dark:border-red-900">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Irreversible and destructive actions</p>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-medium text-gray-900 dark:text-white">Delete Account</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Permanently delete your account and all data</div>
+                        </div>
+                        <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active', 'border-purple-600', 'text-purple-600');
+                button.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+
+            // Show selected tab
+            document.getElementById(tab + 'Content').classList.remove('hidden');
+            document.getElementById(tab + 'Tab').classList.add('active', 'border-purple-600', 'text-purple-600');
+            document.getElementById(tab + 'Tab').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        }
+
+        function toggleApiKey() {
+            const input = document.getElementById('apiKeyDisplay');
+            const icon = document.getElementById('toggleIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function copyApiKey() {
+            const input = document.getElementById('apiKeyDisplay');
+            input.select();
+            document.execCommand('copy');
+            alert('API key copied to clipboard!');
+        }
+    </script>
+</body>
+</html>
