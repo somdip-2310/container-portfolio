@@ -198,97 +198,118 @@
             </div>
 
             <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Free Plan -->
-                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Free</h4>
-                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-4">$0<span class="text-sm text-gray-500">/mo</span></div>
-                        <ul class="space-y-3 mb-6">
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">5 Containers</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">2 vCPU, 4GB RAM</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">100GB Bandwidth</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Community Support</span>
-                            </li>
-                        </ul>
-                        <button class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg" disabled>
-                            Current Plan
+                <!-- Billing Period Toggle -->
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 p-1">
+                        <button id="monthlyBtn" onclick="switchBilling('monthly')" class="px-4 py-2 text-sm font-medium rounded-md bg-purple-600 text-white">
+                            Monthly
                         </button>
+                        <button id="quarterlyBtn" onclick="switchBilling('quarterly')" class="px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            Quarterly <span class="text-xs text-green-600 dark:text-green-400 ml-1">(Save 10%)</span>
+                        </button>
+                        <button id="annualBtn" onclick="switchBilling('annual')" class="px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            Annual <span class="text-xs text-green-600 dark:text-green-400 ml-1">(Save 17%)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <!-- Free Plan -->
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">FREE</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">$0<span class="text-sm text-gray-500">/mo</span></div>
+                        <p class="text-xs text-gray-500 mb-4">Testing, Students</p>
+                        <ul class="space-y-2 mb-6 flex-grow text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">1 Container</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">256 MB RAM/container</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">500 MB Storage</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">10 GB Bandwidth</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Subdomain</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Community Support</span></li>
+                        </ul>
+                        <button class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm" disabled>Current Plan</button>
+                    </div>
+
+                    <!-- Starter Plan -->
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">STARTER</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                            <span class="monthly-price">$29</span>
+                            <span class="quarterly-price hidden">$26</span>
+                            <span class="annual-price hidden">$24</span>
+                            <span class="text-sm text-gray-500">/mo</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Solo devs, Side projects</p>
+                        <ul class="space-y-2 mb-6 flex-grow text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">3 Containers</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">512 MB RAM/container</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">2 GB Storage</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">50 GB Bandwidth</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">1 Custom Domain</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Email (24hr)</span></li>
+                        </ul>
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Starter</button>
                     </div>
 
                     <!-- Pro Plan -->
-                    <div class="border-2 border-purple-600 rounded-lg p-6 relative">
+                    <div class="border-2 border-purple-600 rounded-lg p-6 relative flex flex-col">
                         <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</span>
+                            <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">⭐ POPULAR</span>
                         </div>
-                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Pro</h4>
-                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-4">$29<span class="text-sm text-gray-500">/mo</span></div>
-                        <ul class="space-y-3 mb-6">
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">25 Containers</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">4 vCPU, 8GB RAM</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">1TB Bandwidth</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Priority Support</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Custom Domains</span>
-                            </li>
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">PRO</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                            <span class="monthly-price">$75</span>
+                            <span class="quarterly-price hidden">$68</span>
+                            <span class="annual-price hidden">$62</span>
+                            <span class="text-sm text-gray-500">/mo</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Small teams, Startups</p>
+                        <ul class="space-y-2 mb-6 flex-grow text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">8 Containers</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">1 GB RAM/container</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">10 GB Storage</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">200 GB Bandwidth</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">5 Custom Domains</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Priority (4hr)</span></li>
                         </ul>
-                        <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                            Upgrade to Pro
-                        </button>
+                        <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Pro</button>
+                    </div>
+
+                    <!-- Business Plan -->
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">BUSINESS</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                            <span class="monthly-price">$149</span>
+                            <span class="quarterly-price hidden">$134</span>
+                            <span class="annual-price hidden">$124</span>
+                            <span class="text-sm text-gray-500">/mo</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Growing companies</p>
+                        <ul class="space-y-2 mb-6 flex-grow text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">20 Containers</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">2 GB RAM/container</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">50 GB Storage</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">1 TB Bandwidth</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Unlimited Domains</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">24/7 Support (1hr)</span></li>
+                        </ul>
+                        <button class="w-full bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Business</button>
                     </div>
 
                     <!-- Enterprise Plan -->
-                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Enterprise</h4>
-                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Custom</div>
-                        <ul class="space-y-3 mb-6">
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Unlimited Containers</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Custom Resources</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Unlimited Bandwidth</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">24/7 Support</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">SLA Guarantee</span>
-                            </li>
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">ENTERPRISE</h4>
+                        <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Custom</div>
+                        <p class="text-xs text-gray-500 mb-4">Large enterprise</p>
+                        <ul class="space-y-2 mb-6 flex-grow text-sm">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Custom Containers</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Up to 16GB RAM</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Custom Storage</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Custom Bandwidth</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Unlimited Domains</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Dedicated Support</span></li>
                         </ul>
-                        <button class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition">
-                            Contact Sales
-                        </button>
+                        <button class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition text-sm">Contact Sales</button>
                     </div>
                 </div>
             </div>
@@ -306,6 +327,35 @@
 
         function addPaymentMethod() {
             alert('Payment method setup would be handled by a payment processor like Stripe.');
+        }
+
+        function switchBilling(period) {
+            // Update button styles
+            document.querySelectorAll('#monthlyBtn, #quarterlyBtn, #annualBtn').forEach(btn => {
+                btn.classList.remove('bg-purple-600', 'text-white');
+                btn.classList.add('text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+            });
+
+            if (period === 'monthly') {
+                document.getElementById('monthlyBtn').classList.add('bg-purple-600', 'text-white');
+                document.getElementById('monthlyBtn').classList.remove('text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+            } else if (period === 'quarterly') {
+                document.getElementById('quarterlyBtn').classList.add('bg-purple-600', 'text-white');
+                document.getElementById('quarterlyBtn').classList.remove('text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+            } else if (period === 'annual') {
+                document.getElementById('annualBtn').classList.add('bg-purple-600', 'text-white');
+                document.getElementById('annualBtn').classList.remove('text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+            }
+
+            // Hide all prices
+            document.querySelectorAll('.monthly-price, .quarterly-price, .annual-price').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show selected period prices
+            document.querySelectorAll(`.${period}-price`).forEach(el => {
+                el.classList.remove('hidden');
+            });
         }
     </script>
 </body>
