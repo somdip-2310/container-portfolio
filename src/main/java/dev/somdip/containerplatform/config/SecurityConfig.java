@@ -106,7 +106,9 @@ public class SecurityConfig {
                 .permitAll()
             )
             .requiresChannel(channel -> channel
-                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                .requestMatchers(r ->
+                    r.getHeader("X-Forwarded-Proto") != null &&
+                    !"https".equalsIgnoreCase(r.getHeader("X-Forwarded-Proto")))
                 .requiresSecure()
             );
 
