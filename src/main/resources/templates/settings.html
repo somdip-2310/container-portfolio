@@ -291,11 +291,11 @@
                         </div>
 
                         <div class="flex space-x-3">
-                            <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                            <button onclick="regenerateApiKey()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
                                 <i class="fas fa-sync-alt mr-2"></i>
                                 Regenerate Key
                             </button>
-                            <button class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition">
+                            <button onclick="window.location.href='/cli'" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition">
                                 <i class="fas fa-book mr-2"></i>
                                 View API Docs
                             </button>
@@ -361,6 +361,34 @@
             input.select();
             document.execCommand('copy');
             alert('API key copied to clipboard!');
+        }
+
+        async function regenerateApiKey() {
+            if (!confirm('Are you sure you want to regenerate your API key? Your existing key will be invalidated.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/regenerate-api-key', {
+                    method: 'POST',
+                    headers: {
+                        [header]: token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('apiKeyDisplay').value = data.apiKey;
+                    alert('API key regenerated successfully! Make sure to copy it now.');
+                } else {
+                    const error = await response.text();
+                    alert('Failed to regenerate API key: ' + error);
+                }
+            } catch (error) {
+                console.error('Error regenerating API key:', error);
+                alert('Error regenerating API key');
+            }
         }
     </script>
 </body>

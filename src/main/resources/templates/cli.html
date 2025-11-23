@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('CLI Installation')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">CLI Installation</h1>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">Install and configure the SnapDeploy CLI tool</p>
+            </div>
+
+            <!-- Installation Instructions -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                        <i class="fas fa-terminal text-purple-600 mr-2"></i>
+                        Installation
+                    </h2>
+
+                    <!-- macOS / Linux -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">macOS / Linux</h3>
+                        <div class="bg-gray-900 rounded-lg p-4 relative">
+                            <code class="text-green-400 text-sm">curl -sSL https://cli.snapdeploy.io/install.sh | bash</code>
+                            <button onclick="copyCommand('curl -sSL https://cli.snapdeploy.io/install.sh | bash')"
+                                    class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Windows -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Windows (PowerShell)</h3>
+                        <div class="bg-gray-900 rounded-lg p-4 relative">
+                            <code class="text-green-400 text-sm">iwr -useb https://cli.snapdeploy.io/install.ps1 | iex</code>
+                            <button onclick="copyCommand('iwr -useb https://cli.snapdeploy.io/install.ps1 | iex')"
+                                    class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- NPM -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">NPM</h3>
+                        <div class="bg-gray-900 rounded-lg p-4 relative">
+                            <code class="text-green-400 text-sm">npm install -g @snapdeploy/cli</code>
+                            <button onclick="copyCommand('npm install -g @snapdeploy/cli')"
+                                    class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                        <i class="fas fa-key text-purple-600 mr-2"></i>
+                        Authentication
+                    </h2>
+
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        After installation, authenticate using your API key:
+                    </p>
+
+                    <div class="bg-gray-900 rounded-lg p-4 relative mb-4">
+                        <code class="text-green-400 text-sm">snapdeploy auth login</code>
+                        <button onclick="copyCommand('snapdeploy auth login')"
+                                class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Don't have an API key?
+                        <a href="/settings#api" class="text-purple-600 hover:text-purple-700 dark:text-purple-400">Generate one here</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Common Commands -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                        <i class="fas fa-code text-purple-600 mr-2"></i>
+                        Common Commands
+                    </h2>
+
+                    <div class="space-y-4">
+                        <!-- Deploy -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Deploy a container</h4>
+                            <div class="bg-gray-900 rounded-lg p-4 relative">
+                                <code class="text-green-400 text-sm">snapdeploy deploy --image nginx:latest --name my-app</code>
+                                <button onclick="copyCommand('snapdeploy deploy --image nginx:latest --name my-app')"
+                                        class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- List containers -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">List containers</h4>
+                            <div class="bg-gray-900 rounded-lg p-4 relative">
+                                <code class="text-green-400 text-sm">snapdeploy containers list</code>
+                                <button onclick="copyCommand('snapdeploy containers list')"
+                                        class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- View logs -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">View container logs</h4>
+                            <div class="bg-gray-900 rounded-lg p-4 relative">
+                                <code class="text-green-400 text-sm">snapdeploy logs &lt;container-id&gt;</code>
+                                <button onclick="copyCommand('snapdeploy logs <container-id>')"
+                                        class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Restart -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Restart a container</h4>
+                            <div class="bg-gray-900 rounded-lg p-4 relative">
+                                <code class="text-green-400 text-sm">snapdeploy restart &lt;container-id&gt;</code>
+                                <button onclick="copyCommand('snapdeploy restart <container-id>')"
+                                        class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Delete -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Delete a container</h4>
+                            <div class="bg-gray-900 rounded-lg p-4 relative">
+                                <code class="text-green-400 text-sm">snapdeploy delete &lt;container-id&gt;</code>
+                                <button onclick="copyCommand('snapdeploy delete <container-id>')"
+                                        class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                        <i class="fas fa-question-circle text-purple-600 mr-2"></i>
+                        Need Help?
+                    </h2>
+
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Run the help command to see all available options:
+                    </p>
+
+                    <div class="bg-gray-900 rounded-lg p-4 relative">
+                        <code class="text-green-400 text-sm">snapdeploy --help</code>
+                        <button onclick="copyCommand('snapdeploy --help')"
+                                class="absolute top-2 right-2 text-gray-400 hover:text-white">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+    <script>
+        function copyCommand(command) {
+            navigator.clipboard.writeText(command).then(() => {
+                // Show a temporary success message
+                const event = new CustomEvent('show-notification', {
+                    detail: { message: 'Command copied to clipboard!', type: 'success' }
+                });
+                window.dispatchEvent(event);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+    </script>
+</body>
+</html>
