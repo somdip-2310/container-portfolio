@@ -444,25 +444,65 @@ public class ContainerService {
         // In a real implementation, you'd validate CPU-memory compatibility
     }
     
+    /**
+     * Auto-detect the default port based on the image name/type
+     * Uses pattern matching to handle both Docker Hub and ECR image names
+     */
     private Integer getDefaultPortForImage(String image) {
-        if (image == null) return 80;
-        
-        switch (image.toLowerCase()) {
-            case "nginx":
-            case "httpd":
-            case "apache":
-                return 80;
-            case "tomcat":
-                return 8080;
-            case "node":
-            case "nodejs":
-                return 3000;
-            case "python":
-            case "django":
-            case "flask":
-                return 8000;
-            default:
-                return 80;
+        if (image == null) return 8080;
+
+        String imageLower = image.toLowerCase();
+
+        // Static web servers (nginx, apache, httpd) - port 80
+        if (imageLower.contains("nginx") || imageLower.contains("httpd") || imageLower.contains("apache")) {
+            log.info("Detected static web server for image {}, using default port 80", image);
+            return 80;
         }
+
+        // Node.js applications - port 3000
+        if (imageLower.contains("node")) {
+            log.info("Detected Node.js application for image {}, using default port 3000", image);
+            return 3000;
+        }
+
+        // Python applications (Flask, Django, FastAPI) - port 8000
+        if (imageLower.contains("python") || imageLower.contains("django") || imageLower.contains("flask") || imageLower.contains("fastapi")) {
+            log.info("Detected Python application for image {}, using default port 8000", image);
+            return 8000;
+        }
+
+        // Java applications (Spring Boot, Tomcat) - port 8080
+        if (imageLower.contains("java") || imageLower.contains("temurin") || imageLower.contains("openjdk") || imageLower.contains("tomcat")) {
+            log.info("Detected Java application for image {}, using default port 8080", image);
+            return 8080;
+        }
+
+        // Go applications - port 8080
+        if (imageLower.contains("golang") || imageLower.contains("go:") || imageLower.contains("/go")) {
+            log.info("Detected Go application for image {}, using default port 8080", image);
+            return 8080;
+        }
+
+        // PHP applications - port 80 (with php-fpm) or 9000 (pure php-fpm)
+        if (imageLower.contains("php")) {
+            log.info("Detected PHP application for image {}, using default port 80", image);
+            return 80;
+        }
+
+        // Ruby/Rails applications - port 3000
+        if (imageLower.contains("ruby") || imageLower.contains("rails")) {
+            log.info("Detected Ruby application for image {}, using default port 3000", image);
+            return 3000;
+        }
+
+        // .NET applications - port 8080 or 5000
+        if (imageLower.contains("dotnet") || imageLower.contains("aspnet")) {
+            log.info("Detected .NET application for image {}, using default port 8080", image);
+            return 8080;
+        }
+
+        // Default fallback
+        log.warn("Could not detect image type for {}, defaulting to port 8080", image);
+        return 8080;
     }
 }
