@@ -165,11 +165,15 @@
                         </div>
 
                         <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            <span th:if="${container.domain != null}">
+                            <span th:if="${container.customDomain != null}">
                                 <i class="fas fa-globe mr-1"></i>
-                                <span th:text="${container.domain}">domain</span>
+                                <span th:text="${container.customDomain}">domain</span>
                             </span>
-                            <span th:unless="${container.domain != null}">
+                            <span th:if="${container.customDomain == null and container.subdomain != null}">
+                                <i class="fas fa-globe mr-1"></i>
+                                <span th:text="${container.subdomain + '.somdip.dev'}">subdomain</span>
+                            </span>
+                            <span th:if="${container.customDomain == null and container.subdomain == null}">
                                 <i class="fas fa-globe mr-1"></i>
                                 <span class="text-gray-400">No domain</span>
                             </span>
