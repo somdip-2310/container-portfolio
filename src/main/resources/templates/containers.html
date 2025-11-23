@@ -184,21 +184,25 @@
                         </div>
 
                         <div class="flex space-x-2">
-                            <button th:onclick="'viewLogs(\'' + ${container.containerId} + '\')'"
+                            <button th:data-container-id="${container.containerId}"
+                                    onclick="viewLogs(this.getAttribute('data-container-id'))"
                                     class="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-3 rounded text-sm transition">
                                 <i class="fas fa-terminal mr-1"></i> Logs
                             </button>
                             <button th:if="${container.status == 'STOPPED'}"
-                                    th:onclick="'startContainer(\'' + ${container.containerId} + '\')'"
+                                    th:data-container-id="${container.containerId}"
+                                    onclick="startContainer(this.getAttribute('data-container-id'))"
                                     class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded text-sm transition">
                                 <i class="fas fa-play mr-1"></i> Start
                             </button>
                             <button th:if="${container.status == 'RUNNING'}"
-                                    th:onclick="'stopContainer(\'' + ${container.containerId} + '\')'"
+                                    th:data-container-id="${container.containerId}"
+                                    onclick="stopContainer(this.getAttribute('data-container-id'))"
                                     class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-3 rounded text-sm transition">
                                 <i class="fas fa-stop mr-1"></i> Stop
                             </button>
-                            <button th:onclick="'showContainerMenu(\'' + ${container.containerId} + '\')'"
+                            <button th:data-container-id="${container.containerId}"
+                                    onclick="showContainerMenu(this.getAttribute('data-container-id'))"
                                     class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded transition">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
