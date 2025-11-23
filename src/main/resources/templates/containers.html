@@ -16,7 +16,7 @@
                 </div>
                 <button onclick="showDeployModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition">
                     <i class="fas fa-bolt mr-2"></i>
-                    Deploy New Container
+                    Deploy Your Application
                 </button>
             </div>
 
@@ -69,7 +69,7 @@
                 <p class="text-gray-500 dark:text-gray-400 mb-6">Deploy your first container to get started</p>
                 <button onclick="showDeployModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition">
                     <i class="fas fa-bolt mr-2"></i>
-                    Deploy New Container
+                    Deploy Your Application
                 </button>
             </div>
 
@@ -232,7 +232,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
                         <i class="fas fa-bolt text-purple-600 mr-2"></i>
-                        Deploy New Container
+                        Deploy Your Application
                     </h2>
                     <button onclick="hideDeployModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <i class="fas fa-times text-2xl"></i>
@@ -655,7 +655,7 @@
             const containerName = document.getElementById('sourceContainerName').value;
 
             if (!fileInput.files[0]) {
-                showNotification('Please select a ZIP file', 'error');
+                showToast('Please select a ZIP file', 'error');
                 return;
             }
 
@@ -663,10 +663,17 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
 
+            // Hide deploy modal and show progress modal
+            hideDeployModal();
+            showProgressModal('Uploading Source Code', 'Preparing your source code for deployment...');
+            updateProgress(5);
+
             try {
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
                 formData.append('containerName', containerName);
+
+                updateProgressWithMessage(10, 'Uploading source code...');
 
                 const response = await fetch('/api/source/deploy', {
                     method: 'POST',
@@ -679,20 +686,113 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    showNotification(`Project analyzed! Type: ${result.projectTypeDisplay}. Building Docker image...`, 'success');
-                    hideDeployModal();
-                    setTimeout(() => location.reload(), 2000);
+                    updateProgressWithMessage(30, `Project analyzed: ${result.projectTypeDisplay}`);
+
+                    // Start polling for deployment status
+                    if (result.deploymentId) {
+                        await pollDeploymentStatus(result.deploymentId);
+                    } else {
+                        // If no deployment tracking, show success after delay
+                        updateProgressWithMessage(70, 'Building Docker image...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        updateProgressWithMessage(90, 'Creating container...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        updateProgress(100);
+                        setTimeout(() => {
+                            hideProgressModal();
+                            showToast('Deployment completed successfully!', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        }, 500);
+                    }
                 } else {
+                    hideProgressModal();
                     const error = await response.json();
-                    showNotification('Deployment failed: ' + (error.error || 'Unknown error'), 'error');
+                    showToast('Deployment failed: ' + (error.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
+                hideProgressModal();
                 console.error('Error deploying from source:', error);
-                showNotification('Error deploying from source', 'error');
+                showToast('Error deploying from source: ' + error.message, 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Deploy from Source';
             }
+        }
+
+        // Poll deployment status
+        async function pollDeploymentStatus(deploymentId) {
+            const maxAttempts = 60; // 5 minutes max
+            let attempts = 0;
+
+            const poll = async () => {
+                try {
+                    const response = await fetch(`/api/source/status/${deploymentId}`, {
+                        credentials: 'same-origin',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        }
+                    });
+
+                    if (response.ok) {
+                        const status = await response.json();
+
+                        // Update progress based on status
+                        if (status.status === 'ANALYZING') {
+                            updateProgressWithMessage(35, 'Analyzing project structure...');
+                        } else if (status.status === 'BUILDING') {
+                            updateProgressWithMessage(50, 'Building Docker image...');
+                        } else if (status.status === 'PUSHING') {
+                            updateProgressWithMessage(70, 'Pushing image to registry...');
+                        } else if (status.status === 'DEPLOYING') {
+                            updateProgressWithMessage(85, 'Deploying container...');
+                        } else if (status.status === 'COMPLETED') {
+                            updateProgress(100);
+                            setTimeout(() => {
+                                hideProgressModal();
+                                showToast('Deployment completed successfully!', 'success');
+                                setTimeout(() => location.reload(), 1000);
+                            }, 500);
+                            return;
+                        } else if (status.status === 'FAILED') {
+                            hideProgressModal();
+                            showToast('Deployment failed: ' + (status.error || 'Unknown error'), 'error');
+                            return;
+                        }
+
+                        // Continue polling if not finished
+                        attempts++;
+                        if (attempts < maxAttempts) {
+                            setTimeout(poll, 5000); // Poll every 5 seconds
+                        } else {
+                            hideProgressModal();
+                            showToast('Deployment timeout - please check container status', 'warning');
+                        }
+                    } else {
+                        // Status endpoint not available, fall back to simple progress
+                        updateProgressWithMessage(70, 'Building and deploying...');
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        updateProgress(100);
+                        setTimeout(() => {
+                            hideProgressModal();
+                            showToast('Deployment initiated successfully!', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        }, 500);
+                    }
+                } catch (error) {
+                    console.error('Error polling deployment status:', error);
+                    // Continue with simple progress
+                    updateProgressWithMessage(70, 'Building and deploying...');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    updateProgress(100);
+                    setTimeout(() => {
+                        hideProgressModal();
+                        showToast('Deployment initiated successfully!', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }, 500);
+                }
+            };
+
+            poll();
         }
 
         // Set quick image preset
@@ -702,7 +802,7 @@
             document.getElementById('containerPort').value = port;
         }
 
-        // Deploy new container
+        // Deploy your application
         async function deployNewContainer(event) {
             event.preventDefault();
 

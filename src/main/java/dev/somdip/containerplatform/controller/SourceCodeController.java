@@ -3,18 +3,19 @@ package dev.somdip.containerplatform.controller;
 import dev.somdip.containerplatform.dto.container.CreateContainerRequest;
 import dev.somdip.containerplatform.dto.container.DeployContainerResponse;
 import dev.somdip.containerplatform.model.Container;
-import dev.somdip.containerplatform.service.ContainerService;
-import dev.somdip.containerplatform.service.ProjectAnalyzer;
-import dev.somdip.containerplatform.service.SourceCodeDeploymentService;
+import dev.somdip.containerplatform.model.SourceDeployment;
+import dev.somdip.containerplatform.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/source")
@@ -24,11 +25,17 @@ public class SourceCodeController {
 
     private final SourceCodeDeploymentService sourceCodeDeploymentService;
     private final ContainerService containerService;
+    private final SourceCodeBuildService buildService;
+    private final SourceDeploymentTrackingService deploymentTrackingService;
 
     public SourceCodeController(SourceCodeDeploymentService sourceCodeDeploymentService,
-                               ContainerService containerService) {
+                               ContainerService containerService,
+                               SourceCodeBuildService buildService,
+                               SourceDeploymentTrackingService deploymentTrackingService) {
         this.sourceCodeDeploymentService = sourceCodeDeploymentService;
         this.containerService = containerService;
+        this.buildService = buildService;
+        this.deploymentTrackingService = deploymentTrackingService;
     }
 
     @PostMapping("/deploy")
@@ -55,7 +62,7 @@ public class SourceCodeController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Only ZIP files are accepted"));
             }
 
-            // Deploy from source
+            // Step 1: Analyze and upload source code to S3
             SourceCodeDeploymentService.DeploymentResult result =
                     sourceCodeDeploymentService.deployFromSource(file, containerName, userId);
 
@@ -63,19 +70,43 @@ public class SourceCodeController {
                     result.getProjectType().getDisplayName(),
                     result.isDockerfileGenerated());
 
-            // Create response with project info
+            // Step 2: Create deployment tracking record
+            SourceDeployment deployment = deploymentTrackingService.createDeployment(
+                userId, containerName, result.getProjectId(), result.getS3Key());
+
+            // Step 3: Start CodeBuild job asynchronously
+            CompletableFuture.runAsync(() -> {
+                try {
+                    log.info("Starting CodeBuild for deployment: {}", deployment.getDeploymentId());
+
+                    SourceCodeBuildService.BuildResult buildResult = buildService.startBuild(
+                        result.getProjectId(), userId, containerName, result.getS3Key());
+
+                    // Update deployment with build info
+                    deploymentTrackingService.updateBuildStarted(
+                        deployment.getDeploymentId(),
+                        buildResult.getBuildId(),
+                        buildResult.getImageUri());
+
+                    // Poll build status and update deployment
+                    pollBuildStatus(deployment.getDeploymentId(), buildResult.getBuildId(),
+                                  buildResult.getImageUri(), containerName, userId, cpu, memory);
+
+                } catch (Exception e) {
+                    log.error("Error in async build process", e);
+                    deploymentTrackingService.markFailed(deployment.getDeploymentId(), e.getMessage());
+                }
+            });
+
+            // Create response with deployment info
             Map<String, Object> response = new HashMap<>();
+            response.put("deploymentId", deployment.getDeploymentId());
             response.put("projectId", result.getProjectId());
             response.put("projectType", result.getProjectType().name());
             response.put("projectTypeDisplay", result.getProjectType().getDisplayName());
             response.put("dockerfileGenerated", result.isDockerfileGenerated());
-            response.put("s3Key", result.getS3Key());
             response.put("message", "Project analyzed successfully. Building Docker image...");
-
-            // Note: Actual container creation and image building would happen via CodeBuild
-            // This is a placeholder for the next steps
-            response.put("status", "ANALYZING_COMPLETE");
-            response.put("nextStep", "IMAGE_BUILD_PENDING");
+            response.put("status", "ANALYZING");
 
             return ResponseEntity.ok(response);
 
@@ -83,6 +114,78 @@ public class SourceCodeController {
             log.error("Error deploying from source", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("error", "Deployment failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Poll build status and create container when build completes
+     */
+    private void pollBuildStatus(String deploymentId, String buildId, String imageUri,
+                                String containerName, String userId, Integer cpu, Integer memory) {
+        int maxAttempts = 120; // 10 minutes max (poll every 5 seconds)
+        int attempt = 0;
+
+        while (attempt < maxAttempts) {
+            try {
+                Thread.sleep(5000); // Wait 5 seconds between polls
+
+                SourceCodeBuildService.BuildStatus status = buildService.getBuildStatus(buildId);
+
+                log.debug("Build status for {}: {} - {}", deploymentId, status.getStatus(), status.getPhase());
+
+                // Update deployment status
+                deploymentTrackingService.updateBuildStatus(deploymentId, status.getStatus(), status.getPhase());
+
+                // Check if build completed
+                if ("BUILD_COMPLETED".equals(status.getStatus())) {
+                    log.info("Build completed successfully for deployment: {}", deploymentId);
+
+                    // Extract image name and tag from imageUri
+                    String[] parts = imageUri.split("/");
+                    String imageWithTag = parts[parts.length - 1];
+                    String[] imageParts = imageWithTag.split(":");
+                    String image = imageParts[0];
+                    String imageTag = imageParts.length > 1 ? imageParts[1] : "latest";
+
+                    // Create and deploy container
+                    Container container = containerService.createContainer(
+                        userId, containerName, image, imageTag, 8080);
+
+                    deploymentTrackingService.updateContainerCreated(deploymentId, container.getContainerId());
+
+                    // Deploy the container
+                    containerService.deployContainer(container.getContainerId());
+
+                    // Mark deployment as completed
+                    deploymentTrackingService.markCompleted(deploymentId);
+
+                    log.info("Deployment completed successfully: {}", deploymentId);
+                    break;
+
+                } else if ("BUILD_FAILED".equals(status.getStatus())) {
+                    String errorMsg = "Build failed: " + status.getPhase();
+                    log.error("Build failed for deployment {}: {}", deploymentId, errorMsg);
+                    deploymentTrackingService.markFailed(deploymentId, errorMsg);
+                    break;
+                }
+
+                attempt++;
+
+            } catch (InterruptedException e) {
+                log.error("Build polling interrupted for deployment: {}", deploymentId);
+                Thread.currentThread().interrupt();
+                deploymentTrackingService.markFailed(deploymentId, "Build polling interrupted");
+                break;
+            } catch (Exception e) {
+                log.error("Error polling build status for deployment: {}", deploymentId, e);
+                deploymentTrackingService.markFailed(deploymentId, "Error: " + e.getMessage());
+                break;
+            }
+        }
+
+        if (attempt >= maxAttempts) {
+            log.error("Build timeout for deployment: {}", deploymentId);
+            deploymentTrackingService.markFailed(deploymentId, "Build timeout after 10 minutes");
         }
     }
 
@@ -138,5 +241,43 @@ public class SourceCodeController {
                 "supportedTypes", supportedTypes,
                 "message", "These project types are automatically detected and configured"
         ));
+    }
+
+    /**
+     * Get deployment status - used by frontend to poll progress
+     */
+    @GetMapping("/status/{deploymentId}")
+    public ResponseEntity<?> getDeploymentStatus(
+            @PathVariable String deploymentId,
+            Authentication authentication) {
+        try {
+            SourceDeployment deployment = deploymentTrackingService.getDeployment(deploymentId);
+
+            if (deployment == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Verify ownership
+            if (!deployment.getUserId().equals(authentication.getName())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("deploymentId", deployment.getDeploymentId());
+            response.put("status", deployment.getStatus().name());
+            response.put("phase", deployment.getCurrentPhase());
+            response.put("containerId", deployment.getContainerId());
+            response.put("error", deployment.getErrorMessage());
+            response.put("createdAt", deployment.getCreatedAt());
+            response.put("updatedAt", deployment.getUpdatedAt());
+            response.put("completedAt", deployment.getCompletedAt());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Error getting deployment status: {}", deploymentId, e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Failed to get status: " + e.getMessage()));
+        }
     }
 }
