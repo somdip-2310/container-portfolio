@@ -160,9 +160,9 @@ public class SourceCodeController {
 
                     log.info("Using ECR image: {}:{}", image, imageTag);
 
-                    // Create and deploy container
+                    // Create and deploy container (port will be auto-detected based on image type)
                     Container container = containerService.createContainer(
-                        userId, containerName, image, imageTag, 8080);
+                        userId, containerName, image, imageTag, null);
 
                     deploymentTrackingService.updateContainerCreated(deploymentId, container.getContainerId());
 
