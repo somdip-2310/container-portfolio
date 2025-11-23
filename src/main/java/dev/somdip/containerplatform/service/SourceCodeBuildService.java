@@ -182,7 +182,7 @@ public class SourceCodeBuildService {
                 .name(projectName)
                 .description("Build Docker image for container: " + containerName)
                 .source(ProjectSource.builder()
-                    .type(SourceType.S3)
+                    .type(SourceType.NO_SOURCE)
                     .buildspec(getBuildSpec())
                     .build())
                 .artifacts(ProjectArtifacts.builder()
