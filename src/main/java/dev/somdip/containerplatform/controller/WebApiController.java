@@ -68,7 +68,7 @@ public class WebApiController {
                 return ResponseEntity.status(403).build();
             }
 
-            String logs = logStreamingService.getContainerLogs(containerId, lines);
+            String logs = logStreamingService.getLatestLogs(containerId, lines);
 
             return ResponseEntity.ok(Map.of(
                 "containerId", containerId,
