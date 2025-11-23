@@ -2,6 +2,7 @@ package dev.somdip.containerplatform.service;
 
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.repository.ContainerRepository;
+import dev.somdip.containerplatform.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +26,9 @@ import java.util.concurrent.*;
 @Service
 public class ContainerHealthCheckService {
     private static final Logger log = LoggerFactory.getLogger(ContainerHealthCheckService.class);
-    
+
     private final ContainerRepository containerRepository;
+    private final UserRepository userRepository;
     private final EcsClient ecsClient;
     private final CloudWatchClient cloudWatchClient;
     private final RestTemplate restTemplate;
@@ -42,9 +44,11 @@ public class ContainerHealthCheckService {
     private final Map<String, HealthStatus> healthStatusCache = new ConcurrentHashMap<>();
     
     public ContainerHealthCheckService(ContainerRepository containerRepository,
+                                     UserRepository userRepository,
                                      EcsClient ecsClient,
                                      CloudWatchClient cloudWatchClient) {
         this.containerRepository = containerRepository;
+        this.userRepository = userRepository;
         this.ecsClient = ecsClient;
         this.cloudWatchClient = cloudWatchClient;
         this.restTemplate = new RestTemplate();
@@ -112,8 +116,19 @@ public class ContainerHealthCheckService {
                 if (!isEcsServiceActive(container)) {
                     log.warn("Container {} has RUNNING status but ECS service is not active. Deleting from database.",
                         container.getContainerId());
+
+                    // Delete from repository
                     containerRepository.delete(container.getContainerId());
                     healthStatusCache.remove(container.getContainerId());
+
+                    // Decrement user's container count
+                    try {
+                        userRepository.incrementContainerCount(container.getUserId(), -1);
+                        log.info("Decremented container count for user: {}", container.getUserId());
+                    } catch (Exception e) {
+                        log.error("Failed to decrement container count for user: {}", container.getUserId(), e);
+                    }
+
                     continue;
                 }
 
