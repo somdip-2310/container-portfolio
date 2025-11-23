@@ -235,7 +235,19 @@
                     </button>
                 </div>
 
-                <!-- Modal Body -->
+                <!-- Deployment Type Tabs -->
+                <div class="flex space-x-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+                    <button type="button" id="dockerImageTab" onclick="switchDeployTab('dockerImage')"
+                            class="px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600">
+                        <i class="fas fa-docker mr-2"></i>Docker Image
+                    </button>
+                    <button type="button" id="sourceCodeTab" onclick="switchDeployTab('sourceCode')"
+                            class="px-4 py-2 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-code mr-2"></i>Source Code
+                    </button>
+                </div>
+
+                <!-- Docker Image Form -->
                 <form id="deployForm" onsubmit="deployNewContainer(event)" class="space-y-6">
                     <!-- Container Name -->
                     <div>
@@ -320,6 +332,131 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- Source Code Upload Form -->
+                <form id="sourceCodeForm" onsubmit="deployFromSource(event)" class="space-y-6 hidden">
+                    <!-- Container Name -->
+                    <div>
+                        <label for="sourceContainerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Container Name *
+                        </label>
+                        <input type="text" id="sourceContainerName" name="containerName" required
+                               placeholder="my-awesome-app"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Lowercase letters, numbers, and hyphens only</p>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label for="sourceCodeFile" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Upload Source Code (ZIP) *
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-purple-500 transition">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                                <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                    <label for="sourceCodeFile" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-purple-600 hover:text-purple-500">
+                                        <span>Upload a file</span>
+                                        <input id="sourceCodeFile" name="file" type="file" accept=".zip" required class="sr-only" onchange="updateFileName(this)">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">ZIP file containing your application source code</p>
+                                <p id="selectedFileName" class="text-sm font-medium text-purple-600 mt-2"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Banner -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <div class="flex">
+                            <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                            <div class="text-sm text-blue-700 dark:text-blue-300">
+                                <p class="font-medium mb-1">Automatic Deployment</p>
+                                <p>We'll automatically detect your project type (Node.js, Python, Java, etc.), generate a Dockerfile, build your image, and deploy it!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Supported Technologies -->
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Supported Technologies:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Node.js</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Python</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Java (Maven)</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Java (Gradle)</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Go</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">PHP</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Ruby</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">.NET</span>
+                            <span class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-xs">Static HTML</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button type="button" onclick="hideDeployModal()"
+                                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                        <button type="submit" id="sourceCodeSubmitBtn"
+                                class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition transform hover:scale-105">
+                            <i class="fas fa-upload mr-2"></i>
+                            Deploy from Source
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Actions Modal -->
+    <div id="containerActionsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <div class="p-6">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Container Actions</h3>
+                    <button onclick="hideContainerActionsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body - Action Buttons -->
+                <div class="space-y-3">
+                    <button onclick="handleViewDetails()"
+                            class="w-full flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg text-left transition">
+                        <i class="fas fa-info-circle text-blue-500 w-8"></i>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">View Details</span>
+                    </button>
+
+                    <button onclick="handleRestartContainer()"
+                            class="w-full flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg text-left transition">
+                        <i class="fas fa-redo text-green-500 w-8"></i>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">Restart Container</span>
+                    </button>
+
+                    <button onclick="handleViewMetrics()"
+                            class="w-full flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg text-left transition">
+                        <i class="fas fa-chart-line text-purple-500 w-8"></i>
+                        <span class="text-gray-700 dark:text-gray-200 font-medium">View Metrics</span>
+                    </button>
+
+                    <button onclick="handleDeleteContainer()"
+                            class="w-full flex items-center px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-left transition">
+                        <i class="fas fa-trash text-red-500 w-8"></i>
+                        <span class="text-red-600 dark:text-red-400 font-medium">Delete Container</span>
+                    </button>
+                </div>
+
+                <!-- Cancel Button -->
+                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button onclick="hideContainerActionsModal()"
+                            class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-gray-700 dark:text-gray-300 transition">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -382,6 +519,7 @@
             try {
                 const response = await fetch(`/api/containers/${containerId}/deploy`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         [csrfHeader]: csrfToken,
                         'Content-Type': 'application/json'
@@ -392,7 +530,8 @@
                     showNotification('Container starting...', 'success');
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    showNotification('Failed to start container', 'error');
+                    const error = await response.text();
+                    showNotification('Failed to start container: ' + error, 'error');
                 }
             } catch (error) {
                 console.error('Error starting container:', error);
@@ -407,6 +546,7 @@
             try {
                 const response = await fetch(`/api/containers/${containerId}/stop`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         [csrfHeader]: csrfToken,
                         'Content-Type': 'application/json'
@@ -417,7 +557,8 @@
                     showNotification('Container stopping...', 'success');
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    showNotification('Failed to stop container', 'error');
+                    const error = await response.text();
+                    showNotification('Failed to stop container: ' + error, 'error');
                 }
             } catch (error) {
                 console.error('Error stopping container:', error);
@@ -444,6 +585,89 @@
             if (modal) {
                 modal.classList.add('hidden');
                 document.getElementById('deployForm').reset();
+                document.getElementById('sourceCodeForm').reset();
+                document.getElementById('selectedFileName').textContent = '';
+                switchDeployTab('dockerImage');
+            }
+        }
+
+        // Switch deployment tabs
+        function switchDeployTab(tabName) {
+            const dockerImageTab = document.getElementById('dockerImageTab');
+            const sourceCodeTab = document.getElementById('sourceCodeTab');
+            const dockerImageForm = document.getElementById('deployForm');
+            const sourceCodeForm = document.getElementById('sourceCodeForm');
+
+            if (tabName === 'dockerImage') {
+                dockerImageTab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+                dockerImageTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+                sourceCodeTab.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+                sourceCodeTab.classList.add('text-gray-500', 'dark:text-gray-400');
+
+                dockerImageForm.classList.remove('hidden');
+                sourceCodeForm.classList.add('hidden');
+            } else {
+                sourceCodeTab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+                sourceCodeTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+                dockerImageTab.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+                dockerImageTab.classList.add('text-gray-500', 'dark:text-gray-400');
+
+                sourceCodeForm.classList.remove('hidden');
+                dockerImageForm.classList.add('hidden');
+            }
+        }
+
+        // Update file name display
+        function updateFileName(input) {
+            const fileName = input.files[0]?.name || '';
+            document.getElementById('selectedFileName').textContent = fileName;
+        }
+
+        // Deploy from source code
+        async function deployFromSource(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('sourceCodeFile');
+            const containerName = document.getElementById('sourceContainerName').value;
+
+            if (!fileInput.files[0]) {
+                showNotification('Please select a ZIP file', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('sourceCodeSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('containerName', containerName);
+
+                const response = await fetch('/api/source/deploy', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(`Project analyzed! Type: ${result.projectTypeDisplay}. Building Docker image...`, 'success');
+                    hideDeployModal();
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    const error = await response.json();
+                    showNotification('Deployment failed: ' + (error.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deploying from source:', error);
+                showNotification('Error deploying from source', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Deploy from Source';
             }
         }
 
@@ -468,6 +692,7 @@
             try {
                 const response = await fetch('/api/containers', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         [csrfHeader]: csrfToken,
                         'Content-Type': 'application/json'
@@ -489,21 +714,56 @@
             }
         }
 
+        // Current container ID for modal actions
+        let currentContainerId = null;
+
         // Show container menu
         function showContainerMenu(containerId) {
-            const actions = [
-                'View Details',
-                'Restart',
-                'View Metrics',
-                'Delete'
-            ];
+            currentContainerId = containerId;
+            const modal = document.getElementById('containerActionsModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
 
-            const action = prompt('Choose action:\n' + actions.map((a, i) => `${i+1}. ${a}`).join('\n'));
+        // Hide container actions modal
+        function hideContainerActionsModal() {
+            const modal = document.getElementById('containerActionsModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                currentContainerId = null;
+            }
+        }
 
-            if (action === '4') {
-                deleteContainer(containerId);
-            } else if (action === '2') {
-                restartContainer(containerId);
+        // Handle view details
+        function handleViewDetails() {
+            hideContainerActionsModal();
+            if (currentContainerId) {
+                window.location.href = `/container-details?containerId=${currentContainerId}`;
+            }
+        }
+
+        // Handle restart container
+        async function handleRestartContainer() {
+            hideContainerActionsModal();
+            if (currentContainerId) {
+                await restartContainer(currentContainerId);
+            }
+        }
+
+        // Handle view metrics
+        function handleViewMetrics() {
+            hideContainerActionsModal();
+            if (currentContainerId) {
+                window.location.href = `/logs?containerId=${currentContainerId}`;
+            }
+        }
+
+        // Handle delete container
+        async function handleDeleteContainer() {
+            hideContainerActionsModal();
+            if (currentContainerId) {
+                await deleteContainer(currentContainerId);
             }
         }
 
@@ -514,6 +774,7 @@
             try {
                 const response = await fetch(`/api/containers/${containerId}`, {
                     method: 'DELETE',
+                    credentials: 'same-origin',
                     headers: {
                         [csrfHeader]: csrfToken
                     }
@@ -523,7 +784,8 @@
                     showNotification('Container deleted successfully', 'success');
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showNotification('Failed to delete container', 'error');
+                    const error = await response.text();
+                    showNotification('Failed to delete container: ' + error, 'error');
                 }
             } catch (error) {
                 console.error('Error deleting container:', error);
@@ -538,6 +800,7 @@
             try {
                 const response = await fetch(`/api/containers/${containerId}/restart`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         [csrfHeader]: csrfToken,
                         'Content-Type': 'application/json'
@@ -548,7 +811,8 @@
                     showNotification('Container restarting...', 'success');
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    showNotification('Failed to restart container', 'error');
+                    const error = await response.text();
+                    showNotification('Failed to restart container: ' + error, 'error');
                 }
             } catch (error) {
                 console.error('Error restarting container:', error);

@@ -10,6 +10,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
+import software.amazon.awssdk.services.codebuild.CodeBuildClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ecr.EcrClient;
@@ -128,6 +129,15 @@ public class AwsConfig {
     public Ec2Client ec2Client(AwsCredentialsProvider credentialsProvider, Region region) {
         log.info("Creating EC2 client for region: {}", region);
         return Ec2Client.builder()
+                .region(region)
+                .credentialsProvider(credentialsProvider)
+                .build();
+    }
+
+    @Bean
+    public CodeBuildClient codeBuildClient(AwsCredentialsProvider credentialsProvider, Region region) {
+        log.info("Creating CodeBuild client for region: {}", region);
+        return CodeBuildClient.builder()
                 .region(region)
                 .credentialsProvider(credentialsProvider)
                 .build();

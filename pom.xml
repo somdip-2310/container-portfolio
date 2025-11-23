@@ -92,7 +92,12 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>ecr</artifactId>
         </dependency>
-        
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>codebuild</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>route53</artifactId>
