@@ -654,14 +654,45 @@
             const fileInput = document.getElementById('sourceCodeFile');
             const containerName = document.getElementById('sourceContainerName').value;
 
-            if (!fileInput.files[0]) {
+            // Validate file input exists
+            if (!fileInput) {
+                showToast('File input not found. Please refresh the page.', 'error');
+                console.error('File input element not found');
+                return;
+            }
+
+            // Validate file is selected
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast('Please select a ZIP file to upload', 'error');
+                console.error('No file selected');
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // Validate file object
+            if (!file) {
+                showToast('File object is invalid. Please try selecting the file again.', 'error');
+                console.error('File object is null or undefined');
+                return;
+            }
+
+            // Validate file is a ZIP
+            if (!file.name.toLowerCase().endsWith('.zip')) {
                 showToast('Please select a ZIP file', 'error');
                 return;
             }
 
+            console.log('File to upload:', file);
+            console.log('File name:', file.name);
+            console.log('File size:', file.size);
+            console.log('File type:', file.type);
+
             const submitBtn = document.getElementById('sourceCodeSubmitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+            }
 
             // Hide deploy modal and show progress modal
             hideDeployModal();
@@ -670,13 +701,6 @@
 
             try {
                 const formData = new FormData();
-                const file = fileInput.files[0];
-
-                console.log('File to upload:', file);
-                console.log('File name:', file.name);
-                console.log('File size:', file.size);
-                console.log('File type:', file.type);
-
                 formData.append('file', file);
                 formData.append('containerName', containerName);
 
