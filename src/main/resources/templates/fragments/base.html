@@ -89,12 +89,6 @@
                 
                 <!-- Right side items -->
                 <div class="flex items-center space-x-4">
-                    <!-- Dark mode toggle -->
-                    <button id="theme-toggle" type="button" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2">
-                        <i class="fas fa-moon dark:hidden text-lg"></i>
-                        <i class="fas fa-sun hidden dark:block text-lg"></i>
-                    </button>
-
                     <!-- Notifications -->
                     <button id="notifications-toggle" type="button" class="relative text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2">
                         <i class="fas fa-bell text-lg"></i>
@@ -148,22 +142,22 @@
                     <!-- User dropdown -->
                     <div class="relative">
                         <button id="user-menu-button" type="button" class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                            <img class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
-                                 th:src="|https://ui-avatars.com/api/?name=${#strings.replace(#authentication?.name ?: 'User', '@', '')}&background=8B5CF6&color=fff|"
-                                 alt="User Avatar">
+                            <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                                <span th:text="${#authentication?.name != null ? #strings.substring(#authentication.name, 0, 1).toUpperCase() + (#strings.indexOf(#authentication.name, ' ') > 0 ? #strings.substring(#authentication.name, #strings.indexOf(#authentication.name, ' ') + 1, #strings.indexOf(#authentication.name, ' ') + 2).toUpperCase() : (#strings.indexOf(#authentication.name, '@') > 1 ? #strings.substring(#authentication.name, 1, 2).toUpperCase() : '')) : 'U'}">SR</span>
+                            </div>
                             <span class="ml-3" th:text="${#authentication?.name ?: 'User'}">User</span>
                             <i class="fas fa-chevron-down ml-2 text-xs"></i>
                         </button>
 
                         <!-- Dropdown menu (hidden by default) -->
                         <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
-                            <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <a href="/settings#profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fas fa-user mr-2"></i>Profile
                             </a>
                             <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fas fa-cog mr-2"></i>Settings
                             </a>
-                            <a href="/api-keys" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <a href="/settings#api" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fas fa-key mr-2"></i>API Keys
                             </a>
                             <hr class="my-1 border-gray-200 dark:border-gray-700">
@@ -293,53 +287,39 @@
     <!-- Scripts Fragment -->
     <div th:fragment="scripts">
         <script>
-            // Dark mode toggle
-            const themeToggle = document.getElementById('theme-toggle');
-            const html = document.documentElement;
-
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    html.classList.toggle('dark');
-                    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
-                });
-            }
-
-            // Load saved theme
-            if (localStorage.getItem('theme') === 'dark' ||
-                (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                html.classList.add('dark');
-            }
-
             // User dropdown toggle
             const userMenuButton = document.getElementById('user-menu-button');
             const userMenu = document.getElementById('user-menu');
+            const notificationsToggle = document.getElementById('notifications-toggle');
+            const notificationsMenu = document.getElementById('notifications-menu');
 
             if (userMenuButton && userMenu) {
                 userMenuButton.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    userMenu.classList.toggle('hidden');
+                    e.preventDefault();
+                    const isHidden = userMenu.classList.contains('hidden');
+                    userMenu.classList.toggle('hidden', !isHidden);
                     notificationsMenu?.classList.add('hidden');
                 });
             }
 
             // Notifications dropdown toggle
-            const notificationsToggle = document.getElementById('notifications-toggle');
-            const notificationsMenu = document.getElementById('notifications-menu');
-
             if (notificationsToggle && notificationsMenu) {
                 notificationsToggle.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    notificationsMenu.classList.toggle('hidden');
+                    e.preventDefault();
+                    const isHidden = notificationsMenu.classList.contains('hidden');
+                    notificationsMenu.classList.toggle('hidden', !isHidden);
                     userMenu?.classList.add('hidden');
                 });
             }
 
             // Close dropdowns when clicking outside
             document.addEventListener('click', (e) => {
-                if (userMenu && !userMenu.contains(e.target) && e.target !== userMenuButton) {
+                if (userMenu && !userMenu.contains(e.target) && !userMenuButton?.contains(e.target)) {
                     userMenu.classList.add('hidden');
                 }
-                if (notificationsMenu && !notificationsMenu.contains(e.target) && e.target !== notificationsToggle) {
+                if (notificationsMenu && !notificationsMenu.contains(e.target) && !notificationsToggle?.contains(e.target)) {
                     notificationsMenu.classList.add('hidden');
                 }
             });
