@@ -261,7 +261,7 @@ public class EcsService {
                 .containerPort(container.getPort())
                 .protocol("tcp")
                 .build())
-            .environment(convertEnvironmentVariables(container.getEnvironmentVariables()))
+            .environment(convertEnvironmentVariables(container))
             .logConfiguration(LogConfiguration.builder()
                 .logDriver("awslogs")
                 .options(Map.of(
@@ -601,17 +601,40 @@ public class EcsService {
         }
     }
     
-    private Collection<KeyValuePair> convertEnvironmentVariables(Map<String, String> envVars) {
-        if (envVars == null || envVars.isEmpty()) {
-            return Collections.emptyList();
+    private Collection<KeyValuePair> convertEnvironmentVariables(Container container) {
+        List<KeyValuePair> envVars = new ArrayList<>();
+        Map<String, String> userEnvVars = container.getEnvironmentVariables();
+        
+        // Add default environment variables for proper network binding (if not user-provided)
+        if (userEnvVars == null || !userEnvVars.containsKey("HOST")) {
+            envVars.add(KeyValuePair.builder().name("HOST").value("0.0.0.0").build());
+        }
+        if (userEnvVars == null || !userEnvVars.containsKey("PORT")) {
+            envVars.add(KeyValuePair.builder().name("PORT").value(String.valueOf(container.getPort())).build());
+        }
+        // For Java Spring Boot applications
+        if (userEnvVars == null || !userEnvVars.containsKey("SERVER_ADDRESS")) {
+            envVars.add(KeyValuePair.builder().name("SERVER_ADDRESS").value("0.0.0.0").build());
+        }
+        // For .NET applications
+        if (userEnvVars == null || !userEnvVars.containsKey("ASPNETCORE_URLS")) {
+            envVars.add(KeyValuePair.builder()
+                .name("ASPNETCORE_URLS")
+                .value("http://0.0.0.0:" + container.getPort())
+                .build());
         }
         
-        return envVars.entrySet().stream()
-            .map(entry -> KeyValuePair.builder()
-                .name(entry.getKey())
-                .value(entry.getValue())
-                .build())
-            .collect(Collectors.toList());
+        // Add user-defined environment variables (these take precedence)
+        if (userEnvVars != null) {
+            userEnvVars.entrySet().forEach(entry ->
+                envVars.add(KeyValuePair.builder()
+                    .name(entry.getKey())
+                    .value(entry.getValue())
+                    .build())
+            );
+        }
+        
+        return envVars;
     }
     
     private Task getTaskDetails(String taskArn) {
