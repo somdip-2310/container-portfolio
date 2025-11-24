@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -92,7 +93,12 @@ public class ContainerService {
         container.setSslEnabled(true);
         container.setCreatedAt(Instant.now());
         container.setUpdatedAt(Instant.now());
-        
+
+        // Set PORT environment variable (critical for app to listen on correct port)
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put("PORT", String.valueOf(container.getPort()));
+        container.setEnvironmentVariables(envVars);
+
         // Set default health check configuration
         Container.HealthCheckConfig healthCheck = new Container.HealthCheckConfig();
         healthCheck.setPath("/health");
@@ -137,11 +143,19 @@ public class ContainerService {
             validateMemory(memory);
             container.setMemory(memory);
         }
-        
+
         if (environmentVariables != null) {
-            container.setEnvironmentVariables(environmentVariables);
+            // Merge with existing env vars, ensuring PORT is always preserved
+            Map<String, String> mergedEnvVars = new HashMap<>();
+            if (container.getEnvironmentVariables() != null) {
+                mergedEnvVars.putAll(container.getEnvironmentVariables());
+            }
+            mergedEnvVars.putAll(environmentVariables);
+            // Always ensure PORT is set to the container's port
+            mergedEnvVars.put("PORT", String.valueOf(container.getPort()));
+            container.setEnvironmentVariables(mergedEnvVars);
         }
-        
+
         container.setUpdatedAt(Instant.now());
         return containerRepository.save(container);
     }
