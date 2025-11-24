@@ -201,12 +201,12 @@ public class UsageTrackingService {
                 return 0.0;
             }
 
-            Service service = response.services().get(0);
+            software.amazon.awssdk.services.ecs.model.Service ecsService = response.services().get(0);
 
             // Get the task ARNs for this service
             ListTasksRequest listTasksRequest = ListTasksRequest.builder()
                 .cluster(clusterName)
-                .serviceName(service.serviceName())
+                .serviceName(ecsService.serviceName())
                 .desiredStatus(DesiredStatus.RUNNING)
                 .build();
 
