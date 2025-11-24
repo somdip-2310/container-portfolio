@@ -258,7 +258,7 @@ public class EcsService {
             .memory(container.getMemory() - 128) // Reserve 128MB for health-proxy
             .essential(true)
             .portMappings(PortMapping.builder()
-                .containerPort(9090)
+                .containerPort(container.getPort())
                 .protocol("tcp")
                 .build())
             .environment(convertEnvironmentVariables(container.getEnvironmentVariables()))
