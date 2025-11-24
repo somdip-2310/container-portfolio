@@ -37,10 +37,10 @@ public class DashboardService {
             List<Container> userContainers = containerRepository.findByUserId(userId);
             long totalContainers = userContainers.size();
             long runningContainers = userContainers.stream()
-                .filter(c -> "RUNNING".equals(c.getStatus()))
+                .filter(c -> c.getStatus() == Container.ContainerStatus.RUNNING)
                 .count();
             long stoppedContainers = userContainers.stream()
-                .filter(c -> "STOPPED".equals(c.getStatus()))
+                .filter(c -> c.getStatus() == Container.ContainerStatus.STOPPED)
                 .count();
             
             // Get resource usage
@@ -85,56 +85,97 @@ public class DashboardService {
         try {
             Instant endTime = Instant.now();
             Instant startTime = endTime.minus(days, ChronoUnit.DAYS);
-            
-            // Get CPU metrics
-            GetMetricStatisticsRequest cpuRequest = GetMetricStatisticsRequest.builder()
-                .namespace("AWS/ECS")
-                .metricName("CPUUtilization")
-                .dimensions(Dimension.builder()
-                    .name("ServiceName")
-                    .value("user-" + userId)
-                    .build())
-                .startTime(startTime)
-                .endTime(endTime)
-                .period(3600) // 1 hour intervals
-                .statistics(Statistic.AVERAGE)
-                .build();
-                
-            GetMetricStatisticsResponse cpuResponse = cloudWatchClient.getMetricStatistics(cpuRequest);
-            
-            // Get Memory metrics
-            GetMetricStatisticsRequest memoryRequest = GetMetricStatisticsRequest.builder()
-                .namespace("AWS/ECS")
-                .metricName("MemoryUtilization")
-                .dimensions(Dimension.builder()
-                    .name("ServiceName")
-                    .value("user-" + userId)
-                    .build())
-                .startTime(startTime)
-                .endTime(endTime)
-                .period(3600) // 1 hour intervals
-                .statistics(Statistic.AVERAGE)
-                .build();
-                
-            GetMetricStatisticsResponse memoryResponse = cloudWatchClient.getMetricStatistics(memoryRequest);
-            
-            // Process and return data
+
+            // Get all user containers
+            List<Container> userContainers = containerRepository.findByUserId(userId);
+
+            // Aggregate metrics from all containers
+            Map<Instant, Double> cpuByTime = new TreeMap<>();
+            Map<Instant, Double> memoryByTime = new TreeMap<>();
+            Map<Instant, Integer> countByTime = new TreeMap<>();
+
+            for (Container container : userContainers) {
+                if (container.getServiceArn() == null) continue;
+
+                String serviceName = extractServiceName(container.getServiceArn());
+                if (serviceName == null) continue;
+
+                // Get CPU metrics for this container
+                try {
+                    GetMetricStatisticsRequest cpuRequest = GetMetricStatisticsRequest.builder()
+                        .namespace("AWS/ECS")
+                        .metricName("CPUUtilization")
+                        .dimensions(
+                            Dimension.builder().name("ServiceName").value(serviceName).build(),
+                            Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
+                        )
+                        .startTime(startTime)
+                        .endTime(endTime)
+                        .period(86400) // 1 day intervals for 7 days view
+                        .statistics(Statistic.AVERAGE)
+                        .build();
+
+                    GetMetricStatisticsResponse cpuResponse = cloudWatchClient.getMetricStatistics(cpuRequest);
+
+                    for (Datapoint dp : cpuResponse.datapoints()) {
+                        cpuByTime.merge(dp.timestamp(), dp.average(), Double::sum);
+                        countByTime.merge(dp.timestamp(), 1, Integer::sum);
+                    }
+
+                    // Get Memory metrics for this container
+                    GetMetricStatisticsRequest memoryRequest = GetMetricStatisticsRequest.builder()
+                        .namespace("AWS/ECS")
+                        .metricName("MemoryUtilization")
+                        .dimensions(
+                            Dimension.builder().name("ServiceName").value(serviceName).build(),
+                            Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
+                        )
+                        .startTime(startTime)
+                        .endTime(endTime)
+                        .period(86400) // 1 day intervals for 7 days view
+                        .statistics(Statistic.AVERAGE)
+                        .build();
+
+                    GetMetricStatisticsResponse memoryResponse = cloudWatchClient.getMetricStatistics(memoryRequest);
+
+                    for (Datapoint dp : memoryResponse.datapoints()) {
+                        memoryByTime.merge(dp.timestamp(), dp.average(), Double::sum);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to get metrics for container: {}", container.getContainerId(), e);
+                }
+            }
+
+            // Calculate averages and convert to lists
+            List<Double> cpuData = cpuByTime.entrySet().stream()
+                .map(e -> countByTime.getOrDefault(e.getKey(), 1) > 0 ?
+                    e.getValue() / countByTime.get(e.getKey()) : e.getValue())
+                .collect(Collectors.toList());
+
+            List<Double> memoryData = memoryByTime.entrySet().stream()
+                .map(e -> countByTime.getOrDefault(e.getKey(), 1) > 0 ?
+                    e.getValue() / countByTime.get(e.getKey()) : e.getValue())
+                .collect(Collectors.toList());
+
             Map<String, List<Double>> usage = new HashMap<>();
-            usage.put("cpu", cpuResponse.datapoints().stream()
-                .sorted(Comparator.comparing(Datapoint::timestamp))
-                .map(Datapoint::average)
-                .collect(Collectors.toList()));
-            usage.put("memory", memoryResponse.datapoints().stream()
-                .sorted(Comparator.comparing(Datapoint::timestamp))
-                .map(Datapoint::average)
-                .collect(Collectors.toList()));
-                
+            usage.put("cpu", cpuData.isEmpty() ? List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) : cpuData);
+            usage.put("memory", memoryData.isEmpty() ? List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) : memoryData);
+
             return usage;
-            
+
         } catch (Exception e) {
             log.error("Error getting resource usage history for user: {}", userId, e);
-            return Map.of("cpu", new ArrayList<>(), "memory", new ArrayList<>());
+            return Map.of("cpu", List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                         "memory", List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
         }
+    }
+
+    private String extractServiceName(String serviceArn) {
+        // Extract service name from ARN like:
+        // arn:aws:ecs:us-east-1:257394460825:service/somdip-dev-cluster/service-{containerId}
+        if (serviceArn == null) return null;
+        String[] parts = serviceArn.split("/");
+        return parts.length >= 3 ? parts[2] : null;
     }
     
     public List<RecentActivity> getRecentActivity(String userId, int limit) {
@@ -177,11 +218,12 @@ public class DashboardService {
             totalCpu += container.getCpu() / 1024.0; // Convert CPU units to vCPUs
             totalMemory += container.getMemory() / 1024.0; // Convert MB to GB
             
-            if ("RUNNING".equals(container.getStatus())) {
-                // In a real implementation, fetch actual usage from CloudWatch
-                // For now, simulate with random values
-                usedCpu += (container.getCpu() / 1024.0) * 0.45;
-                usedMemory += (container.getMemory() / 1024.0) * 0.5;
+            if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+                // Get actual resource usage from container's resource usage data
+                if (container.getResourceUsage() != null) {
+                    usedCpu += (container.getCpu() / 1024.0) * (container.getResourceUsage().getAvgCpuPercent() / 100.0);
+                    usedMemory += (container.getMemory() / 1024.0) * (container.getResourceUsage().getAvgMemoryPercent() / 100.0);
+                }
             }
         }
         

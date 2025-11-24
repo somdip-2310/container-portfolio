@@ -48,7 +48,7 @@ public class MetricsService {
             int runningContainers = 0;
             
             for (Container container : userContainers) {
-                if ("RUNNING".equals(container.getStatus())) {
+                if (container.getStatus() == Container.ContainerStatus.RUNNING) {
                     runningContainers++;
                     ContainerMetrics metrics = fetchContainerMetrics(container.getContainerId());
                     totalCpuUsage += metrics.getCpuUsage();
@@ -92,60 +92,76 @@ public class MetricsService {
     }
     
     private ContainerMetrics fetchContainerMetrics(String containerId) {
+        // Get container info for limits and service name
+        Container container = containerRepository.findById(containerId)
+            .orElseThrow(() -> new RuntimeException("Container not found"));
+
+        // Use actual resource usage data if available
+        if (container.getResourceUsage() != null) {
+            return ContainerMetrics.builder()
+                .containerId(containerId)
+                .containerName(container.getName())
+                .cpuUsage(container.getResourceUsage().getAvgCpuPercent())
+                .memoryUsage(container.getResourceUsage().getAvgMemoryPercent())
+                .cpuLimit(container.getCpu())
+                .memoryLimit(container.getMemory())
+                .timestamp(Instant.now())
+                .status(container.getStatus() != null ? container.getStatus().name() : "UNKNOWN")
+                .build();
+        }
+
+        // Otherwise fetch from CloudWatch
         Instant endTime = Instant.now();
         Instant startTime = endTime.minus(5, ChronoUnit.MINUTES);
-        
+
+        String serviceName = extractServiceName(container.getServiceArn());
+        if (serviceName == null) {
+            return createEmptyMetrics();
+        }
+
         // Fetch CPU metrics
         GetMetricStatisticsRequest cpuRequest = GetMetricStatisticsRequest.builder()
             .namespace("AWS/ECS")
             .metricName("CPUUtilization")
             .dimensions(
-                Dimension.builder()
-                    .name("ServiceName")
-                    .value("container-" + containerId)
-                    .build()
+                Dimension.builder().name("ServiceName").value(serviceName).build(),
+                Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
             )
             .startTime(startTime)
             .endTime(endTime)
             .period(60) // 1 minute
             .statistics(Statistic.AVERAGE)
             .build();
-            
+
         GetMetricStatisticsResponse cpuResponse = cloudWatchClient.getMetricStatistics(cpuRequest);
-        
+
         // Fetch Memory metrics
         GetMetricStatisticsRequest memoryRequest = GetMetricStatisticsRequest.builder()
             .namespace("AWS/ECS")
             .metricName("MemoryUtilization")
             .dimensions(
-                Dimension.builder()
-                    .name("ServiceName")
-                    .value("container-" + containerId)
-                    .build()
+                Dimension.builder().name("ServiceName").value(serviceName).build(),
+                Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
             )
             .startTime(startTime)
             .endTime(endTime)
             .period(60) // 1 minute
             .statistics(Statistic.AVERAGE)
             .build();
-            
+
         GetMetricStatisticsResponse memoryResponse = cloudWatchClient.getMetricStatistics(memoryRequest);
-        
+
         // Get the latest values
         double cpuUsage = cpuResponse.datapoints().stream()
             .max(Comparator.comparing(Datapoint::timestamp))
             .map(Datapoint::average)
             .orElse(0.0);
-            
+
         double memoryUsage = memoryResponse.datapoints().stream()
             .max(Comparator.comparing(Datapoint::timestamp))
             .map(Datapoint::average)
             .orElse(0.0);
-            
-        // Get container info for limits
-        Container container = containerRepository.findById(containerId)
-            .orElseThrow(() -> new RuntimeException("Container not found"));
-            
+
         return ContainerMetrics.builder()
             .containerId(containerId)
             .containerName(container.getName())
@@ -156,6 +172,14 @@ public class MetricsService {
             .timestamp(Instant.now())
             .status(container.getStatus() != null ? container.getStatus().name() : "UNKNOWN")
             .build();
+    }
+
+    private String extractServiceName(String serviceArn) {
+        // Extract service name from ARN like:
+        // arn:aws:ecs:us-east-1:257394460825:service/somdip-dev-cluster/service-{containerId}
+        if (serviceArn == null) return null;
+        String[] parts = serviceArn.split("/");
+        return parts.length >= 3 ? parts[2] : null;
     }
     
     private ContainerMetrics createEmptyMetrics() {

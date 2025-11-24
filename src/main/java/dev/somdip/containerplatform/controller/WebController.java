@@ -113,8 +113,8 @@ public class WebController {
             
             model.addAttribute("containers", containers);
             model.addAttribute("totalContainers", containers.size());
-            model.addAttribute("runningContainers", 
-                containers.stream().filter(c -> "RUNNING".equals(c.getStatus())).count());
+            model.addAttribute("runningContainers",
+                containers.stream().filter(c -> c.getStatus() == Container.ContainerStatus.RUNNING).count());
             
         } catch (Exception e) {
             log.error("Error loading containers", e);
