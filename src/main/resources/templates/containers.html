@@ -84,7 +84,7 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400"
-                                   th:text="${(container.image != null and #strings.contains(container.image, '/')) ? #strings.substringAfterLast(container.image, '/') : container.image} + ':' + container.imageTag">image:tag</p>
+                                   th:text="${(container.image != null and #strings.contains(container.image, '/')) ? #strings.substring(container.image, #strings.lastIndexOf(container.image, '/') + 1) : container.image} + ':' + container.imageTag">image:tag</p>
                             </div>
                             <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (container.status == 'STOPPED' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : (container.status == 'FAILED' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200')))}"
                                   th:text="${container.status}">Status</span>
