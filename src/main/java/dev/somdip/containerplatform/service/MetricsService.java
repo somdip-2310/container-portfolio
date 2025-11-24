@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MetricsService {
-    /*
+
     private final CloudWatchClient cloudWatchClient;
     private final ContainerRepository containerRepository;
     
@@ -192,5 +192,5 @@ public class MetricsService {
             .status("UNKNOWN")
             .build();
     }
-    */
+
 }
