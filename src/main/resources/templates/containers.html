@@ -192,22 +192,19 @@
                             </button>
                             <button type="button" th:if="${container.status == 'STOPPED'}"
                                     th:attr="data-container-id=${container.containerId}"
-                                    th:onclick="|startContainer('${container.containerId}')|"
-                                    class="flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                    class="btn-start-container flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
                                 <i class="fas fa-play mr-1.5"></i>
                                 <span>Start</span>
                             </button>
                             <button type="button" th:if="${container.status == 'RUNNING'}"
                                     th:attr="data-container-id=${container.containerId}"
-                                    th:onclick="|stopContainer('${container.containerId}')|"
-                                    class="flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                    class="btn-stop-container flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
                                 <i class="fas fa-stop mr-1.5"></i>
                                 <span>Stop</span>
                             </button>
                             <button type="button"
                                     th:attr="data-container-id=${container.containerId}"
-                                    th:onclick="|showContainerMenu('${container.containerId}')|"
-                                    class="flex items-center justify-center bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 text-gray-700 dark:text-gray-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                    class="btn-show-menu flex items-center justify-center bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 text-gray-700 dark:text-gray-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
                                 <i class="fas fa-ellipsis-v mr-1.5"></i>
                                 <span>More</span>
                             </button>
@@ -1169,6 +1166,26 @@
         function showNotification(message, type = 'info') {
             showToast(message, type);
         }
+
+        // Add event listeners for button clicks using delegation
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const containerId = target.getAttribute('data-container-id');
+            if (!containerId) return;
+
+            if (target.classList.contains('btn-start-container')) {
+                e.preventDefault();
+                startContainer(containerId);
+            } else if (target.classList.contains('btn-stop-container')) {
+                e.preventDefault();
+                stopContainer(containerId);
+            } else if (target.classList.contains('btn-show-menu')) {
+                e.preventDefault();
+                showContainerMenu(containerId);
+            }
+        });
     </script>
 </body>
 </html>
