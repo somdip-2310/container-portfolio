@@ -303,11 +303,11 @@ public class EcsService {
         }
 
         Container.HealthCheckConfig hc = container.getHealthCheck();
-        String command = String.format("CMD-SHELL, curl -f http://localhost:%d%s || exit 1",
-            container.getPort(), hc.getPath() != null ? hc.getPath() : "/health");
+        String healthPath = hc.getPath() != null ? hc.getPath() : "/health";
+        String healthCommand = "curl -f http://localhost:" + container.getPort() + healthPath + " || exit 1";
 
         return HealthCheck.builder()
-            .command(command)
+            .command("CMD-SHELL", healthCommand)
             .interval(hc.getInterval() != null ? hc.getInterval() : 30)
             .timeout(hc.getTimeout() != null ? hc.getTimeout() : 5)
             .retries(hc.getHealthyThreshold() != null ? hc.getHealthyThreshold() : 3)

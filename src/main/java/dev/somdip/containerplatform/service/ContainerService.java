@@ -485,8 +485,11 @@ public class ContainerService {
             return 8000;
         }
 
-        // Java applications (Spring Boot, Tomcat) - port 8080
-        if (imageLower.contains("java") || imageLower.contains("temurin") || imageLower.contains("openjdk") || imageLower.contains("tomcat")) {
+        // Java applications (Spring Boot, Tomcat, Maven, Gradle) - port 8080
+        if (imageLower.contains("java") || imageLower.contains("maven") ||
+            imageLower.contains("gradle") || imageLower.contains("tomcat") ||
+            imageLower.contains("spring") || imageLower.contains("openjdk") ||
+            imageLower.contains("temurin") || imageLower.contains("eclipse-temurin")) {
             log.info("Detected Java application for image {}, using default port 8080", image);
             return 8080;
         }
@@ -497,10 +500,10 @@ public class ContainerService {
             return 8080;
         }
 
-        // PHP applications - port 80 (with php-fpm) or 9000 (pure php-fpm)
-        if (imageLower.contains("php")) {
-            log.info("Detected PHP application for image {}, using default port 80", image);
-            return 80;
+        // PHP applications (with Composer support) - port 8000
+        if (imageLower.contains("php") || imageLower.contains("composer")) {
+            log.info("Detected PHP application for image {}, using default port 8000", image);
+            return 8000;
         }
 
         // Ruby/Rails applications - port 3000
@@ -509,8 +512,9 @@ public class ContainerService {
             return 3000;
         }
 
-        // .NET applications - port 8080 or 5000
-        if (imageLower.contains("dotnet") || imageLower.contains("aspnet")) {
+        // .NET applications (ASP.NET, mcr.microsoft.com) - port 8080
+        if (imageLower.contains("dotnet") || imageLower.contains("aspnet") ||
+            imageLower.contains("mcr.microsoft.com")) {
             log.info("Detected .NET application for image {}, using default port 8080", image);
             return 8080;
         }
