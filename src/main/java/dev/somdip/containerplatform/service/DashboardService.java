@@ -266,23 +266,31 @@ public class DashboardService {
     
     public List<RecentActivity> getRecentActivity(String userId, int limit) {
         List<RecentActivity> activities = new ArrayList<>();
-        
+
         try {
             // Get recent deployments
             List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, limit);
             for (Deployment deployment : deployments) {
-                activities.add(RecentActivity.builder()
-                    .type("deployment")
-                    .containerName(deployment.getContainerName())
-                    .action(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
-                    .timestamp(deployment.getCreatedAt())
-                    .status(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
-                    .build());
+                // Only add if deployment has a timestamp
+                if (deployment.getCreatedAt() != null) {
+                    activities.add(RecentActivity.builder()
+                        .type("deployment")
+                        .containerName(deployment.getContainerName())
+                        .action(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
+                        .timestamp(deployment.getCreatedAt())
+                        .status(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
+                        .build());
+                }
             }
-            
-            // Sort by timestamp
-            activities.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
-            
+
+            // Sort by timestamp (null-safe)
+            activities.sort((a, b) -> {
+                if (a.getTimestamp() == null && b.getTimestamp() == null) return 0;
+                if (a.getTimestamp() == null) return 1;
+                if (b.getTimestamp() == null) return -1;
+                return b.getTimestamp().compareTo(a.getTimestamp());
+            });
+
             // Limit results
             return activities.stream()
                 .limit(limit)

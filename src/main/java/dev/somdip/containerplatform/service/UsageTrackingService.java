@@ -6,13 +6,18 @@ import dev.somdip.containerplatform.repository.ContainerRepository;
 import dev.somdip.containerplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.ecs.EcsClient;
+import software.amazon.awssdk.services.ecs.model.*;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -22,30 +27,37 @@ public class UsageTrackingService {
     private final UserRepository userRepository;
     private final ContainerRepository containerRepository;
     private final ContainerService containerService;
+    private final EcsClient ecsClient;
+
+    @Value("${aws.ecs.cluster}")
+    private String clusterName;
 
     // FREE plan limit: 200 hours
     public static final double FREE_PLAN_HOURS_LIMIT = 200.0;
 
+    // Cache to store last tracking time for each container
+    private final Map<String, Instant> lastTrackingTime = new HashMap<>();
+
     /**
-     * Track container hours usage every hour
-     * For each user, calculate hours used by running containers
+     * Track container hours usage every 15 minutes
+     * Uses actual AWS ECS task runtime for accurate billing
      */
-    @Scheduled(cron = "0 0 * * * *") // Every hour at minute 0
+    @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
     public void trackContainerHours() {
-        log.info("Starting hourly container usage tracking");
+        log.info("Starting container usage tracking (every 15 minutes)");
 
         try {
             List<User> allUsers = userRepository.findAll();
 
             for (User user : allUsers) {
                 try {
-                    updateUserHoursUsed(user);
+                    updateUserHoursUsedFromECS(user);
                 } catch (Exception e) {
                     log.error("Error tracking hours for user: {}", user.getUserId(), e);
                 }
             }
 
-            log.info("Completed hourly container usage tracking for {} users", allUsers.size());
+            log.info("Completed container usage tracking for {} users", allUsers.size());
 
         } catch (Exception e) {
             log.error("Error in usage tracking job", e);
@@ -108,39 +120,144 @@ public class UsageTrackingService {
         }
     }
 
-    private void updateUserHoursUsed(User user) {
+    /**
+     * Update user hours based on actual ECS task runtime from AWS
+     * This method queries AWS ECS to get exact task start times and calculates actual hours
+     */
+    private void updateUserHoursUsedFromECS(User user) {
         List<Container> userContainers = containerRepository.findByUserId(user.getUserId());
 
-        // Count running containers
-        long runningContainers = userContainers.stream()
-            .filter(c -> c.getStatus() == Container.ContainerStatus.RUNNING)
-            .count();
+        double totalHoursToAdd = 0.0;
+        Instant now = Instant.now();
 
-        if (runningContainers == 0) {
-            return; // No running containers, no hours to add
+        for (Container container : userContainers) {
+            if (container.getStatus() != Container.ContainerStatus.RUNNING) {
+                continue; // Only track running containers
+            }
+
+            if (container.getServiceArn() == null) {
+                log.warn("Container {} has no service ARN, skipping", container.getContainerId());
+                continue;
+            }
+
+            try {
+                // Get actual runtime from ECS
+                double hoursForThisContainer = getActualContainerRuntime(container, now);
+                totalHoursToAdd += hoursForThisContainer;
+
+                log.debug("Container {}: added {} hours", container.getContainerId(), hoursForThisContainer);
+
+            } catch (Exception e) {
+                log.error("Error getting runtime for container {}: {}", container.getContainerId(), e.getMessage());
+            }
         }
 
-        // Add 1 hour for each running container
+        if (totalHoursToAdd == 0) {
+            return; // No hours to add
+        }
+
+        // Update user's total hours
         double currentHours = user.getHoursUsed() != null ? user.getHoursUsed() : 0.0;
-        double newHours = currentHours + runningContainers;
+        double newHours = currentHours + totalHoursToAdd;
 
         user.setHoursUsed(newHours);
-        user.setUpdatedAt(Instant.now());
+        user.setUpdatedAt(now);
 
         // Set reset time if not already set
         if (user.getUsageResetAt() == null) {
-            user.setUsageResetAt(Instant.now().plus(30, ChronoUnit.DAYS));
+            user.setUsageResetAt(now.plus(30, ChronoUnit.DAYS));
         }
 
         userRepository.save(user);
 
-        log.info("Updated usage for user {}: {} hours used ({} running containers)",
-            user.getUserId(), newHours, runningContainers);
+        log.info("Updated usage for user {}: {} hours used (added {} hours this interval)",
+            user.getUserId(), newHours, totalHoursToAdd);
 
         // Check if approaching limit (90% threshold)
         if (user.getPlan() == User.UserPlan.FREE && newHours >= FREE_PLAN_HOURS_LIMIT * 0.9) {
             log.warn("User {} is approaching FREE plan limit: {} / {} hours",
                 user.getUserId(), newHours, FREE_PLAN_HOURS_LIMIT);
+        }
+    }
+
+    /**
+     * Get actual container runtime from AWS ECS tasks
+     * Returns hours elapsed since last check (or since task start if first check)
+     */
+    private double getActualContainerRuntime(Container container, Instant now) {
+        String containerId = container.getContainerId();
+
+        try {
+            // Describe the ECS tasks for this service
+            DescribeServicesRequest request = DescribeServicesRequest.builder()
+                .cluster(clusterName)
+                .services(container.getServiceArn())
+                .build();
+
+            DescribeServicesResponse response = ecsClient.describeServices(request);
+
+            if (response.services().isEmpty()) {
+                log.warn("No ECS service found for container {}", containerId);
+                return 0.0;
+            }
+
+            Service service = response.services().get(0);
+
+            // Get the task ARNs for this service
+            ListTasksRequest listTasksRequest = ListTasksRequest.builder()
+                .cluster(clusterName)
+                .serviceName(service.serviceName())
+                .desiredStatus(DesiredStatus.RUNNING)
+                .build();
+
+            ListTasksResponse listTasksResponse = ecsClient.listTasks(listTasksRequest);
+
+            if (listTasksResponse.taskArns().isEmpty()) {
+                log.debug("No running tasks for container {}", containerId);
+                return 0.0;
+            }
+
+            // Describe the tasks to get start time
+            DescribeTasksRequest describeTasksRequest = DescribeTasksRequest.builder()
+                .cluster(clusterName)
+                .tasks(listTasksResponse.taskArns())
+                .build();
+
+            DescribeTasksResponse describeTasksResponse = ecsClient.describeTasks(describeTasksRequest);
+
+            if (describeTasksResponse.tasks().isEmpty()) {
+                return 0.0;
+            }
+
+            // Get the first running task (there should typically be one per service)
+            Task task = describeTasksResponse.tasks().get(0);
+            Instant taskStartTime = task.startedAt();
+
+            if (taskStartTime == null) {
+                log.warn("Task for container {} has no start time", containerId);
+                return 0.0;
+            }
+
+            // Calculate hours since last check (or since task start)
+            Instant lastCheck = lastTrackingTime.getOrDefault(containerId, taskStartTime);
+
+            // Ensure we don't count time before the task actually started
+            if (lastCheck.isBefore(taskStartTime)) {
+                lastCheck = taskStartTime;
+            }
+
+            // Calculate duration in hours
+            Duration duration = Duration.between(lastCheck, now);
+            double hours = duration.toMinutes() / 60.0;
+
+            // Update last tracking time for this container
+            lastTrackingTime.put(containerId, now);
+
+            return Math.max(0, hours); // Ensure non-negative
+
+        } catch (Exception e) {
+            log.error("Error querying ECS for container {}: {}", containerId, e.getMessage());
+            return 0.0;
         }
     }
 

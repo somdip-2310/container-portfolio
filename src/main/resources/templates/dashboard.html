@@ -111,7 +111,11 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Memory Usage</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${#numbers.formatDecimal(stats.memoryUsageGB, 1, 1)} + 'GB'">0GB</p>
+                            <!-- Show MB if less than 1 GB, otherwise show GB -->
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2"
+                               th:text="${stats.memoryUsageGB < 1.0} ?
+                                       (${#numbers.formatDecimal(stats.memoryUsageGB * 1024, 0, 0)} + 'MB') :
+                                       (${#numbers.formatDecimal(stats.memoryUsageGB, 1, 1)} + 'GB')">0MB</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 of <span th:text="${#numbers.formatDecimal(stats.totalMemoryGB, 1, 1)}">0</span>GB total
                             </p>
