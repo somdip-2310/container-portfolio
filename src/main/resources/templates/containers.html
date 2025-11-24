@@ -979,9 +979,10 @@
         // Handle view details
         function handleViewDetails() {
             console.log('handleViewDetails called, currentContainerId:', currentContainerId);
+            const containerId = currentContainerId; // Store before hiding modal
             hideContainerActionsModal();
-            if (currentContainerId) {
-                window.location.href = `/containers/${currentContainerId}`;
+            if (containerId) {
+                window.location.href = `/containers/${containerId}`;
             } else {
                 showToast('Container ID not found', 'error');
             }
@@ -990,9 +991,10 @@
         // Handle restart container
         async function handleRestartContainer() {
             console.log('handleRestartContainer called, currentContainerId:', currentContainerId);
+            const containerId = currentContainerId; // Store before hiding modal
             hideContainerActionsModal();
-            if (currentContainerId) {
-                await restartContainer(currentContainerId);
+            if (containerId) {
+                await restartContainer(containerId);
             } else {
                 showToast('Container ID not found', 'error');
             }
@@ -1001,9 +1003,10 @@
         // Handle view metrics
         function handleViewMetrics() {
             console.log('handleViewMetrics called, currentContainerId:', currentContainerId);
+            const containerId = currentContainerId; // Store before hiding modal
             hideContainerActionsModal();
-            if (currentContainerId) {
-                window.location.href = `/logs?containerId=${currentContainerId}`;
+            if (containerId) {
+                window.location.href = `/logs?containerId=${containerId}`;
             } else {
                 showToast('Container ID not found', 'error');
             }
@@ -1012,11 +1015,12 @@
         // Handle delete container
         async function handleDeleteContainer() {
             console.log('handleDeleteContainer called, currentContainerId:', currentContainerId);
+            const containerId = currentContainerId; // Store before hiding modal
             hideContainerActionsModal();
-            if (currentContainerId) {
+            if (containerId) {
                 const confirmed = confirm('Are you sure you want to delete this container? This action cannot be undone.');
                 if (confirmed) {
-                    await deleteContainer(currentContainerId);
+                    await deleteContainer(containerId);
                 }
             } else {
                 showToast('Container ID not found', 'error');
