@@ -91,14 +91,14 @@ public class DockerfileGenerator {
         if (isPnpm) {
             dockerfile.append("# Enable pnpm\n");
             dockerfile.append("RUN npm install -g pnpm\n\n");
-            dockerfile.append("COPY pnpm-lock.yaml package.json ./\n");
-            dockerfile.append("RUN pnpm install --frozen-lockfile\n\n");
+            dockerfile.append("COPY package.json pnpm-lock.yaml* ./\n");
+            dockerfile.append("RUN pnpm install || pnpm install --no-frozen-lockfile\n\n");
         } else if (isYarn) {
-            dockerfile.append("COPY yarn.lock package.json ./\n");
-            dockerfile.append("RUN yarn install --frozen-lockfile\n\n");
+            dockerfile.append("COPY package.json yarn.lock* ./\n");
+            dockerfile.append("RUN yarn install || yarn install --no-frozen-lockfile\n\n");
         } else {
             dockerfile.append("COPY package*.json ./\n");
-            dockerfile.append("RUN npm ci\n\n");
+            dockerfile.append("RUN npm ci || npm install\n\n");
         }
 
         // Copy source and build
@@ -163,11 +163,11 @@ public class DockerfileGenerator {
             dockerfile.append("    && poetry install --no-dev --no-interaction --no-ansi\n\n");
         } else if ("pipenv".equals(packageManager)) {
             dockerfile.append("RUN pip install --no-cache-dir pipenv\n");
-            dockerfile.append("COPY Pipfile Pipfile.lock ./\n");
-            dockerfile.append("RUN pipenv install --system --deploy\n\n");
+            dockerfile.append("COPY Pipfile Pipfile.lock* ./\n");
+            dockerfile.append("RUN pipenv install --system || pipenv install --system --skip-lock\n\n");
         } else {
-            dockerfile.append("COPY requirements.txt .\n");
-            dockerfile.append("RUN pip install --no-cache-dir -r requirements.txt\n\n");
+            dockerfile.append("COPY requirements.txt* ./\n");
+            dockerfile.append("RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi\n\n");
         }
 
         // Copy application
@@ -196,20 +196,22 @@ public class DockerfileGenerator {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for Java Maven application\n");
         dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/eclipse-temurin:17-jdk-alpine AS builder\n\n");
+
+        // Install Maven
+        dockerfile.append("# Install Maven\n");
+        dockerfile.append("RUN apk add --no-cache maven\n\n");
+
         dockerfile.append("WORKDIR /app\n\n");
 
-        // Copy Maven files
-        dockerfile.append("COPY pom.xml ./\n");
-        dockerfile.append("COPY .mvn .mvn\n");
-        dockerfile.append("COPY mvnw ./\n");
-        dockerfile.append("RUN chmod +x mvnw\n\n");
+        // Copy pom.xml for dependency download
+        dockerfile.append("COPY pom.xml ./\n\n");
 
         // Download dependencies
-        dockerfile.append("RUN ./mvnw dependency:go-offline -B\n\n");
+        dockerfile.append("RUN mvn dependency:go-offline -B || true\n\n");
 
         // Copy source and build
         dockerfile.append("COPY src ./src\n");
-        dockerfile.append("RUN ./mvnw clean package -DskipTests\n\n");
+        dockerfile.append("RUN mvn clean package -DskipTests\n\n");
 
         // Production stage
         dockerfile.append("# Production stage\n");
@@ -241,20 +243,22 @@ public class DockerfileGenerator {
         StringBuilder dockerfile = new StringBuilder();
         dockerfile.append("# Multi-stage build for Java Gradle application\n");
         dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/eclipse-temurin:17-jdk-alpine AS builder\n\n");
+
+        // Install Gradle
+        dockerfile.append("# Install Gradle\n");
+        dockerfile.append("RUN apk add --no-cache gradle\n\n");
+
         dockerfile.append("WORKDIR /app\n\n");
 
-        // Copy Gradle files
-        dockerfile.append("COPY build.gradle settings.gradle ./\n");
-        dockerfile.append("COPY gradle gradle\n");
-        dockerfile.append("COPY gradlew ./\n");
-        dockerfile.append("RUN chmod +x gradlew\n\n");
+        // Copy Gradle build files
+        dockerfile.append("COPY build.gradle* settings.gradle* ./\n\n");
 
         // Download dependencies
-        dockerfile.append("RUN ./gradlew dependencies --no-daemon\n\n");
+        dockerfile.append("RUN gradle dependencies --no-daemon || true\n\n");
 
         // Copy source and build
         dockerfile.append("COPY src ./src\n");
-        dockerfile.append("RUN ./gradlew build -x test --no-daemon\n\n");
+        dockerfile.append("RUN gradle build -x test --no-daemon\n\n");
 
         // Production stage
         dockerfile.append("# Production stage\n");
@@ -288,8 +292,8 @@ public class DockerfileGenerator {
         dockerfile.append("FROM 257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/golang:1.21-alpine AS builder\n\n");
         dockerfile.append("WORKDIR /app\n\n");
 
-        // Copy go mod files
-        dockerfile.append("COPY go.mod go.sum ./\n");
+        // Copy go mod files (go.sum is optional - wildcards allow optional files)
+        dockerfile.append("COPY go.* ./\n");
         dockerfile.append("RUN go mod download\n\n");
 
         // Copy source and build
@@ -337,7 +341,7 @@ public class DockerfileGenerator {
 
         // Copy application
         dockerfile.append("COPY . .\n");
-        dockerfile.append("RUN composer install --no-dev --optimize-autoloader\n\n");
+        dockerfile.append("RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader; fi\n\n");
 
         // Set permissions
         dockerfile.append("RUN chown -R www-data:www-data /var/www/html\n\n");
@@ -360,8 +364,8 @@ public class DockerfileGenerator {
         dockerfile.append("RUN apk add --no-cache build-base postgresql-dev nodejs yarn\n\n");
 
         // Install gems
-        dockerfile.append("COPY Gemfile Gemfile.lock ./\n");
-        dockerfile.append("RUN bundle install --without development test\n\n");
+        dockerfile.append("COPY Gemfile Gemfile.lock* ./\n");
+        dockerfile.append("RUN bundle install --without development test || bundle install --without development test --no-deployment\n\n");
 
         // Copy application
         dockerfile.append("COPY . .\n\n");
@@ -404,7 +408,8 @@ public class DockerfileGenerator {
         dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
-        dockerfile.append("ENTRYPOINT [\"dotnet\", \"*.dll\"]\n");
+        // Use shell form to allow wildcard expansion for DLL name
+        dockerfile.append("CMD dotnet *.dll\n");
 
         return dockerfile.toString();
     }

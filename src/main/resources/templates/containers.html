@@ -83,7 +83,8 @@
                         <div class="flex items-start justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400" th:text="${container.image + ':' + container.imageTag}">image:tag</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400"
+                                   th:text="${(container.image != null and #strings.contains(container.image, '/')) ? #strings.substringAfterLast(container.image, '/') : container.image} + ':' + ${container.imageTag}">image:tag</p>
                             </div>
                             <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (container.status == 'STOPPED' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : (container.status == 'FAILED' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200')))}"
                                   th:text="${container.status}">Status</span>
@@ -165,14 +166,22 @@
                         </div>
 
                         <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            <span th:if="${container.customDomain != null}">
-                                <i class="fas fa-globe mr-1"></i>
+                            <a th:if="${container.customDomain != null}"
+                               th:href="'https://' + ${container.customDomain}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="flex items-center hover:text-purple-600 dark:hover:text-purple-400 transition">
+                                <i class="fas fa-external-link-alt mr-1"></i>
                                 <span th:text="${container.customDomain}">domain</span>
-                            </span>
-                            <span th:if="${container.customDomain == null and container.subdomain != null}">
-                                <i class="fas fa-globe mr-1"></i>
+                            </a>
+                            <a th:if="${container.customDomain == null and container.subdomain != null}"
+                               th:href="'https://' + ${container.subdomain + '.containers.somdip.dev'}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="flex items-center hover:text-purple-600 dark:hover:text-purple-400 transition">
+                                <i class="fas fa-external-link-alt mr-1"></i>
                                 <span th:text="${container.subdomain + '.containers.somdip.dev'}">subdomain</span>
-                            </span>
+                            </a>
                             <span th:if="${container.customDomain == null and container.subdomain == null}">
                                 <i class="fas fa-globe mr-1"></i>
                                 <span class="text-gray-400">No domain</span>

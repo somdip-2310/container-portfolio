@@ -117,6 +117,7 @@ public class WebApiController {
 
             return ResponseEntity.ok(Map.of(
                 "containerId", containerId,
+                "containerName", container.getContainerName(),
                 "logs", logs != null ? logs : "",
                 "lineCount", lines
             ));
