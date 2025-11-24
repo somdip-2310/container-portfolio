@@ -1,6 +1,7 @@
 package dev.somdip.containerplatform.service;
 
 import dev.somdip.containerplatform.dto.DashboardStats;
+import dev.somdip.containerplatform.dto.DeploymentTimelineEvent;
 import dev.somdip.containerplatform.dto.ResourceUsage;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.model.Container;
@@ -170,6 +171,91 @@ public class DashboardService {
         }
     }
 
+    public Map<String, List<Double>> getNetworkIOHistory(String userId, int days) {
+        try {
+            Instant endTime = Instant.now();
+            Instant startTime = endTime.minus(days, ChronoUnit.DAYS);
+
+            // Get all user containers
+            List<Container> userContainers = containerRepository.findByUserId(userId);
+
+            // Aggregate network metrics from all containers
+            Map<Instant, Double> networkInByTime = new TreeMap<>();
+            Map<Instant, Double> networkOutByTime = new TreeMap<>();
+
+            for (Container container : userContainers) {
+                if (container.getServiceArn() == null) continue;
+
+                String serviceName = extractServiceName(container.getServiceArn());
+                if (serviceName == null) continue;
+
+                try {
+                    // Get Network In metrics
+                    GetMetricStatisticsRequest networkInRequest = GetMetricStatisticsRequest.builder()
+                        .namespace("AWS/ECS")
+                        .metricName("NetworkRxBytes")
+                        .dimensions(
+                            Dimension.builder().name("ServiceName").value(serviceName).build(),
+                            Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
+                        )
+                        .startTime(startTime)
+                        .endTime(endTime)
+                        .period(86400) // 1 day intervals
+                        .statistics(Statistic.SUM)
+                        .build();
+
+                    GetMetricStatisticsResponse networkInResponse = cloudWatchClient.getMetricStatistics(networkInRequest);
+
+                    for (Datapoint dp : networkInResponse.datapoints()) {
+                        // Convert bytes to MB
+                        double megabytes = dp.sum() / (1024.0 * 1024.0);
+                        networkInByTime.merge(dp.timestamp(), megabytes, Double::sum);
+                    }
+
+                    // Get Network Out metrics
+                    GetMetricStatisticsRequest networkOutRequest = GetMetricStatisticsRequest.builder()
+                        .namespace("AWS/ECS")
+                        .metricName("NetworkTxBytes")
+                        .dimensions(
+                            Dimension.builder().name("ServiceName").value(serviceName).build(),
+                            Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
+                        )
+                        .startTime(startTime)
+                        .endTime(endTime)
+                        .period(86400) // 1 day intervals
+                        .statistics(Statistic.SUM)
+                        .build();
+
+                    GetMetricStatisticsResponse networkOutResponse = cloudWatchClient.getMetricStatistics(networkOutRequest);
+
+                    for (Datapoint dp : networkOutResponse.datapoints()) {
+                        // Convert bytes to MB
+                        double megabytes = dp.sum() / (1024.0 * 1024.0);
+                        networkOutByTime.merge(dp.timestamp(), megabytes, Double::sum);
+                    }
+
+                } catch (Exception e) {
+                    log.warn("Failed to get network metrics for container: {}", container.getContainerId(), e);
+                }
+            }
+
+            // Convert to lists
+            List<Double> networkInData = new ArrayList<>(networkInByTime.values());
+            List<Double> networkOutData = new ArrayList<>(networkOutByTime.values());
+
+            Map<String, List<Double>> networkIO = new HashMap<>();
+            networkIO.put("in", networkInData.isEmpty() ? List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) : networkInData);
+            networkIO.put("out", networkOutData.isEmpty() ? List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) : networkOutData);
+
+            return networkIO;
+
+        } catch (Exception e) {
+            log.error("Error getting network I/O history for user: {}", userId, e);
+            return Map.of("in", List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                         "out", List.of(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+        }
+    }
+
     private String extractServiceName(String serviceArn) {
         // Extract service name from ARN like:
         // arn:aws:ecs:us-east-1:257394460825:service/somdip-dev-cluster/service-{containerId}
@@ -253,5 +339,79 @@ public class DashboardService {
                 .status(d.getStatus() != null ? d.getStatus().name() : "UNKNOWN")
                 .build())
             .collect(Collectors.toList());
+    }
+
+    public List<DeploymentTimelineEvent> getDeploymentTimeline(String userId, int days) {
+        List<DeploymentTimelineEvent> timeline = new ArrayList<>();
+
+        try {
+            Instant cutoffTime = Instant.now().minus(days, ChronoUnit.DAYS);
+
+            // Get recent deployments
+            List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, 50);
+
+            for (Deployment deployment : deployments) {
+                if (deployment.getCreatedAt() != null && deployment.getCreatedAt().isAfter(cutoffTime)) {
+                    String eventType = "DEPLOYED";
+                    String description = "Container deployed";
+
+                    if (deployment.getStatus() != null) {
+                        switch (deployment.getStatus()) {
+                            case COMPLETED:
+                                eventType = "STARTED";
+                                description = "Container started successfully";
+                                break;
+                            case FAILED:
+                                eventType = "FAILED";
+                                description = "Deployment failed";
+                                break;
+                            case IN_PROGRESS:
+                                eventType = "DEPLOYING";
+                                description = "Deployment in progress";
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    timeline.add(DeploymentTimelineEvent.builder()
+                        .containerName(deployment.getContainerName())
+                        .containerId(deployment.getContainerId())
+                        .eventType(eventType)
+                        .status(deployment.getStatus() != null ? deployment.getStatus().name() : "UNKNOWN")
+                        .timestamp(deployment.getCreatedAt())
+                        .description(description)
+                        .build());
+                }
+            }
+
+            // Get container state changes (stopped containers)
+            List<Container> userContainers = containerRepository.findByUserId(userId);
+            for (Container container : userContainers) {
+                if (container.getStatus() == Container.ContainerStatus.STOPPED &&
+                    container.getUpdatedAt() != null &&
+                    container.getUpdatedAt().isAfter(cutoffTime)) {
+
+                    timeline.add(DeploymentTimelineEvent.builder()
+                        .containerName(container.getName())
+                        .containerId(container.getContainerId())
+                        .eventType("STOPPED")
+                        .status("STOPPED")
+                        .timestamp(container.getUpdatedAt())
+                        .description("Container stopped")
+                        .build());
+                }
+            }
+
+            // Sort by timestamp (most recent first)
+            timeline.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
+
+            // Limit to most recent 20 events
+            return timeline.stream().limit(20).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("Error getting deployment timeline for user: {}", userId, e);
+            return new ArrayList<>();
+        }
     }
 }

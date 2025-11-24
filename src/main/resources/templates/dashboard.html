@@ -8,6 +8,44 @@
     <!-- Main Content -->
     <main class="lg:ml-64 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- FREE Plan Usage Banner -->
+            <div th:if="${isFreePlan}" th:class="${hasExceededLimit ? 'bg-red-100 dark:bg-red-900/30 border-red-500' : (hoursRemaining < 20 ? 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-500' : 'bg-blue-100 dark:bg-blue-900/30 border-blue-500')}"
+                 class="rounded-lg p-6 mb-8 border-l-4">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center mb-2">
+                            <i th:class="${hasExceededLimit ? 'fas fa-exclamation-triangle text-red-600' : (hoursRemaining < 20 ? 'fas fa-exclamation-circle text-yellow-600' : 'fas fa-info-circle text-blue-600')}" class="mr-3 text-xl"></i>
+                            <h3 th:class="${hasExceededLimit ? 'text-red-900 dark:text-red-100' : (hoursRemaining < 20 ? 'text-yellow-900 dark:text-yellow-100' : 'text-blue-900 dark:text-blue-100')}"
+                                class="text-lg font-semibold" th:text="${hasExceededLimit ? 'FREE Plan Limit Exceeded' : 'FREE Plan Usage'}">FREE Plan Usage</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <p th:class="${hasExceededLimit ? 'text-red-800 dark:text-red-200' : (hoursRemaining < 20 ? 'text-yellow-800 dark:text-yellow-200' : 'text-blue-800 dark:text-blue-200')}"
+                               class="text-sm">
+                                <span th:if="${hasExceededLimit}">Your containers have been stopped. You've used all <strong th:text="${#numbers.formatDecimal(hoursLimit, 0, 0)}">200</strong> hours of your FREE plan.</span>
+                                <span th:if="${!hasExceededLimit}">You have <strong th:text="${#numbers.formatDecimal(hoursRemaining, 1, 1)}">180</strong> hours remaining out of <strong th:text="${#numbers.formatDecimal(hoursLimit, 0, 0)}">200</strong> hours this month.</span>
+                            </p>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                <div th:class="${hasExceededLimit ? 'bg-red-600' : (hoursRemaining < 20 ? 'bg-yellow-500' : 'bg-blue-600')}"
+                                     class="h-2.5 rounded-full transition-all" th:style="'width: ' + ${usagePercentage > 100 ? 100 : usagePercentage} + '%'"></div>
+                            </div>
+                            <p th:class="${hasExceededLimit ? 'text-red-700 dark:text-red-300' : (hoursRemaining < 20 ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300')}"
+                               class="text-xs">
+                                <span th:text="${#numbers.formatDecimal(hoursUsed, 1, 1)}">20</span> hours used
+                                (<span th:text="${#numbers.formatDecimal(usagePercentage, 1, 1)}">10</span>%)
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="window.location.href='/billing'"
+                                class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition transform hover:scale-105 flex items-center">
+                            <i class="fas fa-crown mr-2"></i>
+                            Upgrade to PRO
+                        </button>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-2 text-center">Unlimited hours</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Page Header -->
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
@@ -95,11 +133,62 @@
                     </div>
                 </div>
 
-                <!-- Request Volume Chart -->
+                <!-- Network I/O Chart -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Request Volume</h2>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Network I/O (7 days)</h2>
                     <div class="h-64">
-                        <canvas id="requestChart"></canvas>
+                        <canvas id="networkChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deployment Timeline -->
+            <div th:if="${deploymentTimeline != null and !#lists.isEmpty(deploymentTimeline)}" class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Deployment Timeline (Last 7 Days)</h2>
+                </div>
+                <div class="p-6">
+                    <div class="relative">
+                        <!-- Timeline line -->
+                        <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+
+                        <!-- Timeline events -->
+                        <div class="space-y-6">
+                            <div th:each="event : ${deploymentTimeline}" class="relative flex items-start">
+                                <!-- Event icon -->
+                                <div th:class="${'relative z-10 flex items-center justify-center w-16 h-16 rounded-full ' +
+                                    (event.eventType == 'STARTED' ? 'bg-green-100 dark:bg-green-900' :
+                                    (event.eventType == 'STOPPED' ? 'bg-red-100 dark:bg-red-900' :
+                                    (event.eventType == 'FAILED' ? 'bg-orange-100 dark:bg-orange-900' :
+                                    'bg-blue-100 dark:bg-blue-900')))}">
+                                    <i th:class="${'fas ' +
+                                        (event.eventType == 'STARTED' ? 'fa-play text-green-600 dark:text-green-400' :
+                                        (event.eventType == 'STOPPED' ? 'fa-stop text-red-600 dark:text-red-400' :
+                                        (event.eventType == 'FAILED' ? 'fa-times text-orange-600 dark:text-orange-400' :
+                                        'fa-rocket text-blue-600 dark:text-blue-400')))}"></i>
+                                </div>
+
+                                <!-- Event details -->
+                                <div class="ml-6 flex-1 bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white" th:text="${event.containerName}">Container Name</h4>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1" th:text="${event.description}">Description</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' +
+                                                (event.eventType == 'STARTED' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                (event.eventType == 'STOPPED' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                                                (event.eventType == 'FAILED' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                                                'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200')))}"
+                                                  th:text="${event.eventType}">STATUS</span>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                               th:text="${#temporals.format(event.timestamp, 'MMM dd, HH:mm')}">Time</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -379,27 +468,53 @@
             }
         });
 
-        // Request Volume Chart
-        const requestCtx = document.getElementById('requestChart').getContext('2d');
+        // Network I/O Chart
+        const networkCtx = document.getElementById('networkChart').getContext('2d');
 
-        // Create gradient for bars
-        const barGradient = requestCtx.createLinearGradient(0, 0, 0, 256);
-        barGradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
-        barGradient.addColorStop(1, 'rgba(59, 130, 246, 0.8)');
+        // Create gradient for Network In
+        const netInGradient = networkCtx.createLinearGradient(0, 0, 0, 256);
+        netInGradient.addColorStop(0, 'rgba(34, 197, 94, 0.3)');
+        netInGradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
 
-        // Request volume data - to be implemented with actual metrics
-        const requestData = [0, 0, 0, 0, 0, 0];
+        // Create gradient for Network Out
+        const netOutGradient = networkCtx.createLinearGradient(0, 0, 0, 256);
+        netOutGradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
+        netOutGradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
 
-        new Chart(requestCtx, {
-            type: 'bar',
+        // Get actual data from Thymeleaf
+        const networkInData = /*[[${networkInData}]]*/ [0, 0, 0, 0, 0, 0, 0];
+        const networkOutData = /*[[${networkOutData}]]*/ [0, 0, 0, 0, 0, 0, 0];
+
+        new Chart(networkCtx, {
+            type: 'line',
             data: {
-                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
-                    label: 'Requests',
-                    data: requestData,
-                    backgroundColor: barGradient,
-                    borderRadius: 6,
-                    borderSkipped: false
+                    label: 'Network In (MB)',
+                    data: networkInData,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: netInGradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: 'rgb(34, 197, 94)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }, {
+                    label: 'Network Out (MB)',
+                    data: networkOutData,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: netOutGradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: 'rgb(239, 68, 68)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
                 }]
             },
             options: {
@@ -408,16 +523,25 @@
                 aspectRatio: 2,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
                     tooltip: {
+                        mode: 'index',
+                        intersect: false,
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         padding: 12,
                         borderColor: 'rgba(255, 255, 255, 0.2)',
                         borderWidth: 1,
                         callbacks: {
                             label: function(context) {
-                                return context.parsed.y.toLocaleString() + ' requests';
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' MB';
                             }
                         }
                     }
@@ -427,7 +551,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return value >= 1000 ? (value/1000) + 'k' : value;
+                                return value.toFixed(1) + ' MB';
                             }
                         },
                         grid: {
@@ -439,6 +563,11 @@
                             display: false
                         }
                     }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
                 }
             }
         });

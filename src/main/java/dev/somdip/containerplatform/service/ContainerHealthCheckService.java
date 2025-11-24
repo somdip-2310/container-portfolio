@@ -286,40 +286,30 @@ public class ContainerHealthCheckService {
             Instant endTime = Instant.now();
             Instant startTime = endTime.minusSeconds(300); // Last 5 minutes
             
-            // CPU Utilization
-            Double cpuUtilization = getMetricValue(
-                "ECS/ContainerInsights",
-                "CpuUtilized",
-                "ServiceName", "service-" + container.getContainerId(),
+            // Extract service name from service ARN
+            String serviceName = extractServiceName(container.getServiceArn());
+            if (serviceName == null) {
+                log.warn("Cannot get metrics for container {} - no service name", container.getContainerId());
+                return metrics;
+            }
+
+            // CPU Utilization (AWS/ECS namespace, not Container Insights)
+            Double cpuUtilization = getMetricValueWithCluster(
+                "AWS/ECS",
+                "CPUUtilization",
+                serviceName,
                 startTime, endTime
             );
             metrics.setCpuUtilization(cpuUtilization);
-            
+
             // Memory Utilization
-            Double memoryUtilization = getMetricValue(
-                "ECS/ContainerInsights",
-                "MemoryUtilized",
-                "ServiceName", "service-" + container.getContainerId(),
+            Double memoryUtilization = getMetricValueWithCluster(
+                "AWS/ECS",
+                "MemoryUtilization",
+                serviceName,
                 startTime, endTime
             );
             metrics.setMemoryUtilization(memoryUtilization);
-            
-            // Network metrics
-            Double networkIn = getMetricValue(
-                "ECS/ContainerInsights",
-                "NetworkRxBytes",
-                "ServiceName", "service-" + container.getContainerId(),
-                startTime, endTime
-            );
-            metrics.setNetworkIn(networkIn);
-            
-            Double networkOut = getMetricValue(
-                "ECS/ContainerInsights",
-                "NetworkTxBytes",
-                "ServiceName", "service-" + container.getContainerId(),
-                startTime, endTime
-            );
-            metrics.setNetworkOut(networkOut);
             
         } catch (Exception e) {
             log.error("Failed to get resource metrics", e);
@@ -328,25 +318,25 @@ public class ContainerHealthCheckService {
         return metrics;
     }
     
-    private Double getMetricValue(String namespace, String metricName, 
-                                 String dimensionName, String dimensionValue,
-                                 Instant startTime, Instant endTime) {
+    private Double getMetricValueWithCluster(String namespace, String metricName,
+                                            String serviceName,
+                                            Instant startTime, Instant endTime) {
         try {
             GetMetricStatisticsRequest request = GetMetricStatisticsRequest.builder()
                 .namespace(namespace)
                 .metricName(metricName)
-                .dimensions(Dimension.builder()
-                    .name(dimensionName)
-                    .value(dimensionValue)
-                    .build())
+                .dimensions(
+                    Dimension.builder().name("ServiceName").value(serviceName).build(),
+                    Dimension.builder().name("ClusterName").value(clusterName).build()
+                )
                 .startTime(startTime)
                 .endTime(endTime)
                 .period(60) // 1 minute
                 .statistics(Statistic.AVERAGE)
                 .build();
-            
+
             GetMetricStatisticsResponse response = cloudWatchClient.getMetricStatistics(request);
-            
+
             if (!response.datapoints().isEmpty()) {
                 return response.datapoints().stream()
                     .mapToDouble(Datapoint::average)
@@ -356,8 +346,16 @@ public class ContainerHealthCheckService {
         } catch (Exception e) {
             log.error("Failed to get metric: {} - {}", namespace, metricName, e);
         }
-        
+
         return 0.0;
+    }
+
+    private String extractServiceName(String serviceArn) {
+        // Extract service name from ARN like:
+        // arn:aws:ecs:us-east-1:257394460825:service/somdip-dev-cluster/service-{containerId}
+        if (serviceArn == null) return null;
+        String[] parts = serviceArn.split("/");
+        return parts.length >= 3 ? parts[2] : null;
     }
     
     private void sendHealthMetrics(Container container, HealthStatus status) {

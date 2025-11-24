@@ -30,6 +30,8 @@ public class User {
     private Instant passwordResetExpiry;
     private Integer containerCount;
     private Long totalDeployments;
+    private Double hoursUsed; // Total container hours used (for FREE plan limit)
+    private Instant usageResetAt; // When usage counter resets (for FREE plan monthly reset)
     private UsageStats usageStats;
     
     
@@ -227,6 +229,24 @@ public class User {
     @DynamoDbAttribute("usageStats")
     public UsageStats getUsageStats() {
         return usageStats;
+    }
+
+    @DynamoDbAttribute("hoursUsed")
+    public Double getHoursUsed() {
+        return hoursUsed;
+    }
+
+    public void setHoursUsed(Double hoursUsed) {
+        this.hoursUsed = hoursUsed;
+    }
+
+    @DynamoDbAttribute("usageResetAt")
+    public Instant getUsageResetAt() {
+        return usageResetAt;
+    }
+
+    public void setUsageResetAt(Instant usageResetAt) {
+        this.usageResetAt = usageResetAt;
     }
 
     public enum UserPlan {

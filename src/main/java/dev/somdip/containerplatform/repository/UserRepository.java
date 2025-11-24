@@ -15,8 +15,11 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Repository
@@ -137,5 +140,17 @@ public class UserRepository {
             return save(user);
         }
         throw new IllegalArgumentException("User not found: " + userId);
+    }
+
+    public List<User> findAll() {
+        log.debug("Finding all users");
+        return getTable().scan().items().stream().collect(Collectors.toList());
+    }
+
+    public List<User> findByPlan(User.UserPlan plan) {
+        log.debug("Finding users by plan: {}", plan);
+        return getTable().scan().items().stream()
+            .filter(user -> user.getPlan() == plan)
+            .collect(Collectors.toList());
     }
 }

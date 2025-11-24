@@ -1,12 +1,14 @@
 package dev.somdip.containerplatform.controller;
 
 import dev.somdip.containerplatform.dto.DashboardStats;
+import dev.somdip.containerplatform.dto.DeploymentTimelineEvent;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.DashboardService;
+import dev.somdip.containerplatform.service.UsageTrackingService;
 import dev.somdip.containerplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class WebController {
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
+    private final UsageTrackingService usageTrackingService;
 
     /**
      * Helper method to extract userId from Authentication
@@ -67,16 +70,36 @@ public class WebController {
             DashboardStats stats = dashboardService.getDashboardStats(userId);
             Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(userId, 7);
             List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 5);
-            
+            Map<String, List<Double>> networkIO = dashboardService.getNetworkIOHistory(userId, 7);
+            List<DeploymentTimelineEvent> deploymentTimeline = dashboardService.getDeploymentTimeline(userId, 7);
+
+            // Calculate hours usage for FREE plan
+            double hoursUsed = user.getHoursUsed() != null ? user.getHoursUsed() : 0.0;
+            double hoursRemaining = usageTrackingService.getRemainingHours(user);
+            boolean isFreePlan = user.getPlan() == User.UserPlan.FREE;
+            boolean hasExceededLimit = isFreePlan && hoursRemaining <= 0;
+
             // Add data to model
             model.addAttribute("username", user.getName());
             model.addAttribute("stats", stats);
             model.addAttribute("usageHistory", usageHistory);
             model.addAttribute("recentActivity", recentActivity);
-            
+            model.addAttribute("networkIO", networkIO);
+            model.addAttribute("deploymentTimeline", deploymentTimeline);
+
+            // Add FREE plan usage data
+            model.addAttribute("isFreePlan", isFreePlan);
+            model.addAttribute("hoursUsed", hoursUsed);
+            model.addAttribute("hoursRemaining", hoursRemaining);
+            model.addAttribute("hoursLimit", UsageTrackingService.FREE_PLAN_HOURS_LIMIT);
+            model.addAttribute("hasExceededLimit", hasExceededLimit);
+            model.addAttribute("usagePercentage", isFreePlan ? (hoursUsed / UsageTrackingService.FREE_PLAN_HOURS_LIMIT) * 100 : 0);
+
             // Add chart data as JSON for JavaScript
             model.addAttribute("cpuData", usageHistory.get("cpu"));
             model.addAttribute("memoryData", usageHistory.get("memory"));
+            model.addAttribute("networkInData", networkIO.get("in"));
+            model.addAttribute("networkOutData", networkIO.get("out"));
             
         } catch (Exception e) {
             log.error("Error loading dashboard", e);
