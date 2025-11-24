@@ -26,7 +26,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WebController {
 	
-	private static final Logger log = LoggerFactory.getLogger(WebController.class);
     
 
     private final DashboardService dashboardService;

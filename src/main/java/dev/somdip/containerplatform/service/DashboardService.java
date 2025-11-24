@@ -36,7 +36,6 @@ public class DashboardService {
     private final EcsClient ecsClient;
     private final CloudWatchClient cloudWatchClient;
 
-    private static final Logger log = LoggerFactory.getLogger(DashboardService.class);
    
 
     public DashboardStats getDashboardStats(String userId) {
@@ -158,9 +157,9 @@ public class DashboardService {
                 activities.add(RecentActivity.builder()
                     .type("deployment")
                     .containerName(deployment.getContainerName())
-                    .action(deployment.getStatus())
+                    .action(deployment.getStatus().name())
                     .timestamp(deployment.getCreatedAt())
-                    .status(deployment.getStatus())
+                    .status(deployment.getStatus().name())
                     .build());
             }
             
@@ -219,7 +218,7 @@ public class DashboardService {
                 .containerName(d.getContainerName())
                 .action("Deployed")
                 .timestamp(d.getCreatedAt())
-                .status(d.getStatus())
+                .status(d.getStatus().name())
                 .build())
             .collect(Collectors.toList());
     }

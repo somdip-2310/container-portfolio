@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class LogStreamHandler extends TextWebSocketHandler {
 	
-	private static final Logger log = LoggerFactory.getLogger(LogStreamHandler.class);
     
 
     private final LogStreamingService logStreamingService;
