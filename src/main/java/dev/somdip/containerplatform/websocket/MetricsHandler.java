@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class MetricsHandler extends TextWebSocketHandler {
     
-	/*
+
     private final MetricsService metricsService;
     private final ContainerService containerService;
     private final ObjectMapper objectMapper;
@@ -240,5 +240,5 @@ public class MetricsHandler extends TextWebSocketHandler {
         );
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(error)));
     }
-    */
+
 }

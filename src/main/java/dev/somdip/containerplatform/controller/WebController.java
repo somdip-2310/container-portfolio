@@ -28,11 +28,11 @@ public class WebController {
 	
 	private static final Logger log = LoggerFactory.getLogger(WebController.class);
     
-	/*
+
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
-	*/
+
     @GetMapping("/")
     public String home() {
         return "index";
@@ -48,7 +48,7 @@ public class WebController {
         return "register";
     }
     
-    /*
+
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -94,9 +94,9 @@ public class WebController {
         
         return "dashboard";
     }
-    */
+
     
-    /*
+
     @GetMapping("/containers")
     public String containers(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -187,7 +187,7 @@ public class WebController {
         return "logs";
     }
     
-    /*
+
     @GetMapping("/billing")
     public String billing(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -208,10 +208,10 @@ public class WebController {
         
         return "billing";
     }
-    */
+
     
     
-    /*
+
     @GetMapping("/profile")
     public String profile(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -313,5 +313,5 @@ public class WebController {
         // Domain management page
         return "domains";
     }
-    */
+
 }

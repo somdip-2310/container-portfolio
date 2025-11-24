@@ -30,15 +30,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DashboardService {
     
-	/*
+
     private final ContainerRepository containerRepository;
     private final DeploymentRepository deploymentRepository;
     private final EcsClient ecsClient;
     private final CloudWatchClient cloudWatchClient;
-    */
+
     private static final Logger log = LoggerFactory.getLogger(DashboardService.class);
    
-    /*
+
     public DashboardStats getDashboardStats(String userId) {
         try {
             // Get container counts
@@ -89,8 +89,8 @@ public class DashboardService {
         }
     }
     
-    */
-    /*
+
+
     public Map<String, List<Double>> getResourceUsageHistory(String userId, int days) {
         try {
             Instant endTime = Instant.now();
@@ -146,8 +146,8 @@ public class DashboardService {
             return Map.of("cpu", new ArrayList<>(), "memory", new ArrayList<>());
         }
     }
-    */
-    /*
+
+
     public List<RecentActivity> getRecentActivity(String userId, int limit) {
         List<RecentActivity> activities = new ArrayList<>();
         
@@ -223,5 +223,5 @@ public class DashboardService {
                 .build())
             .collect(Collectors.toList());
     }
-    */
+
 }
