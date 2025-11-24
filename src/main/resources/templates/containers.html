@@ -85,7 +85,7 @@
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400" th:text="${container.image + ':' + container.imageTag}">image:tag</p>
                             </div>
-                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (container.status == 'STOPPED' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'))}"
+                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (container.status == 'STOPPED' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : (container.status == 'FAILED' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200')))}"
                                   th:text="${container.status}">Status</span>
                         </div>
 
@@ -171,7 +171,7 @@
                             </span>
                             <span th:if="${container.customDomain == null and container.subdomain != null}">
                                 <i class="fas fa-globe mr-1"></i>
-                                <span th:text="${container.subdomain + '.somdip.dev'}">subdomain</span>
+                                <span th:text="${container.subdomain + '.containers.somdip.dev'}">subdomain</span>
                             </span>
                             <span th:if="${container.customDomain == null and container.subdomain == null}">
                                 <i class="fas fa-globe mr-1"></i>
@@ -847,22 +847,66 @@
                     if (response.ok) {
                         const status = await response.json();
 
+                        // Funny messages for different stages
+                        const funnyMessages = {
+                            'ANALYZING': [
+                                'Reading tea leaves and source code...',
+                                'Consulting the documentation gods...',
+                                'Checking if you forgot semicolons...',
+                                'Deciphering ancient runes (a.k.a. your code)...'
+                            ],
+                            'BUILDING': [
+                                'Teaching containers to containerize...',
+                                'Downloading the internet (just kidding)...',
+                                'Compiling 1s and 0s into something useful...',
+                                'Making Docker do the heavy lifting...',
+                                'Convincing servers this is a good idea...'
+                            ],
+                            'PUSHING': [
+                                'Uploading to the cloud (literally)...',
+                                'Shoving bits through tubes...',
+                                'Negotiating with the registry...',
+                                'Making sure no one steals your image...'
+                            ],
+                            'DEPLOYING': [
+                                'Waking up the servers from their nap...',
+                                'Deploying with style and grace...',
+                                'Teaching ECS tasks to task properly...',
+                                'Almost there! Putting on finishing touches...',
+                                'Telling AWS to get to work...',
+                                'Spinning up your container like a DJ...',
+                                'Making the load balancer feel important...',
+                                'Convincing the health checks to pass...',
+                                'Registering targets (they agreed to it)...',
+                                'Waiting for AWS to finish its coffee break...',
+                                'Configuring networking (it\'s complicated)...',
+                                'Setting up auto-scaling (just in case)...',
+                                'Deploying containers like a boss...',
+                                'Making sure everything talks to each other...',
+                                'Testing if the deployment gods are smiling...'
+                            ]
+                        };
+
                         // Update progress based on status
                         if (status.status === 'ANALYZING') {
-                            updateProgressWithMessage(35, 'Analyzing project structure...');
+                            const msg = funnyMessages.ANALYZING[Math.floor(Math.random() * funnyMessages.ANALYZING.length)];
+                            updateProgressWithMessage(35, msg);
                         } else if (status.status === 'BUILDING') {
-                            updateProgressWithMessage(50, 'Building Docker image...');
+                            const msg = funnyMessages.BUILDING[Math.floor(Math.random() * funnyMessages.BUILDING.length)];
+                            updateProgressWithMessage(50, msg);
                         } else if (status.status === 'PUSHING') {
-                            updateProgressWithMessage(70, 'Pushing image to registry...');
+                            const msg = funnyMessages.PUSHING[Math.floor(Math.random() * funnyMessages.PUSHING.length)];
+                            updateProgressWithMessage(70, msg);
                         } else if (status.status === 'DEPLOYING') {
-                            updateProgressWithMessage(85, 'Deploying container...');
+                            const msg = funnyMessages.DEPLOYING[Math.floor(Math.random() * funnyMessages.DEPLOYING.length)];
+                            updateProgressWithMessage(85, msg);
                         } else if (status.status === 'COMPLETED') {
                             updateProgress(100);
                             setTimeout(() => {
                                 hideProgressModal();
-                                showToast('Deployment completed successfully!', 'success');
-                                setTimeout(() => location.reload(), 1000);
-                            }, 500);
+                                showToast('Deployment completed successfully! Your container is now running.', 'success');
+                                setTimeout(() => location.reload(), 3000);
+                            }, 1000);
                             return;
                         } else if (status.status === 'FAILED') {
                             hideProgressModal();

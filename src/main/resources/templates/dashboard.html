@@ -22,7 +22,7 @@
                             <p th:class="${hasExceededLimit ? 'text-red-800 dark:text-red-200' : (hoursRemaining < 20 ? 'text-yellow-800 dark:text-yellow-200' : 'text-blue-800 dark:text-blue-200')}"
                                class="text-sm">
                                 <span th:if="${hasExceededLimit}">Your containers have been stopped. You've used all <strong th:text="${#numbers.formatDecimal(hoursLimit, 0, 0)}">200</strong> hours of your FREE plan.</span>
-                                <span th:if="${!hasExceededLimit}">You have <strong th:text="${#numbers.formatDecimal(hoursRemaining, 1, 1)}">180</strong> hours remaining out of <strong th:text="${#numbers.formatDecimal(hoursLimit, 0, 0)}">200</strong> hours this month.</span>
+                                <span th:if="${!hasExceededLimit}">You have <strong th:text="${#numbers.formatDecimal(hoursRemaining, 1, 1)}">180</strong> hours remaining out of <strong th:text="${#numbers.formatDecimal(hoursLimit, 0, 0)}">200</strong> hours.</span>
                             </p>
                             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
                                 <div th:class="${hasExceededLimit ? 'bg-red-600' : (hoursRemaining < 20 ? 'bg-yellow-500' : 'bg-blue-600')}"

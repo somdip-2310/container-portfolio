@@ -129,6 +129,7 @@ public class DockerfileGenerator {
         }
 
         dockerfile.append("USER nodejs\n\n");
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         // Health check
@@ -176,6 +177,7 @@ public class DockerfileGenerator {
         dockerfile.append("RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app\n");
         dockerfile.append("USER appuser\n\n");
 
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         // Health check
@@ -221,6 +223,7 @@ public class DockerfileGenerator {
         dockerfile.append("COPY --from=builder --chown=appuser:appgroup /app/target/*.jar app.jar\n\n");
 
         dockerfile.append("USER appuser\n\n");
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         // Health check
@@ -265,6 +268,7 @@ public class DockerfileGenerator {
         dockerfile.append("COPY --from=builder --chown=appuser:appgroup /app/build/libs/*.jar app.jar\n\n");
 
         dockerfile.append("USER appuser\n\n");
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         // Health check
@@ -302,6 +306,7 @@ public class DockerfileGenerator {
         // Copy binary
         dockerfile.append("COPY --from=builder /app/main .\n\n");
 
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         // Health check
@@ -337,6 +342,7 @@ public class DockerfileGenerator {
         // Set permissions
         dockerfile.append("RUN chown -R www-data:www-data /var/www/html\n\n");
 
+        dockerfile.append("ENV PORT=80\n");
         dockerfile.append("EXPOSE 80\n\n");
 
         dockerfile.append("CMD [\"php-fpm\"]\n");
@@ -365,6 +371,7 @@ public class DockerfileGenerator {
             dockerfile.append("RUN bundle exec rails assets:precompile\n\n");
         }
 
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         dockerfile.append("CMD [\"bundle\", \"exec\", \"rails\", \"server\", \"-b\", \"0.0.0.0\"]\n");
@@ -393,6 +400,8 @@ public class DockerfileGenerator {
 
         dockerfile.append("COPY --from=builder /app/out .\n\n");
 
+        dockerfile.append("ENV ASPNETCORE_URLS=http://+:").append(info.getPort()).append("\n");
+        dockerfile.append("ENV PORT=").append(info.getPort()).append("\n");
         dockerfile.append("EXPOSE ").append(info.getPort()).append("\n\n");
 
         dockerfile.append("ENTRYPOINT [\"dotnet\", \"*.dll\"]\n");
@@ -412,6 +421,7 @@ public class DockerfileGenerator {
         // Copy static files
         dockerfile.append("COPY . /usr/share/nginx/html\n\n");
 
+        dockerfile.append("ENV PORT=80\n");
         dockerfile.append("EXPOSE 80\n\n");
 
         // Health check
