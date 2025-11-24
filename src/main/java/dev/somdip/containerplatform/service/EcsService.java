@@ -249,13 +249,13 @@ public class EcsService {
     
     private String createTaskDefinition(Container container) {
         String family = "container-" + container.getContainerId();
-        
-        // Build container definition
-        ContainerDefinition containerDef = ContainerDefinition.builder()
+
+        // Build user's application container definition
+        ContainerDefinition userContainerDef = ContainerDefinition.builder()
             .name(container.getContainerName())
             .image(container.getImage() + ":" + container.getImageTag())
-            .cpu(container.getCpu())
-            .memory(container.getMemory())
+            .cpu(container.getCpu() - 64) // Reserve 64 CPU units for health-proxy
+            .memory(container.getMemory() - 128) // Reserve 128MB for health-proxy
             .essential(true)
             .portMappings(PortMapping.builder()
                 .containerPort(container.getPort())
@@ -267,12 +267,44 @@ public class EcsService {
                 .options(Map.of(
                     "awslogs-group", logGroup,
                     "awslogs-region", "us-east-1",
-                    "awslogs-stream-prefix", container.getContainerId()
+                    "awslogs-stream-prefix", container.getContainerId() + "/app"
                 ))
                 .build())
-            .healthCheck(createHealthCheckConfig(container))
             .build();
-        
+
+        // Build health-proxy sidecar container definition
+        ContainerDefinition healthProxyDef = ContainerDefinition.builder()
+            .name("health-proxy")
+            .image("257394460825.dkr.ecr.us-east-1.amazonaws.com/health-proxy:latest")
+            .cpu(64)
+            .memory(128)
+            .essential(false) // Non-essential so user app failure doesn't stop proxy
+            .portMappings(PortMapping.builder()
+                .containerPort(9090)
+                .protocol("tcp")
+                .build())
+            .environment(List.of(
+                KeyValuePair.builder().name("USER_APP_PORT").value(String.valueOf(container.getPort())).build(),
+                KeyValuePair.builder().name("USER_APP_HOST").value("localhost").build(),
+                KeyValuePair.builder().name("HEALTH_PROXY_PORT").value("9090").build()
+            ))
+            .logConfiguration(LogConfiguration.builder()
+                .logDriver("awslogs")
+                .options(Map.of(
+                    "awslogs-group", logGroup,
+                    "awslogs-region", "us-east-1",
+                    "awslogs-stream-prefix", container.getContainerId() + "/health-proxy"
+                ))
+                .build())
+            .healthCheck(HealthCheck.builder()
+                .command("CMD-SHELL", "curl -f http://localhost:9090/health || exit 1")
+                .interval(30)
+                .timeout(5)
+                .retries(3)
+                .startPeriod(60)
+                .build())
+            .build();
+
         RegisterTaskDefinitionRequest request = RegisterTaskDefinitionRequest.builder()
             .family(family)
             .taskRoleArn(taskRoleArn)
@@ -281,9 +313,10 @@ public class EcsService {
             .requiresCompatibilities(Compatibility.FARGATE)
             .cpu(String.valueOf(container.getCpu()))
             .memory(String.valueOf(container.getMemory()))
-            .containerDefinitions(containerDef)
+            .containerDefinitions(userContainerDef, healthProxyDef)
             .build();
-        
+
+        log.info("Created task definition with health-proxy sidecar for container: {}", container.getContainerId());
         RegisterTaskDefinitionResponse response = ecsClient.registerTaskDefinition(request);
         return response.taskDefinition().taskDefinitionArn();
     }

@@ -1,17 +1,17 @@
 package dev.somdip.containerplatform.controller;
 
 import dev.somdip.containerplatform.dto.DashboardStats;
-import dev.somdip.containerplatform.dto.DeploymentTimelineEvent;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.User;
-import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.DashboardService;
-import dev.somdip.containerplatform.service.UsageTrackingService;
 import dev.somdip.containerplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,20 +25,14 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 public class WebController {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(WebController.class);
+    
+	/*
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
-    private final UsageTrackingService usageTrackingService;
-
-    /**
-     * Helper method to extract userId from Authentication
-     */
-    private String getUserId(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getUserId();
-    }
-
+	*/
     @GetMapping("/")
     public String home() {
         return "index";
@@ -53,7 +47,8 @@ public class WebController {
     public String register() {
         return "register";
     }
-
+    
+    /*
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -62,44 +57,25 @@ public class WebController {
         
         try {
             // Get user ID from authentication
-            String userId = getUserId(authentication);
-            User user = userService.findById(userId)
+            String username = authentication.getName();
+            User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+            String userId = user.getUserId();
             
             // Get dashboard statistics
             DashboardStats stats = dashboardService.getDashboardStats(userId);
             Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(userId, 7);
             List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 5);
-            Map<String, List<Double>> networkIO = dashboardService.getNetworkIOHistory(userId, 7);
-            List<DeploymentTimelineEvent> deploymentTimeline = dashboardService.getDeploymentTimeline(userId, 7);
-
-            // Calculate hours usage for FREE plan
-            double hoursUsed = user.getHoursUsed() != null ? user.getHoursUsed() : 0.0;
-            double hoursRemaining = usageTrackingService.getRemainingHours(user);
-            boolean isFreePlan = user.getPlan() == User.UserPlan.FREE;
-            boolean hasExceededLimit = isFreePlan && hoursRemaining <= 0;
-
+            
             // Add data to model
             model.addAttribute("username", user.getName());
             model.addAttribute("stats", stats);
             model.addAttribute("usageHistory", usageHistory);
             model.addAttribute("recentActivity", recentActivity);
-            model.addAttribute("networkIO", networkIO);
-            model.addAttribute("deploymentTimeline", deploymentTimeline);
-
-            // Add FREE plan usage data
-            model.addAttribute("isFreePlan", isFreePlan);
-            model.addAttribute("hoursUsed", hoursUsed);
-            model.addAttribute("hoursRemaining", hoursRemaining);
-            model.addAttribute("hoursLimit", UsageTrackingService.FREE_PLAN_HOURS_LIMIT);
-            model.addAttribute("hasExceededLimit", hasExceededLimit);
-            model.addAttribute("usagePercentage", isFreePlan ? (hoursUsed / UsageTrackingService.FREE_PLAN_HOURS_LIMIT) * 100 : 0);
-
+            
             // Add chart data as JSON for JavaScript
             model.addAttribute("cpuData", usageHistory.get("cpu"));
             model.addAttribute("memoryData", usageHistory.get("memory"));
-            model.addAttribute("networkInData", networkIO.get("in"));
-            model.addAttribute("networkOutData", networkIO.get("out"));
             
         } catch (Exception e) {
             log.error("Error loading dashboard", e);
@@ -118,7 +94,9 @@ public class WebController {
         
         return "dashboard";
     }
+    */
     
+    /*
     @GetMapping("/containers")
     public String containers(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -136,8 +114,8 @@ public class WebController {
             
             model.addAttribute("containers", containers);
             model.addAttribute("totalContainers", containers.size());
-            model.addAttribute("runningContainers",
-                containers.stream().filter(c -> c.getStatus() == Container.ContainerStatus.RUNNING).count());
+            model.addAttribute("runningContainers", 
+                containers.stream().filter(c -> "RUNNING".equals(c.getStatus())).count());
             
         } catch (Exception e) {
             log.error("Error loading containers", e);
@@ -209,6 +187,7 @@ public class WebController {
         return "logs";
     }
     
+    /*
     @GetMapping("/billing")
     public String billing(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -229,7 +208,10 @@ public class WebController {
         
         return "billing";
     }
+    */
     
+    
+    /*
     @GetMapping("/profile")
     public String profile(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -291,6 +273,7 @@ public class WebController {
         return "api-keys";
     }
     
+    
     @GetMapping("/support")
     public String support(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -326,18 +309,9 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-
+        
         // Domain management page
         return "domains";
     }
-
-    @GetMapping("/metrics")
-    public String metrics(Model model, Authentication authentication) {
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-
-        // Metrics page
-        return "metrics";
-    }
+    */
 }

@@ -1,10 +1,15 @@
 package dev.somdip.containerplatform.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import dev.somdip.containerplatform.controller.HealthController;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -23,15 +28,19 @@ import java.util.concurrent.TimeUnit;
 @Component
 @RequiredArgsConstructor
 public class LogStreamHandler extends TextWebSocketHandler {
+	
+	private static final Logger log = LoggerFactory.getLogger(LogStreamHandler.class);
     
+	/*
     private final LogStreamingService logStreamingService;
     private final ContainerService containerService;
     private final ObjectMapper objectMapper;
-    
+    */
     // Store active sessions and their log streaming tasks
     private final Map<String, ScheduledFuture<?>> activeSessions = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
     
+    /*
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("WebSocket connection established: {}", session.getId());
@@ -44,7 +53,8 @@ public class LogStreamHandler extends TextWebSocketHandler {
         );
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
     }
-    
+    */
+    /*
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         try {
@@ -85,6 +95,7 @@ public class LogStreamHandler extends TextWebSocketHandler {
             sendError(session, "Error processing request: " + e.getMessage());
         }
     }
+    
     
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
@@ -186,4 +197,5 @@ public class LogStreamHandler extends TextWebSocketHandler {
         );
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(error)));
     }
+    */
 }

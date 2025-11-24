@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class LogStreamingService {
-    
+    /*
     private final CloudWatchLogsClient cloudWatchLogsClient;
     
     @Value("${aws.cloudwatch.logGroup.users}")
@@ -107,4 +107,5 @@ public class LogStreamingService {
         Instant timestamp = Instant.ofEpochMilli(event.timestamp());
         return String.format("[%s] %s", timestamp.toString(), event.message());
     }
+    */
 }

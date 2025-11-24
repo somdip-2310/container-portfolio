@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Bean;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
     
-    private final LogStreamHandler logStreamHandler;
-    private final MetricsHandler metricsHandler;
-    
+    //private final LogStreamHandler logStreamHandler;
+    //private final MetricsHandler metricsHandler;
+    /*
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(logStreamHandler, "/ws/logs")
@@ -25,6 +25,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 .setAllowedOrigins("*")
                 .withSockJS(); // Fallback for browsers that don't support WebSocket
     }
+    */
     
     @Bean
     public ServletServerContainerFactoryBean createWebSocketContainer() {
@@ -34,4 +35,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
         container.setMaxSessionIdleTimeout(300000L); // 5 minutes
         return container;
     }
+
+	@Override
+	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+		// TODO Auto-generated method stub
+		
+	}
 }
