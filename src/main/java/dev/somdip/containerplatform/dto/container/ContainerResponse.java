@@ -45,6 +45,10 @@ public class ContainerResponse {
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    // Alias for consistency with Container model
+    public String getContainerName() { return name; }
+    public void setContainerName(String name) { this.name = name; }
     
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }

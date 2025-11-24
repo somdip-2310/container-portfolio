@@ -160,7 +160,7 @@ public class DockerfileGenerator {
             dockerfile.append("RUN pip install --no-cache-dir poetry\n");
             dockerfile.append("COPY pyproject.toml poetry.lock* ./\n");
             dockerfile.append("RUN poetry config virtualenvs.create false \\\n");
-            dockerfile.append("    && poetry install --no-dev --no-interaction --no-ansi\n\n");
+            dockerfile.append("    && (poetry install --no-dev --no-interaction --no-ansi || poetry install --no-dev --no-interaction --no-ansi --no-root)\n\n");
         } else if ("pipenv".equals(packageManager)) {
             dockerfile.append("RUN pip install --no-cache-dir pipenv\n");
             dockerfile.append("COPY Pipfile Pipfile.lock* ./\n");
@@ -298,6 +298,7 @@ public class DockerfileGenerator {
 
         // Copy source and build
         dockerfile.append("COPY . .\n");
+        dockerfile.append("RUN go mod tidy\n");
         dockerfile.append("RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .\n\n");
 
         // Production stage
