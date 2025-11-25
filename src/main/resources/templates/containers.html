@@ -473,7 +473,7 @@
     <div th:replace="~{fragments/base :: scripts}"></div>
 
     <!-- Container Management Scripts -->
-    <script th:inline="javascript">
+    <script>
         // Get CSRF token for API calls
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
