@@ -107,7 +107,7 @@
 
     <script>
         function viewDeploymentDetails(deploymentId) {
-            alert(`Viewing deployment details for: ${deploymentId}\n\nThis feature requires backend implementation.`);
+            window.location.href = '/deployments/' + deploymentId;
         }
 
         function viewDeployment(containerName) {

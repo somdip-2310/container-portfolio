@@ -44,10 +44,10 @@ public class DashboardService {
             List<Container> userContainers = containerRepository.findByUserId(userId);
             long totalContainers = userContainers.size();
             long runningContainers = userContainers.stream()
-                .filter(c -> "RUNNING".equals(c.getStatus()))
+                .filter(c -> c.getStatus() == Container.ContainerStatus.RUNNING)
                 .count();
             long stoppedContainers = userContainers.stream()
-                .filter(c -> "STOPPED".equals(c.getStatus()))
+                .filter(c -> c.getStatus() == Container.ContainerStatus.STOPPED)
                 .count();
             
             // Get resource usage

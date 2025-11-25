@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Deployment Details')}"></head>
+<body>
+    <header th:replace="~{fragments/base :: header}"></header>
+    <aside th:replace="~{fragments/base :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Back Button -->
+            <div class="mb-6">
+                <a href="/deployments" class="inline-flex items-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Deployments
+                </a>
+            </div>
+
+            <!-- Header -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white" th:text="${deployment.containerName}">Container Name</h1>
+                        <p class="mt-2 text-gray-600 dark:text-gray-400">
+                            Deployment ID: <span th:text="${deployment.deploymentId}" class="font-mono">deployment-id</span>
+                        </p>
+                    </div>
+                    <div>
+                        <span th:class="${'px-4 py-2 text-sm font-medium rounded-lg ' +
+                            (deployment.status == 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                            (deployment.status == 'FAILED' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                            (deployment.status == 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')))}">
+                            <i th:class="${'fas mr-2 ' +
+                                (deployment.status == 'COMPLETED' ? 'fa-check-circle' :
+                                (deployment.status == 'FAILED' ? 'fa-times-circle' :
+                                (deployment.status == 'IN_PROGRESS' ? 'fa-spinner fa-spin' : 'fa-circle')))}"></i>
+                            <span th:text="${deployment.status}">Status</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Deployment Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Type</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${deployment.type}">CREATE</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Started</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white"
+                           th:text="${#temporals.format(deployment.startedAt, 'MMM dd, yyyy HH:mm:ss')}">Nov 25, 2025 05:33</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Duration</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white"
+                           th:text="${deployment.durationMillis != null ? (deployment.durationMillis / 1000.0) + 's' : (deployment.status == 'IN_PROGRESS' ? 'In Progress' : 'N/A')}">103.0s</p>
+                    </div>
+                </div>
+
+                <!-- Image Info -->
+                <div class="mt-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Image</p>
+                    <p class="text-lg font-mono text-gray-900 dark:text-white" th:text="${deployment.newImage}">image:tag</p>
+                </div>
+            </div>
+
+            <!-- Deployment Steps -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Deployment Steps</h2>
+
+                <div class="space-y-4">
+                    <div th:each="step, iterStat : ${deployment.steps}" class="flex items-start">
+                        <!-- Step Number and Icon -->
+                        <div class="flex-shrink-0">
+                            <div th:class="${'w-10 h-10 rounded-full flex items-center justify-center ' +
+                                (step.status.name() == 'COMPLETED' ? 'bg-green-100 dark:bg-green-900' :
+                                (step.status.name() == 'FAILED' ? 'bg-red-100 dark:bg-red-900' :
+                                (step.status.name() == 'IN_PROGRESS' ? 'bg-yellow-100 dark:bg-yellow-900' :
+                                'bg-gray-100 dark:bg-gray-700')))}">
+                                <i th:class="${'fas ' +
+                                    (step.status.name() == 'COMPLETED' ? 'fa-check text-green-600 dark:text-green-400' :
+                                    (step.status.name() == 'FAILED' ? 'fa-times text-red-600 dark:text-red-400' :
+                                    (step.status.name() == 'IN_PROGRESS' ? 'fa-spinner fa-spin text-yellow-600 dark:text-yellow-400' :
+                                    'fa-clock text-gray-600 dark:text-gray-400')))}"></i>
+                            </div>
+                        </div>
+
+                        <!-- Step Details -->
+                        <div class="ml-4 flex-1">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${step.message}">Step Message</h3>
+                                <span th:class="${'px-2 py-1 text-xs font-medium rounded ' +
+                                    (step.status.name() == 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                    (step.status.name() == 'FAILED' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                                    (step.status.name() == 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')))}">
+                                    <span th:text="${step.status}">Status</span>
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1" th:text="${step.stepName}">STEP_NAME</p>
+
+                            <!-- Step Timing -->
+                            <div class="text-xs text-gray-500 dark:text-gray-500 mt-2" th:if="${step.startedAt != null}">
+                                <span>Started: </span>
+                                <span th:text="${#temporals.format(step.startedAt, 'HH:mm:ss')}">12:00:00</span>
+                                <span th:if="${step.completedAt != null}"> → </span>
+                                <span th:if="${step.completedAt != null}">Completed: </span>
+                                <span th:if="${step.completedAt != null}" th:text="${#temporals.format(step.completedAt, 'HH:mm:ss')}">12:00:05</span>
+                                <span th:if="${step.completedAt != null and step.startedAt != null}">
+                                    (<span th:text="${(#temporals.formatISO(step.completedAt).toEpochMilli() - #temporals.formatISO(step.startedAt).toEpochMilli()) / 1000.0}">5.0</span>s)
+                                </span>
+                            </div>
+
+                            <!-- Error Message -->
+                            <div th:if="${step.errorMessage != null}" class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                                <p class="text-sm text-red-800 dark:text-red-300" th:text="${step.errorMessage}">Error message</p>
+                            </div>
+                        </div>
+
+                        <!-- Connector Line -->
+                        <div th:if="${!iterStat.last}" class="absolute left-5 mt-12 w-0.5 h-full bg-gray-200 dark:bg-gray-700" style="margin-left: -0.125rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Info -->
+            <div th:if="${deployment.strategy != null}" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Deployment Strategy</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Type</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${deployment.strategy.type}">ROLLING_UPDATE</p>
+                    </div>
+                    <div th:if="${deployment.strategy.healthCheckGracePeriod != null}">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Health Check Grace Period</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${deployment.strategy.healthCheckGracePeriod + 's'}">60s</p>
+                    </div>
+                    <div th:if="${deployment.strategy.enableCircuitBreaker != null}">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Circuit Breaker</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${deployment.strategy.enableCircuitBreaker ? 'Enabled' : 'Disabled'}">Enabled</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+</body>
+</html>

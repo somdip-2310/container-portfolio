@@ -172,6 +172,37 @@ public class WebController {
         return "container-details";
     }
     
+    @GetMapping("/deployments/{deploymentId}")
+    public String deploymentDetails(@PathVariable String deploymentId, Model model, Authentication authentication) {
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            Deployment deployment = deploymentRepository.findById(deploymentId)
+                .orElseThrow(() -> new RuntimeException("Deployment not found"));
+
+            // Enrich with container name if missing
+            if (deployment.getContainerName() == null && deployment.getContainerId() != null) {
+                try {
+                    Container container = containerService.getContainer(deployment.getContainerId());
+                    if (container != null) {
+                        deployment.setContainerName(container.getContainerName());
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not fetch container name for deployment: {}", deployment.getDeploymentId());
+                }
+            }
+
+            model.addAttribute("deployment", deployment);
+        } catch (Exception e) {
+            log.error("Error loading deployment details", e);
+            return "redirect:/deployments";
+        }
+
+        return "deployment-details";
+    }
+
     @GetMapping("/deployments")
     public String deployments(Model model, Authentication authentication) {
         if (authentication == null) {
@@ -185,6 +216,21 @@ public class WebController {
             String userId = user.getUserId();
 
             List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, 50);
+
+            // Enrich deployments with container names if missing
+            for (Deployment deployment : deployments) {
+                if (deployment.getContainerName() == null && deployment.getContainerId() != null) {
+                    try {
+                        Container container = containerService.getContainer(deployment.getContainerId());
+                        if (container != null) {
+                            deployment.setContainerName(container.getContainerName());
+                        }
+                    } catch (Exception e) {
+                        log.warn("Could not fetch container name for deployment: {}", deployment.getDeploymentId());
+                    }
+                }
+            }
+
             model.addAttribute("deployments", deployments);
         } catch (Exception e) {
             log.error("Error loading deployments", e);
