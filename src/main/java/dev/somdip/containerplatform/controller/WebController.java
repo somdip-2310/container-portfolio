@@ -219,14 +219,18 @@ public class WebController {
 
             // Enrich deployments with container names if missing
             for (Deployment deployment : deployments) {
-                if (deployment.getContainerName() == null && deployment.getContainerId() != null) {
+                String containerName = deployment.getContainerName();
+                if ((containerName == null || containerName.trim().isEmpty()) && deployment.getContainerId() != null) {
                     try {
                         Container container = containerService.getContainer(deployment.getContainerId());
-                        if (container != null) {
+                        if (container != null && container.getContainerName() != null) {
                             deployment.setContainerName(container.getContainerName());
+                        } else {
+                            deployment.setContainerName("Deleted Container");
                         }
                     } catch (Exception e) {
-                        log.warn("Could not fetch container name for deployment: {}", deployment.getDeploymentId());
+                        log.warn("Could not fetch container name for deployment: {}", deployment.getDeploymentId(), e);
+                        deployment.setContainerName("Unknown");
                     }
                 }
             }
