@@ -78,51 +78,56 @@
                 <!-- Container Card -->
                 <div th:each="container : ${containers}"
                      th:attr="data-container-id=${container.containerId}, data-name=${container.containerName}, data-status=${container.status}"
-                     class="container-card bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
+                     class="container-card group relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-700 overflow-hidden">
+                    <!-- Subtle gradient overlay on hover -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-50/0 to-purple-100/0 dark:from-purple-900/0 dark:to-purple-800/0 group-hover:from-purple-50/30 group-hover:to-purple-100/10 dark:group-hover:from-purple-900/20 dark:group-hover:to-purple-800/10 transition-all duration-300 pointer-events-none"></div>
+                    <div class="relative p-6">
+                        <div class="flex items-start justify-between mb-5">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-200" th:text="${container.containerName}">container-name</h3>
                             </div>
-                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status.name() == 'RUNNING' ? 'bg-green-500 text-white' : (container.status.name() == 'STOPPED' ? 'bg-yellow-500 text-white' : (container.status.name() == 'FAILED' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white')))}"
-                                  th:text="${container.status}">Status</span>
+                            <span th:class="${'relative px-3 py-1.5 text-xs font-bold rounded-full ' + (container.status.name() == 'RUNNING' ? 'bg-green-500 text-white shadow-lg shadow-green-500/50' : (container.status.name() == 'STOPPED' ? 'bg-yellow-500 text-white shadow-lg shadow-yellow-500/50' : (container.status.name() == 'FAILED' ? 'bg-red-500 text-white shadow-lg shadow-red-500/50' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/50')))}"
+                                  th:text="${container.status}">
+                                <span th:if="${container.status.name() == 'RUNNING'}" class="absolute top-0 right-0 w-2 h-2 bg-white rounded-full animate-ping"></span>
+                                Status
+                            </span>
                         </div>
 
-                        <div class="space-y-2 mb-4">
+                        <div class="space-y-3 mb-5">
                             <!-- CPU Usage -->
-                            <div>
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="bg-white/50 dark:bg-gray-900/30 rounded-lg p-3 backdrop-blur-sm">
+                                <div class="flex justify-between text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     <span class="flex items-center">
-                                        <i class="fas fa-microchip text-purple-500 mr-1"></i>
-                                        CPU
+                                        <i class="fas fa-microchip text-purple-500 mr-2"></i>
+                                        CPU Usage
                                     </span>
                                     <span th:if="${container.resourceUsage != null && container.resourceUsage.avgCpuPercent != null}"
                                           th:text="${#numbers.formatDecimal(container.resourceUsage.avgCpuPercent, 1, 1)} + '%'"
-                                          class="font-semibold">0%</span>
+                                          class="font-bold text-purple-600 dark:text-purple-400">0%</span>
                                     <span th:unless="${container.resourceUsage != null && container.resourceUsage.avgCpuPercent != null}"
                                           class="text-gray-400 text-xs">-</span>
                                 </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-1.5 rounded-full transition-all duration-500"
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 h-2 rounded-full transition-all duration-700 shadow-sm"
                                          th:style="'width: ' + ${container.resourceUsage != null && container.resourceUsage.avgCpuPercent != null ? container.resourceUsage.avgCpuPercent : 0} + '%'"></div>
                                 </div>
                             </div>
 
                             <!-- Memory Usage -->
-                            <div>
-                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            <div class="bg-white/50 dark:bg-gray-900/30 rounded-lg p-3 backdrop-blur-sm">
+                                <div class="flex justify-between text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     <span class="flex items-center">
-                                        <i class="fas fa-memory text-blue-500 mr-1"></i>
-                                        RAM
+                                        <i class="fas fa-memory text-blue-500 mr-2"></i>
+                                        Memory Usage
                                     </span>
                                     <span th:if="${container.resourceUsage != null && container.resourceUsage.avgMemoryPercent != null}"
                                           th:text="${#numbers.formatDecimal(container.resourceUsage.avgMemoryPercent, 1, 1)} + '%'"
-                                          class="font-semibold">0%</span>
+                                          class="font-bold text-blue-600 dark:text-blue-400">0%</span>
                                     <span th:unless="${container.resourceUsage != null && container.resourceUsage.avgMemoryPercent != null}"
                                           class="text-gray-400 text-xs">-</span>
                                 </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all duration-500"
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 h-2 rounded-full transition-all duration-700 shadow-sm"
                                          th:style="'width: ' + ${container.resourceUsage != null && container.resourceUsage.avgMemoryPercent != null ? container.resourceUsage.avgMemoryPercent : 0} + '%'"></div>
                                 </div>
                             </div>

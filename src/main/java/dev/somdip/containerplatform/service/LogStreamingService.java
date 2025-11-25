@@ -29,12 +29,12 @@ public class LogStreamingService {
             String logStreamPrefix = containerId + "/app/";
 
             // First, find all log streams with this prefix
+            // Note: Cannot use orderBy with logStreamNamePrefix, will be ordered by LogStreamName
             DescribeLogStreamsRequest describeRequest = DescribeLogStreamsRequest.builder()
                 .logGroupName(userLogGroup)
                 .logStreamNamePrefix(logStreamPrefix)
-                .orderBy("LastEventTime")
                 .descending(true)
-                .limit(5)
+                .limit(10)
                 .build();
 
             DescribeLogStreamsResponse describeResponse = cloudWatchLogsClient.describeLogStreams(describeRequest);
@@ -43,8 +43,14 @@ public class LogStreamingService {
                 return "No logs available for this container yet.";
             }
 
-            // Get logs from the most recent log stream
-            LogStream mostRecentStream = describeResponse.logStreams().get(0);
+            // Find the most recent log stream by lastEventTimestamp
+            LogStream mostRecentStream = describeResponse.logStreams().stream()
+                .filter(stream -> stream.lastEventTimestamp() != null)
+                .max((s1, s2) -> Long.compare(
+                    s1.lastEventTimestamp() != null ? s1.lastEventTimestamp() : 0,
+                    s2.lastEventTimestamp() != null ? s2.lastEventTimestamp() : 0
+                ))
+                .orElse(describeResponse.logStreams().get(0));
 
             GetLogEventsRequest getLogsRequest = GetLogEventsRequest.builder()
                 .logGroupName(userLogGroup)
