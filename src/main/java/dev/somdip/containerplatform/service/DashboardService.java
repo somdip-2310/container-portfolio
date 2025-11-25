@@ -3,6 +3,7 @@ package dev.somdip.containerplatform.service;
 import dev.somdip.containerplatform.controller.HealthController;
 import dev.somdip.containerplatform.dto.DashboardStats;
 import dev.somdip.containerplatform.dto.ResourceUsage;
+import dev.somdip.containerplatform.dto.Notification;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
@@ -204,30 +205,36 @@ public class DashboardService {
         List<RecentActivity> activities = new ArrayList<>();
         
         try {
-            // Get recent deployments
-            List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, limit);
-            for (Deployment deployment : deployments) {
-                activities.add(RecentActivity.builder()
-                    .type("deployment")
-                    .containerName(deployment.getContainerName())
-                    .action(deployment.getStatus().name())
-                    .timestamp(deployment.getCreatedAt())
-                    .status(deployment.getStatus().name())
-                    .build());
-            }
+            // Get deployments from the last 30 days using time-range query
+            Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
+            List<Deployment> deployments = deploymentRepository.findByUserIdInTimeRange(userId, thirtyDaysAgo, Instant.now());
             
-            // Sort by timestamp
-            activities.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
-            
-            // Limit results
-            return activities.stream()
+            // Sort by created/started time (newest first) and limit
+            deployments.stream()
+                .sorted((d1, d2) -> {
+                    Instant t1 = d1.getCreatedAt() != null ? d1.getCreatedAt() : d1.getStartedAt();
+                    Instant t2 = d2.getCreatedAt() != null ? d2.getCreatedAt() : d2.getStartedAt();
+                    if (t1 == null && t2 == null) return 0;
+                    if (t1 == null) return 1;
+                    if (t2 == null) return -1;
+                    return t2.compareTo(t1); // Descending
+                })
                 .limit(limit)
-                .collect(Collectors.toList());
+                .forEach(deployment -> {
+                    activities.add(RecentActivity.builder()
+                        .type("deployment")
+                        .containerName(deployment.getContainerName() != null ? deployment.getContainerName() : "Unknown")
+                        .action(deployment.getStatus().name())
+                        .timestamp(deployment.getCreatedAt() != null ? deployment.getCreatedAt() : deployment.getStartedAt())
+                        .status(deployment.getStatus().name())
+                        .build());
+                });
                 
         } catch (Exception e) {
             log.error("Error getting recent activity for user: {}", userId, e);
-            return new ArrayList<>();
         }
+        
+        return activities;
     }
     
     private ResourceUsage calculateResourceUsage(List<Container> containers) {
@@ -283,4 +290,75 @@ public class DashboardService {
             .collect(Collectors.toList());
     }
 
+}    
+    public List<Notification> getNotifications(String userId, int limit) {
+        List<Notification> notifications = new ArrayList<>();
+        
+        try {
+            // Get recent deployments
+            Instant oneDayAgo = Instant.now().minus(1, ChronoUnit.DAYS);
+            List<Deployment> deployments = deploymentRepository.findByUserIdInTimeRange(userId, oneDayAgo, Instant.now());
+            
+            // Convert to notifications
+            deployments.stream()
+                .sorted((d1, d2) -> {
+                    Instant t1 = d1.getCompletedAt() != null ? d1.getCompletedAt() : d1.getStartedAt();
+                    Instant t2 = d2.getCompletedAt() != null ? d2.getCompletedAt() : d2.getStartedAt();
+                    if (t1 == null && t2 == null) return 0;
+                    if (t1 == null) return 1;
+                    if (t2 == null) return -1;
+                    return t2.compareTo(t1);
+                })
+                .limit(limit)
+                .forEach(deployment -> {
+                    String type;
+                    String title;
+                    String message;
+                    
+                    if (deployment.getStatus() == Deployment.DeploymentStatus.COMPLETED) {
+                        type = "success";
+                        title = "Deployment successful";
+                        message = (deployment.getContainerName() != null ? deployment.getContainerName() : "Container") + " deployed successfully";
+                    } else if (deployment.getStatus() == Deployment.DeploymentStatus.FAILED) {
+                        type = "error";
+                        title = "Deployment failed";
+                        message = (deployment.getContainerName() != null ? deployment.getContainerName() : "Container") + " failed to deploy";
+                    } else {
+                        type = "info";
+                        title = "Deployment in progress";
+                        message = (deployment.getContainerName() != null ? deployment.getContainerName() : "Container") + " is being deployed";
+                    }
+                    
+                    // Calculate time ago
+                    Instant timestamp = deployment.getCompletedAt() != null ? deployment.getCompletedAt() : deployment.getStartedAt();
+                    String timeAgo = formatTimeAgo(timestamp);
+                    
+                    notifications.add(Notification.builder()
+                        .type(type)
+                        .title(title)
+                        .message(message)
+                        .timeAgo(timeAgo)
+                        .build());
+                });
+                
+        } catch (Exception e) {
+            log.error("Error getting notifications for user: {}", userId, e);
+        }
+        
+        return notifications;
+    }
+    
+    private String formatTimeAgo(Instant instant) {
+        if (instant == null) return "Unknown";
+        
+        long minutes = ChronoUnit.MINUTES.between(instant, Instant.now());
+        if (minutes < 1) return "Just now";
+        if (minutes < 60) return minutes + " minute" + (minutes > 1 ? "s" : "") + " ago";
+        
+        long hours = ChronoUnit.HOURS.between(instant, Instant.now());
+        if (hours < 24) return hours + " hour" + (hours > 1 ? "s" : "") + " ago";
+        
+        long days = ChronoUnit.DAYS.between(instant, Instant.now());
+        return days + " day" + (days > 1 ? "s" : "") + " ago";
+    }
 }

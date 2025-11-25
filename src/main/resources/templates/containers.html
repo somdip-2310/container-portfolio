@@ -187,12 +187,19 @@
                         </div>
 
 
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-4 gap-2">
                             <button type="button" th:data-container-id="${container.containerId}"
                                     onclick="viewLogs(this.getAttribute('data-container-id'))"
                                     class="flex items-center justify-center bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800/30 dark:hover:to-purple-700/30 text-purple-700 dark:text-purple-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
                                 <i class="fas fa-terminal mr-1.5"></i>
                                 <span>Logs</span>
+                            </button>
+                            <button type="button"
+                                    th:attr="data-container-id=${container.containerId}"
+                                    onclick="stopContainer(this.getAttribute('data-container-id'))"
+                                    class="flex items-center justify-center bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 hover:from-yellow-100 hover:to-yellow-200 dark:hover:from-yellow-800/30 dark:hover:to-yellow-700/30 text-yellow-700 dark:text-yellow-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                <i class="fas fa-stop mr-1.5"></i>
+                                <span>Stop</span>
                             </button>
                             <button type="button"
                                     th:attr="data-container-id=${container.containerId}"

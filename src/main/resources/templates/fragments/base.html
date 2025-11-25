@@ -92,7 +92,7 @@
                     <!-- Notifications -->
                     <button id="notifications-toggle" type="button" class="relative text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2">
                         <i class="fas fa-bell text-lg"></i>
-                        <span class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                        <span th:if="${notificationCount > 0}" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" th:text="${notificationCount}">0</span>
                     </button>
 
                     <!-- Notifications Dropdown -->
@@ -101,36 +101,46 @@
                             <h3 class="font-semibold text-gray-900 dark:text-white">Notifications</h3>
                         </div>
                         <div class="max-h-96 overflow-y-auto">
-                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
+                            <!-- Upgrade notification for FREE tier users -->
+                            <div th:if="${user != null and user.plan == T(dev.somdip.containerplatform.model.User.UserPlan).FREE}" 
+                                 class="block px-4 py-3 bg-purple-50 dark:bg-purple-900/20 border-b border-gray-100 dark:border-gray-700">
                                 <div class="flex items-start">
-                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                    <i class="fas fa-crown text-purple-500 mt-1 mr-3"></i>
                                     <div class="flex-1">
-                                        <p class="text-sm text-gray-900 dark:text-white">Deployment successful</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">my-web-app deployed successfully</p>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">2 hours ago</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">Upgrade to Premium</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Get more containers, better performance, and priority support</p>
+                                        <a href="/billing" class="inline-block mt-2 text-xs text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700">
+                                            View Plans →
+                                        </a>
                                     </div>
                                 </div>
-                            </a>
-                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
-                                <div class="flex items-start">
-                                    <i class="fas fa-exclamation-triangle text-yellow-500 mt-1 mr-3"></i>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-gray-900 dark:text-white">High CPU usage</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">api-backend using 85% CPU</p>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">5 hours ago</p>
+                            </div>
+                            
+                            <!-- Dynamic notifications from recent activity -->
+                            <div th:if="${notifications != null and !#lists.isEmpty(notifications)}">
+                                <a th:each="notif : ${notifications}" href="#" 
+                                   class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
+                                    <div class="flex items-start">
+                                        <i th:class="${'fas mt-1 mr-3 ' + 
+                                            (notif.type == 'success' ? 'fa-check-circle text-green-500' :
+                                             notif.type == 'warning' ? 'fa-exclamation-triangle text-yellow-500' :
+                                             notif.type == 'error' ? 'fa-times-circle text-red-500' :
+                                             'fa-info-circle text-blue-500')}"></i>
+                                        <div class="flex-1">
+                                            <p class="text-sm text-gray-900 dark:text-white" th:text="${notif.title}">Title</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400" th:text="${notif.message}">Message</p>
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1" th:text="${notif.timeAgo}">Time</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
-                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <div class="flex items-start">
-                                    <i class="fas fa-times-circle text-red-500 mt-1 mr-3"></i>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-gray-900 dark:text-white">Deployment failed</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">python-worker failed to start</p>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">1 day ago</p>
-                                    </div>
-                                </div>
-                            </a>
+                                </a>
+                            </div>
+                            
+                            <!-- Empty state -->
+                            <div th:if="${notifications == null or #lists.isEmpty(notifications)}" 
+                                 class="px-4 py-8 text-center">
+                                <i class="fas fa-bell-slash text-3xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">No notifications</p>
+                            </div>
                         </div>
                         <div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-center">
                             <a href="#" class="text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium">
@@ -138,7 +148,6 @@
                             </a>
                         </div>
                     </div>
-
                     <!-- User dropdown -->
                     <div class="relative">
                         <button id="user-menu-button" type="button" class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">

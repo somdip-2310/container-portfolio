@@ -2,6 +2,7 @@ package dev.somdip.containerplatform.controller;
 
 import dev.somdip.containerplatform.dto.DashboardStats;
 import dev.somdip.containerplatform.dto.RecentActivity;
+import dev.somdip.containerplatform.dto.Notification;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.model.User;
@@ -73,7 +74,7 @@ public class WebController {
             // Get dashboard statistics using fresh containers
             DashboardStats stats = dashboardService.getDashboardStats(userId);
             Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(containers, 7);
-            List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 5);
+            List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 3);
             
             // Add data to model
             model.addAttribute("username", user.getName());
@@ -85,6 +86,12 @@ public class WebController {
             model.addAttribute("cpuData", usageHistory.get("cpu"));
             model.addAttribute("memoryData", usageHistory.get("memory"));
             model.addAttribute("networkInData", usageHistory.get("networkIn"));
+            
+            // Add notifications and user for notification bell
+            List<Notification> notifications = dashboardService.getNotifications(userId, 3);
+            model.addAttribute("notifications", notifications);
+            model.addAttribute("notificationCount", notifications.size() + (user.getPlan() == User.UserPlan.FREE ? 1 : 0));
+            model.addAttribute("user", user);
             model.addAttribute("networkOutData", usageHistory.get("networkOut"));
             
         } catch (Exception e) {
