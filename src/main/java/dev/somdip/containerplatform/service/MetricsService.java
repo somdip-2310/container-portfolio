@@ -228,7 +228,7 @@ public class MetricsService {
         }
     }
 
-    public void updateAllUserContainerMetrics(String userId) {
+    public List<Container> updateAllUserContainerMetrics(String userId) {
         try {
             List<Container> userContainers = containerRepository.findByUserId(userId);
             for (Container container : userContainers) {
@@ -236,8 +236,11 @@ public class MetricsService {
                     updateContainerMetrics(container.getContainerId());
                 }
             }
+            // Reload containers to get updated metrics
+            return containerRepository.findByUserId(userId);
         } catch (Exception e) {
             log.error("Error updating metrics for user containers: {}", userId, e);
+            return List.of();
         }
     }
 
