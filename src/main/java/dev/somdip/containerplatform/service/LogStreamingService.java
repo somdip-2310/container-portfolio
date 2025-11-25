@@ -28,17 +28,35 @@ public class LogStreamingService {
             // Note: containerId is already verified to belong to the authenticated user in WebApiController
             String logStreamPrefix = containerId + "/app/";
 
-            // Use FilterLogEvents with prefix to get logs from all matching streams
-            FilterLogEventsRequest request = FilterLogEventsRequest.builder()
+            // First, find all log streams with this prefix
+            DescribeLogStreamsRequest describeRequest = DescribeLogStreamsRequest.builder()
                 .logGroupName(userLogGroup)
                 .logStreamNamePrefix(logStreamPrefix)
-                .limit(limit)
+                .orderBy("LastEventTime")
+                .descending(true)
+                .limit(5)
                 .build();
 
-            FilterLogEventsResponse response = cloudWatchLogsClient.filterLogEvents(request);
+            DescribeLogStreamsResponse describeResponse = cloudWatchLogsClient.describeLogStreams(describeRequest);
+
+            if (describeResponse.logStreams().isEmpty()) {
+                return "No logs available for this container yet.";
+            }
+
+            // Get logs from the most recent log stream
+            LogStream mostRecentStream = describeResponse.logStreams().get(0);
+
+            GetLogEventsRequest getLogsRequest = GetLogEventsRequest.builder()
+                .logGroupName(userLogGroup)
+                .logStreamName(mostRecentStream.logStreamName())
+                .limit(limit)
+                .startFromHead(false)
+                .build();
+
+            GetLogEventsResponse getLogsResponse = cloudWatchLogsClient.getLogEvents(getLogsRequest);
 
             // Format logs for display
-            List<String> logLines = response.events().stream()
+            List<String> logLines = getLogsResponse.events().stream()
                 .map(event -> formatLogEvent(event))
                 .collect(Collectors.toList());
 

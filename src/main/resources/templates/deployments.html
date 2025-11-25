@@ -50,8 +50,40 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Deployment rows -->
+                            <tr th:each="deployment : ${deployments}" th:if="${!deployments.isEmpty()}">
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white" th:text="${deployment.containerName}">Container Name</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span th:class="${'px-2 py-1 text-xs font-medium rounded ' +
+                                        (deployment.status == 'SUCCESS' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                        (deployment.status == 'FAILED' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'))}"
+                                        th:text="${deployment.status}">Status</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 dark:text-gray-300" th:text="${deployment.image + ':' + deployment.imageTag}">Image</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 dark:text-gray-300" th:text="${#temporals.format(deployment.startedAt, 'MMM dd, yyyy HH:mm')}">Started</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 dark:text-gray-300" th:if="${deployment.completedAt != null}">
+                                        <span th:text="${deployment.durationSeconds != null ? deployment.durationSeconds + 's' : 'N/A'}">Duration</span>
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400" th:if="${deployment.completedAt == null}">In progress...</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button onclick="viewDeploymentDetails(this.getAttribute('data-deployment-id'))"
+                                            th:attr="data-deployment-id=${deployment.deploymentId}"
+                                            class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium">
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
                             <!-- No data message -->
-                            <tr>
+                            <tr th:if="${deployments.isEmpty()}">
                                 <td colspan="6" class="px-6 py-12 text-center">
                                     <i class="fas fa-rocket text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
                                     <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No deployment history yet</h3>

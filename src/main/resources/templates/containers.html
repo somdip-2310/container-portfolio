@@ -84,7 +84,7 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
                             </div>
-                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-500 text-white' : (container.status == 'STOPPED' ? 'bg-yellow-500 text-white' : (container.status == 'FAILED' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white')))}"
+                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status.name() == 'RUNNING' ? 'bg-green-500 text-white' : (container.status.name() == 'STOPPED' ? 'bg-yellow-500 text-white' : (container.status.name() == 'FAILED' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white')))}"
                                   th:text="${container.status}">Status</span>
                         </div>
 
