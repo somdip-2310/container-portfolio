@@ -106,6 +106,10 @@
     <div th:replace="~{fragments/base :: scripts}"></div>
 
     <script>
+        function viewDeploymentDetails(deploymentId) {
+            alert(`Viewing deployment details for: ${deploymentId}\n\nThis feature requires backend implementation.`);
+        }
+
         function viewDeployment(containerName) {
             alert(`Viewing deployment details for: ${containerName}\n\nThis feature requires backend implementation.`);
         }

@@ -137,11 +137,13 @@ public class EcsService {
         Deployment deployment = new Deployment();
         deployment.setDeploymentId(UUID.randomUUID().toString());
         deployment.setContainerId(container.getContainerId());
+        deployment.setContainerName(container.getContainerName());
         deployment.setUserId(container.getUserId());
         deployment.setInitiatedBy(userId);
         deployment.setType(Deployment.DeploymentType.CREATE);
         deployment.setStatus(Deployment.DeploymentStatus.IN_PROGRESS);
         deployment.setStartedAt(Instant.now());
+        deployment.setCreatedAt(Instant.now());
         deployment.setNewImage(container.getImage() + ":" + container.getImageTag());
         
         // Initialize deployment steps

@@ -193,4 +193,121 @@ public class MetricsService {
             .build();
     }
 
+    public void updateContainerMetrics(String containerId) {
+        try {
+            Container container = containerRepository.findById(containerId)
+                .orElseThrow(() -> new RuntimeException("Container not found"));
+
+            // Skip if container is not running
+            if (container.getStatus() != Container.ContainerStatus.RUNNING) {
+                return;
+            }
+
+            // Fetch metrics from CloudWatch
+            ContainerMetrics metrics = fetchContainerMetricsFromCloudWatch(container);
+
+            // Update container resourceUsage
+            Container.ResourceUsage resourceUsage = container.getResourceUsage();
+            if (resourceUsage == null) {
+                resourceUsage = new Container.ResourceUsage();
+            }
+
+            resourceUsage.setAvgCpuPercent(metrics.getCpuUsage());
+            resourceUsage.setAvgMemoryPercent(metrics.getMemoryUsage());
+            resourceUsage.setMeasurementPeriodStart(Instant.now().minus(5, ChronoUnit.MINUTES));
+            resourceUsage.setMeasurementPeriodEnd(Instant.now());
+
+            container.setResourceUsage(resourceUsage);
+            containerRepository.save(container);
+
+            log.info("Updated metrics for container {}: CPU={}%, Memory={}%",
+                containerId, metrics.getCpuUsage(), metrics.getMemoryUsage());
+
+        } catch (Exception e) {
+            log.error("Error updating metrics for container: {}", containerId, e);
+        }
+    }
+
+    public void updateAllUserContainerMetrics(String userId) {
+        try {
+            List<Container> userContainers = containerRepository.findByUserId(userId);
+            for (Container container : userContainers) {
+                if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+                    updateContainerMetrics(container.getContainerId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error updating metrics for user containers: {}", userId, e);
+        }
+    }
+
+    private ContainerMetrics fetchContainerMetricsFromCloudWatch(Container container) {
+        Instant endTime = Instant.now();
+        Instant startTime = endTime.minus(5, ChronoUnit.MINUTES);
+
+        String serviceName = extractServiceName(container.getServiceArn());
+        if (serviceName == null) {
+            return createEmptyMetrics();
+        }
+
+        try {
+            // Fetch CPU metrics
+            GetMetricStatisticsRequest cpuRequest = GetMetricStatisticsRequest.builder()
+                .namespace("AWS/ECS")
+                .metricName("CPUUtilization")
+                .dimensions(
+                    Dimension.builder().name("ServiceName").value(serviceName).build(),
+                    Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
+                )
+                .startTime(startTime)
+                .endTime(endTime)
+                .period(60)
+                .statistics(Statistic.AVERAGE)
+                .build();
+
+            GetMetricStatisticsResponse cpuResponse = cloudWatchClient.getMetricStatistics(cpuRequest);
+
+            // Fetch Memory metrics
+            GetMetricStatisticsRequest memoryRequest = GetMetricStatisticsRequest.builder()
+                .namespace("AWS/ECS")
+                .metricName("MemoryUtilization")
+                .dimensions(
+                    Dimension.builder().name("ServiceName").value(serviceName).build(),
+                    Dimension.builder().name("ClusterName").value("somdip-dev-cluster").build()
+                )
+                .startTime(startTime)
+                .endTime(endTime)
+                .period(60)
+                .statistics(Statistic.AVERAGE)
+                .build();
+
+            GetMetricStatisticsResponse memoryResponse = cloudWatchClient.getMetricStatistics(memoryRequest);
+
+            // Get the latest values
+            double cpuUsage = cpuResponse.datapoints().stream()
+                .max(Comparator.comparing(Datapoint::timestamp))
+                .map(Datapoint::average)
+                .orElse(0.0);
+
+            double memoryUsage = memoryResponse.datapoints().stream()
+                .max(Comparator.comparing(Datapoint::timestamp))
+                .map(Datapoint::average)
+                .orElse(0.0);
+
+            return ContainerMetrics.builder()
+                .containerId(container.getContainerId())
+                .containerName(container.getName())
+                .cpuUsage(cpuUsage)
+                .memoryUsage(memoryUsage)
+                .cpuLimit(container.getCpu())
+                .memoryLimit(container.getMemory())
+                .timestamp(Instant.now())
+                .status(container.getStatus() != null ? container.getStatus().name() : "UNKNOWN")
+                .build();
+        } catch (Exception e) {
+            log.error("Error fetching CloudWatch metrics for container: {}", container.getContainerId(), e);
+            return createEmptyMetrics();
+        }
+    }
+
 }

@@ -108,7 +108,15 @@ public class ContainerService {
         healthCheck.setUnhealthyThreshold(3);
         healthCheck.setProtocol("HTTP");
         container.setHealthCheck(healthCheck);
-        
+
+        // Initialize resource usage with zeros so dashboard/graphs don't break
+        Container.ResourceUsage resourceUsage = new Container.ResourceUsage();
+        resourceUsage.setAvgCpuPercent(0.0);
+        resourceUsage.setAvgMemoryPercent(0.0);
+        resourceUsage.setMeasurementPeriodStart(Instant.now());
+        resourceUsage.setMeasurementPeriodEnd(Instant.now());
+        container.setResourceUsage(resourceUsage);
+
         container = containerRepository.save(container);
         userRepository.incrementContainerCount(userId, 1);
         

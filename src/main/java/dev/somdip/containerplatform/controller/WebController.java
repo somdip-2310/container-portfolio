@@ -8,6 +8,7 @@ import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.repository.DeploymentRepository;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.DashboardService;
+import dev.somdip.containerplatform.service.MetricsService;
 import dev.somdip.containerplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,7 @@ public class WebController {
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
+    private final MetricsService metricsService;
     private final DeploymentRepository deploymentRepository;
 
     @GetMapping("/")
@@ -56,14 +59,17 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
         try {
             // Get user ID from authentication
             String username = authentication.getName();
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
-            
+
+            // Update metrics for all user containers from CloudWatch
+            metricsService.updateAllUserContainerMetrics(userId);
+
             // Get dashboard statistics
             DashboardStats stats = dashboardService.getDashboardStats(userId);
             Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(userId, 7);
@@ -78,6 +84,10 @@ public class WebController {
             // Add chart data as JSON for JavaScript
             model.addAttribute("cpuData", usageHistory.get("cpu"));
             model.addAttribute("memoryData", usageHistory.get("memory"));
+
+            // Network I/O data (placeholder - convert bytes to MB)
+            model.addAttribute("networkInData", Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+            model.addAttribute("networkOutData", Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
             
         } catch (Exception e) {
             log.error("Error loading dashboard", e);
@@ -104,13 +114,16 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
         try {
             String username = authentication.getName();
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
-            
+
+            // Update metrics for all user containers from CloudWatch
+            metricsService.updateAllUserContainerMetrics(userId);
+
             // Get user's containers
             List<Container> containers = containerService.getUserContainers(userId);
             
