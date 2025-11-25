@@ -290,7 +290,6 @@ public class DashboardService {
             .collect(Collectors.toList());
     }
 
-}    
     public List<Notification> getNotifications(String userId, int limit) {
         List<Notification> notifications = new ArrayList<>();
         
