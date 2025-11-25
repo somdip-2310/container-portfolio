@@ -67,11 +67,21 @@ public class WebController {
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
-            // Get containers without updating metrics (faster page load)
+            // Get containers
             List<Container> containers = metricsService.getUserContainers(userId);
-            
-            // Update metrics asynchronously in background (non-blocking)
-            metricsService.updateAllUserContainerMetricsAsync(userId);
+
+            // If containers don't have metrics yet, update synchronously once
+            boolean needsMetricsUpdate = containers.stream()
+                .anyMatch(c -> c.getStatus() == Container.ContainerStatus.RUNNING && 
+                              (c.getResourceUsage() == null || c.getResourceUsage().getAvgCpuPercent() == null));
+
+            if (needsMetricsUpdate) {
+                log.info("Containers missing metrics, updating synchronously for dashboard");
+                containers = metricsService.updateAllUserContainerMetrics(userId);
+            } else {
+                // Update metrics asynchronously in background for next visit
+                metricsService.updateAllUserContainerMetricsAsync(userId);
+            }
 
             // Get dashboard statistics using current containers
             DashboardStats stats = dashboardService.getDashboardStats(userId);

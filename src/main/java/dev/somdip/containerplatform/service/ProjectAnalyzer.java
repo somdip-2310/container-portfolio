@@ -133,7 +133,7 @@ public class ProjectAnalyzer {
         } else if (Files.exists(projectPath.resolve("go.mod"))) {
             info.setType(ProjectType.GO);
             analyzeGo(projectPath, info);
-        } else if (Files.exists(projectPath.resolve("composer.json"))) {
+        } else if (Files.exists(projectPath.resolve("composer.json")) || hasPhpFiles(projectPath)) {
             info.setType(ProjectType.PHP);
             analyzePhp(projectPath, info);
         } else if (Files.exists(projectPath.resolve("Gemfile"))) {
@@ -334,6 +334,13 @@ public class ProjectAnalyzer {
         info.getMetadata().put("webServer", "nginx");
     }
 
+    private boolean hasPhpFiles(Path projectPath) {
+        try (Stream<Path> paths = Files.walk(projectPath, 2)) {
+            return paths.anyMatch(p -> p.toString().endsWith(".php"));
+        } catch (IOException e) {
+            return false;
+        }
+    }
     private boolean hasHtmlFiles(Path projectPath) {
         try (Stream<Path> paths = Files.walk(projectPath, 2)) {
             return paths.anyMatch(p -> p.toString().endsWith(".html"));

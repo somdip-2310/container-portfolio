@@ -377,60 +377,80 @@
                     containerCountEl.textContent = '0';
                 }
             }
-
             // Load resource usage widget
             async function loadResourceUsage() {
                 const containerUsageEl = document.getElementById('containerUsage');
                 const containerUsageBarEl = document.getElementById('containerUsageBar');
+                const storageUsageEl = document.getElementById('storageUsage');
+                const storageUsageBarEl = document.getElementById('storageUsageBar');
 
-                if (!containerUsageEl || !containerUsageBarEl) return;
+                if (!containerUsageEl || !containerUsageBarEl || !storageUsageEl || !storageUsageBarEl) return;
 
                 try {
-                    const response = await fetch('/web/api/containers', {
+                    const response = await fetch('/web/api/resource-usage', {
                         credentials: 'same-origin'
                     });
 
                     if (response.ok) {
-                        const containers = await response.json();
-                        const currentCount = containers.length;
+                        const usage = await response.json();
+                        
+                        // Update container usage
+                        const containerCount = usage.containerCount;
+                        const containerLimit = usage.containerLimit;
+                        const containerPercentage = containerLimit > 0 ? (containerCount / containerLimit) * 100 : 0;
 
-                        // Get container limit based on plan (TODO: fetch from user profile)
-                        // For now, using FREE plan limit of 1
-                        const limit = 1;
-
-                        const percentage = limit > 0 ? (currentCount / limit) * 100 : 0;
-
-                        containerUsageEl.textContent = `${currentCount}/${limit}`;
-                        containerUsageBarEl.style.width = `${Math.min(percentage, 100)}%`;
+                        containerUsageEl.textContent = containerCount + '/' + containerLimit;
+                        containerUsageBarEl.style.width = Math.min(containerPercentage, 100) + '%';
 
                         // Change color based on usage
-                        if (percentage >= 100) {
+                        if (containerPercentage >= 100) {
                             containerUsageBarEl.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
-                        } else if (percentage >= 80) {
+                        } else if (containerPercentage >= 80) {
                             containerUsageBarEl.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-500';
                         } else {
                             containerUsageBarEl.className = 'bg-blue-600 h-2 rounded-full transition-all duration-500';
                         }
+                        
+                        // Update storage usage
+                        const storageUsed = usage.storageUsedGb || 0;
+                        const storageLimit = usage.storageLimitGb;
+                        const storagePercentage = storageLimit > 0 ? (storageUsed / storageLimit) * 100 : 0;
+                        
+                        storageUsageEl.textContent = storageUsed + 'GB/' + storageLimit + 'GB';
+                        storageUsageBarEl.style.width = Math.min(storagePercentage, 100) + '%';
+                        
+                        // Change color based on usage
+                        if (storagePercentage >= 100) {
+                            storageUsageBarEl.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
+                        } else if (storagePercentage >= 80) {
+                            storageUsageBarEl.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-500';
+                        } else {
+                            storageUsageBarEl.className = 'bg-green-600 h-2 rounded-full transition-all duration-500';
+                        }
                     } else {
                         containerUsageEl.textContent = '0/1';
+                        storageUsageEl.textContent = '0GB/5GB';
                     }
                 } catch (error) {
                     console.error('Error loading resource usage:', error);
                     containerUsageEl.textContent = '0/1';
+                    storageUsageEl.textContent = '0GB/5GB';
                 }
             }
-
-            // Load on page ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    loadContainerCount();
-                    loadResourceUsage();
-                });
-            } else {
-                loadContainerCount();
-                loadResourceUsage();
+                        if (storagePercentage >= 100) {
+                            storageUsageBarEl.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
+                        } else if (storagePercentage >= 80) {
+                            storageUsageBarEl.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-500';
+                        } else {
+                            storageUsageBarEl.className = 'bg-green-600 h-2 rounded-full transition-all duration-500';
+                        }
+                    } else {
+                        containerUsageEl.textContent = '0/1';
+                        storageUsageEl.textContent = '0GB/5GB';
+                    }
+                } catch (error) {
+                    console.error('Error loading resource usage:', error);
+                    containerUsageEl.textContent = '0/1';
+                    storageUsageEl.textContent = '0GB/5GB';
+                }
             }
-        </script>
-    </div>
-</body>
-</html>

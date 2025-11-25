@@ -1251,6 +1251,11 @@
                 element.textContent = date.toLocaleString(undefined, options);
             }
         });
+        // Ensure modals are hidden on page load
+        document.addEventListener("DOMContentLoaded", function() {
+            hideProgressModal();
+            hideDeployModal();
+        });
     </script>
 </body>
 </html>

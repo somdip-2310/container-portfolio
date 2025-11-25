@@ -239,4 +239,51 @@ public class WebApiController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @GetMapping("/resource-usage")
+    public ResponseEntity<Map<String, Object>> getResourceUsage(Authentication authentication) {
+        try {
+            User user = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<Container> containers = containerService.getUserContainers(user.getUserId());
+            int containerCount = containers.size();
+            int containerLimit = getContainerLimitForPlan(user.getPlan());
+            
+            // Get storage usage
+            long storageUsedMb = user.getTotalStorageGb() != null ? user.getTotalStorageGb() * 1024 : 0;
+            long storageLimitMb = getStorageLimitForPlan(user.getPlan()) * 1024;
+            
+            Map<String, Object> usage = new HashMap<>();
+            usage.put("containerCount", containerCount);
+            usage.put("containerLimit", containerLimit);
+            usage.put("storageUsedGb", user.getTotalStorageGb() != null ? user.getTotalStorageGb() : 0);
+            usage.put("storageLimitGb", getStorageLimitForPlan(user.getPlan()));
+            
+            return ResponseEntity.ok(usage);
+        } catch (Exception e) {
+            log.error("Error fetching resource usage: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    private int getContainerLimitForPlan(User.UserPlan plan) {
+        return switch (plan) {
+            case FREE -> 1;
+            case STARTER -> 3;
+            case PRO -> 10;
+            case SCALE -> 25;
+            case ENTERPRISE -> Integer.MAX_VALUE;
+        };
+    }
+    
+    private int getStorageLimitForPlan(User.UserPlan plan) {
+        return switch (plan) {
+            case FREE -> 5;
+            case STARTER -> 20;
+            case PRO -> 100;
+            case SCALE -> 500;
+            case ENTERPRISE -> Integer.MAX_VALUE;
+        };
+    }
 }
