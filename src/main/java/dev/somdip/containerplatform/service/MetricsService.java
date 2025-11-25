@@ -241,6 +241,7 @@ public class MetricsService {
         } catch (Exception e) {
             log.error("Error updating metrics for user containers: {}", userId, e);
             return List.of();
+    }
         }
     
     public List<Container> getUserContainers(String userId) {
