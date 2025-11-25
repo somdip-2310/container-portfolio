@@ -108,7 +108,7 @@
     <footer th:replace="~{fragments/base :: footer}"></footer>
     <div th:replace="~{fragments/base :: scripts}"></div>
 
-    <script th:inline="none">
+    <script>
         function viewDeploymentDetails(deploymentId) {
             window.location.href = '/deployments/' + deploymentId;
         }
