@@ -371,7 +371,7 @@
     <div th:replace="~{fragments/base :: scripts}"></div>
     
     <!-- Dashboard specific scripts -->
-    <script>
+    <script th:inline="javascript">
         // Resource Usage Chart
         const resourceCtx = document.getElementById('resourceChart').getContext('2d');
 
