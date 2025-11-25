@@ -257,13 +257,14 @@ public class WebApiController {
             int containerLimit = getContainerLimitForPlan(user.getPlan());
             
             // Get storage usage
-            long storageUsedMb = user.getTotalStorageGb() != null ? user.getTotalStorageGb() * 1024 : 0;
-            long storageLimitMb = getStorageLimitForPlan(user.getPlan()) * 1024;
+            Long storageUsedGb = (user.getUsageStats() != null && user.getUsageStats().getTotalStorageGb() != null)
+                ? user.getUsageStats().getTotalStorageGb()
+                : 0L;
             
             Map<String, Object> usage = new HashMap<>();
             usage.put("containerCount", containerCount);
             usage.put("containerLimit", containerLimit);
-            usage.put("storageUsedGb", user.getTotalStorageGb() != null ? user.getTotalStorageGb() : 0);
+            usage.put("storageUsedGb", storageUsedGb);
             usage.put("storageLimitGb", getStorageLimitForPlan(user.getPlan()));
             
             return ResponseEntity.ok(usage);
