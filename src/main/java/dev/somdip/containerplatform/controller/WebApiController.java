@@ -3,9 +3,11 @@ package dev.somdip.containerplatform.controller;
 import dev.somdip.containerplatform.dto.container.ContainerResponse;
 import dev.somdip.containerplatform.dto.container.CreateContainerRequest;
 import dev.somdip.containerplatform.model.Container;
+import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
+import dev.somdip.containerplatform.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -29,11 +32,14 @@ public class WebApiController {
 
     private final ContainerService containerService;
     private final LogStreamingService logStreamingService;
+    private final UserService userService;
 
     public WebApiController(ContainerService containerService,
-                           LogStreamingService logStreamingService) {
+                           LogStreamingService logStreamingService,
+                           UserService userService) {
         this.containerService = containerService;
         this.logStreamingService = logStreamingService;
+        this.userService = userService;
     }
 
     /**
