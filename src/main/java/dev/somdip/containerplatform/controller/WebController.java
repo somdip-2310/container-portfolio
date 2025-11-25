@@ -166,7 +166,11 @@ public class WebController {
         }
 
         try {
-            String userId = getUserId(authentication);
+            String username = authentication.getName();
+            User user = userService.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            String userId = user.getUserId();
+
             List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, 50);
             model.addAttribute("deployments", deployments);
         } catch (Exception e) {
