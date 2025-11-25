@@ -8,6 +8,7 @@ import dev.somdip.containerplatform.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 //import org.springframework.transaction.annotation.Transactional;
 
@@ -127,6 +128,10 @@ public class ContainerService {
     public Container getContainer(String containerId) {
         return containerRepository.findById(containerId)
             .orElseThrow(() -> new IllegalArgumentException("Container not found"));
+    }
+    
+    public Container saveContainer(Container container) {
+        return containerRepository.save(container);
     }
     
     public List<Container> listUserContainers(String userId) {
@@ -322,6 +327,42 @@ public class ContainerService {
             container.setStatus(Container.ContainerStatus.FAILED);
             containerRepository.save(container);
             throw new RuntimeException("Failed to stop container", e);
+        }
+    }
+    /**
+     * Restart a container asynchronously
+     * This method initiates the restart process and returns immediately
+     */
+    @Async
+    public void restartContainerAsync(String containerId) {
+        log.info("Starting async restart for container: {}", containerId);
+        
+        try {
+            Container container = getContainer(containerId);
+            
+            // Stop the container if it's running
+            if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+                log.info("Stopping container {} before restart", containerId);
+                stopContainer(containerId);
+                // Wait a bit for clean shutdown
+                Thread.sleep(3000);
+            }
+            
+            // Deploy it again
+            log.info("Redeploying container {} after stop", containerId);
+            deployContainer(containerId);
+            log.info("Container {} restarted successfully", containerId);
+            
+        } catch (Exception e) {
+            log.error("Error during async restart of container: {}", containerId, e);
+            // Update container status to FAILED
+            try {
+                Container container = getContainer(containerId);
+                container.setStatus(Container.ContainerStatus.FAILED);
+                containerRepository.save(container);
+            } catch (Exception ex) {
+                log.error("Failed to update container status after restart failure", ex);
+            }
         }
     }
     

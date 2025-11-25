@@ -67,12 +67,12 @@ public class WebController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
 
-            // Update metrics for all user containers from CloudWatch
-            metricsService.updateAllUserContainerMetrics(userId);
+            // Update metrics for all user containers from CloudWatch and get fresh data
+            List<Container> containers = metricsService.updateAllUserContainerMetrics(userId);
 
-            // Get dashboard statistics
+            // Get dashboard statistics using fresh containers
             DashboardStats stats = dashboardService.getDashboardStats(userId);
-            Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(userId, 7);
+            Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(containers, 7);
             List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 5);
             
             // Add data to model
@@ -84,10 +84,8 @@ public class WebController {
             // Add chart data as JSON for JavaScript
             model.addAttribute("cpuData", usageHistory.get("cpu"));
             model.addAttribute("memoryData", usageHistory.get("memory"));
-
-            // Network I/O data (placeholder - convert bytes to MB)
-            model.addAttribute("networkInData", Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-            model.addAttribute("networkOutData", Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+            model.addAttribute("networkInData", usageHistory.get("networkIn"));
+            model.addAttribute("networkOutData", usageHistory.get("networkOut"));
             
         } catch (Exception e) {
             log.error("Error loading dashboard", e);

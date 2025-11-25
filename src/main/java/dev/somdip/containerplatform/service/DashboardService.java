@@ -130,6 +130,60 @@ public class DashboardService {
         }
     }
 
+    
+    /**
+     * Get resource usage history using pre-loaded containers (avoids eventual consistency issues)
+     */
+    public Map<String, List<Double>> getResourceUsageHistory(List<Container> containers, int days) {
+        try {
+            if (containers.isEmpty()) {
+                return createEmptyHistory();
+            }
+
+            // Calculate average current usage across all containers
+            double avgCpu = containers.stream()
+                .filter(c -> c.getResourceUsage() != null && c.getResourceUsage().getAvgCpuPercent() != null)
+                .mapToDouble(c -> c.getResourceUsage().getAvgCpuPercent())
+                .average()
+                .orElse(0.0);
+
+            double avgMemory = containers.stream()
+                .filter(c -> c.getResourceUsage() != null && c.getResourceUsage().getAvgMemoryPercent() != null)
+                .mapToDouble(c -> c.getResourceUsage().getAvgMemoryPercent())
+                .average()
+                .orElse(0.0);
+
+            // Generate simulated 7-day history showing current values with slight variations
+            List<Double> cpuHistory = generateHistoryData(avgCpu, days);
+            List<Double> memoryHistory = generateHistoryData(avgMemory, days);
+            
+            // Generate network I/O history (simulated for now)
+            List<Double> networkInHistory = generateHistoryData(0.5, days);  // 0.5 MB/s average
+            List<Double> networkOutHistory = generateHistoryData(0.3, days); // 0.3 MB/s average
+
+            Map<String, List<Double>> usage = new HashMap<>();
+            usage.put("cpu", cpuHistory);
+            usage.put("memory", memoryHistory);
+            usage.put("networkIn", networkInHistory);
+            usage.put("networkOut", networkOutHistory);
+
+            return usage;
+
+        } catch (Exception e) {
+            log.error("Error getting resource usage history from containers", e);
+            return createEmptyHistory();
+        }
+    }
+    
+    private Map<String, List<Double>> createEmptyHistory() {
+        List<Double> zeros = Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        return Map.of(
+            "cpu", zeros,
+            "memory", zeros,
+            "networkIn", zeros,
+            "networkOut", zeros
+        );
+    }
     private List<Double> generateHistoryData(double currentValue, int days) {
         // Generate realistic-looking history data with slight variations around current value
         List<Double> history = new ArrayList<>();

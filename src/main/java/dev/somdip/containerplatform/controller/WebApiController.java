@@ -130,7 +130,7 @@ public class WebApiController {
     }
 
     /**
-     * Restart a container
+     * Restart a container (async - returns immediately)
      */
     @PostMapping("/containers/{containerId}/restart")
     public ResponseEntity<ContainerResponse> restartContainer(
@@ -143,27 +143,25 @@ public class WebApiController {
                 return ResponseEntity.status(403).build();
             }
 
-            log.info("Restarting container: {}", containerId);
+            log.info("Initiating async restart for container: {}", containerId);
 
-            // Stop the container if it's running
-            if (container.getStatus() == Container.ContainerStatus.RUNNING) {
-                containerService.stopContainer(containerId);
-                // Wait a bit for clean shutdown
-                Thread.sleep(2000);
-            }
+            // Set status to RESTARTING immediately
+            container.setStatus(Container.ContainerStatus.RESTARTING);
+            containerService.saveContainer(container);
 
-            // Deploy it again
-            Container restartedContainer = containerService.deployContainer(containerId);
-            return ResponseEntity.ok(ContainerResponse.from(restartedContainer));
+            // Start async restart process
+            containerService.restartContainerAsync(containerId);
+
+            // Return immediately with RESTARTING status
+            return ResponseEntity.ok(ContainerResponse.from(container));
         } catch (IllegalArgumentException e) {
             log.error("Container not found: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            log.error("Error restarting container: {}", e.getMessage(), e);
+            log.error("Error initiating container restart: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
-
     /**
      * Delete a container
      */
