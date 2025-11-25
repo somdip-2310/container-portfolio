@@ -242,6 +242,23 @@ public class MetricsService {
             log.error("Error updating metrics for user containers: {}", userId, e);
             return List.of();
         }
+    
+    public List<Container> getUserContainers(String userId) {
+        return containerRepository.findByUserId(userId);
+    }
+    
+    @Async
+    public void updateAllUserContainerMetricsAsync(String userId) {
+        try {
+            List<Container> userContainers = containerRepository.findByUserId(userId);
+            for (Container container : userContainers) {
+                if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+                    updateContainerMetrics(container.getContainerId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error updating metrics asynchronously for user containers: {}", userId, e);
+        }
     }
 
     private ContainerMetrics fetchContainerMetricsFromCloudWatch(Container container) {

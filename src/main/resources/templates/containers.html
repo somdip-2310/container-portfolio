@@ -196,25 +196,30 @@
                             </button>
                             <button type="button"
                                     th:attr="data-container-id=${container.containerId}"
-                                    onclick="stopContainer(this.getAttribute('data-container-id'))"
-                                    class="flex items-center justify-center bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 hover:from-yellow-100 hover:to-yellow-200 dark:hover:from-yellow-800/30 dark:hover:to-yellow-700/30 text-yellow-700 dark:text-yellow-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
+                                    onclick="confirmStopContainer(this.getAttribute('data-container-id'))"
+                                    th:disabled="${container.status != T(dev.somdip.containerplatform.model.Container$ContainerStatus).RUNNING}"
+                                    th:classappend="${container.status != T(dev.somdip.containerplatform.model.Container$ContainerStatus).RUNNING ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    class="flex items-center justify-center bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 hover:from-yellow-100 hover:to-yellow-200 dark:hover:from-yellow-800/30 dark:hover:to-yellow-700/30 text-yellow-700 dark:text-yellow-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow disabled:hover:from-yellow-50 disabled:hover:to-yellow-100">
                                 <i class="fas fa-stop mr-1.5"></i>
                                 <span>Stop</span>
                             </button>
                             <button type="button"
                                     th:attr="data-container-id=${container.containerId}"
-                                    onclick="restartContainer(this.getAttribute('data-container-id'))"
-                                    class="flex items-center justify-center bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800/30 dark:hover:to-green-700/30 text-green-700 dark:text-green-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
-                                <i class="fas fa-redo mr-1.5"></i>
-                                <span>Restart</span>
+                                    onclick="startContainer(this.getAttribute('data-container-id'))"
+                                    th:disabled="${container.status == T(dev.somdip.containerplatform.model.Container$ContainerStatus).RUNNING}"
+                                    th:classappend="${container.status == T(dev.somdip.containerplatform.model.Container$ContainerStatus).RUNNING ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    class="flex items-center justify-center bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 hover:from-green-100 hover:to-green-200 dark:hover:from-green-800/30 dark:hover:to-green-700/30 text-green-700 dark:text-green-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow disabled:hover:from-green-50 disabled:hover:to-green-100">
+                                <i class="fas fa-play mr-1.5"></i>
+                                <span>Start</span>
                             </button>
                             <button type="button"
                                     th:attr="data-container-id=${container.containerId}"
-                                    onclick="deleteContainer(this.getAttribute('data-container-id'))"
+                                    onclick="confirmDeleteContainer(this.getAttribute('data-container-id'))"
                                     class="flex items-center justify-center bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 hover:from-red-100 hover:to-red-200 dark:hover:from-red-800/30 dark:hover:to-red-700/30 text-red-700 dark:text-red-300 font-medium py-2.5 px-3 rounded-lg text-sm transition-all shadow-sm hover:shadow">
                                 <i class="fas fa-trash mr-1.5"></i>
                                 <span>Delete</span>
                             </button>
+                        </div>
                         </div>
                     </div>
                     </div>
@@ -450,6 +455,20 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
+    <!-- Progress Modal -->
+    <div id="progressModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <h3 id="progressTitle" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Processing</h3>
+            <p id="progressMessage" class="text-gray-600 dark:text-gray-400 mb-4">Please wait...</p>
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progressPercent" class="text-sm text-gray-500 dark:text-gray-400 text-center">0%</p>
+        </div>
+    </div>
+
     <footer th:replace="~{fragments/base :: footer}"></footer>
     <div th:replace="~{fragments/base :: scripts}"></div>
 
@@ -528,6 +547,58 @@
         }
 
         // Stop container
+
+        // Start container
+        async function startContainer(containerId) {
+            try {
+                showProgressModal('Starting Container', 'Initiating start...');
+                updateProgress(10);
+
+                const response = await fetch(`/web/api/containers/${containerId}/start`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        [csrfHeader]: csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    updateProgressWithMessage(50, 'Start initiated successfully...');
+                    
+                    setTimeout(() => {
+                        updateProgress(100);
+                        setTimeout(() => {
+                            hideProgressModal();
+                            showToast('Container start initiated. Page will refresh...', 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        }, 500);
+                    }, 1000);
+                } else {
+                    hideProgressModal();
+                    const error = await response.text();
+                    showToast('Failed to start container: ' + error, 'error');
+                }
+            } catch (error) {
+                hideProgressModal();
+                console.error('Error starting container:', error);
+                showToast('Error starting container', 'error');
+            }
+        }
+
+        // Confirm stop container
+        function confirmStopContainer(containerId) {
+            if (confirm('Are you sure you want to stop this container? The container will be shut down gracefully.')) {
+                stopContainer(containerId);
+            }
+        }
+
+        // Confirm delete container
+        function confirmDeleteContainer(containerId) {
+            if (confirm('Are you sure you want to delete this container? This action cannot be undone.')) {
+                deleteContainer(containerId);
+            }
+        }
         async function stopContainer(containerId) {
             try {
                 showToast('Stopping container...', 'info');
@@ -1062,68 +1133,43 @@
             }
         }
 
-        // Restart container
-        async function restartContainer(containerId) {
-            try {
-                showProgressModal('Restarting Container', 'Initiating restart...');
-                updateProgress(10);
-
-                const response = await fetch(`/web/api/containers/${containerId}/restart`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        [csrfHeader]: csrfToken,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    updateProgressWithMessage(50, 'Restart initiated successfully...');
-                    
-                    // Give some time for the progress animation, then reload
-                    setTimeout(() => {
-                        updateProgress(100);
-                        setTimeout(() => {
-                            hideProgressModal();
-                            showToast('Container restart initiated. Page will refresh...', 'success');
-                            setTimeout(() => location.reload(), 1500);
-                        }, 500);
-                    }, 1000);
-                } else {
-                    hideProgressModal();
-                    const error = await response.text();
-                    showToast('Failed to restart container: ' + error, 'error');
-                }
-            } catch (error) {
-                hideProgressModal();
-                console.error('Error restarting container:', error);
-                showToast('Error restarting container', 'error');
-            }
-        }
-
         // Progress modal functions
         function showProgressModal(title, message) {
             const modal = document.getElementById('progressModal');
-            document.getElementById('progressTitle').textContent = title;
-            document.getElementById('progressMessage').textContent = message;
-            document.getElementById('progressBar').style.width = '0%';
-            document.getElementById('progressPercent').textContent = '0%';
+            if (!modal) {
+                console.error('Progress modal not found');
+                return;
+            }
+            const titleEl = document.getElementById('progressTitle');
+            const messageEl = document.getElementById('progressMessage');
+            const barEl = document.getElementById('progressBar');
+            const percentEl = document.getElementById('progressPercent');
+            
+            if (titleEl) titleEl.textContent = title;
+            if (messageEl) messageEl.textContent = message;
+            if (barEl) barEl.style.width = '0%';
+            if (percentEl) percentEl.textContent = '0%';
             modal.classList.remove('hidden');
         }
 
         function hideProgressModal() {
             const modal = document.getElementById('progressModal');
-            modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
         }
 
         function updateProgress(percent) {
-            document.getElementById('progressBar').style.width = percent + '%';
-            document.getElementById('progressPercent').textContent = percent + '%';
+            const barEl = document.getElementById('progressBar');
+            const percentEl = document.getElementById('progressPercent');
+            if (barEl) barEl.style.width = percent + '%';
+            if (percentEl) percentEl.textContent = percent + '%';
         }
 
         function updateProgressWithMessage(percent, message) {
             updateProgress(percent);
-            document.getElementById('progressMessage').textContent = message;
+            const messageEl = document.getElementById('progressMessage');
+            if (messageEl) messageEl.textContent = message;
         }
 
         // Toast notification function

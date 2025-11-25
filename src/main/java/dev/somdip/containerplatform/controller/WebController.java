@@ -67,11 +67,13 @@ public class WebController {
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
+            // Get containers without updating metrics (faster page load)
+            List<Container> containers = metricsService.getUserContainers(userId);
+            
+            // Update metrics asynchronously in background (non-blocking)
+            metricsService.updateAllUserContainerMetricsAsync(userId);
 
-            // Update metrics for all user containers from CloudWatch and get fresh data
-            List<Container> containers = metricsService.updateAllUserContainerMetrics(userId);
-
-            // Get dashboard statistics using fresh containers
+            // Get dashboard statistics using current containers
             DashboardStats stats = dashboardService.getDashboardStats(userId);
             Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(containers, 7);
             List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 3);

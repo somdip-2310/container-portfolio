@@ -129,11 +129,12 @@ public class WebApiController {
         }
     }
 
+    
     /**
-     * Restart a container (async - returns immediately)
+     * Start a stopped container
      */
-    @PostMapping("/containers/{containerId}/restart")
-    public ResponseEntity<ContainerResponse> restartContainer(
+    @PostMapping("/containers/{containerId}/start")
+    public ResponseEntity<ContainerResponse> startContainer(
             @PathVariable String containerId,
             Authentication authentication) {
         try {
@@ -143,22 +144,21 @@ public class WebApiController {
                 return ResponseEntity.status(403).build();
             }
 
-            log.info("Initiating async restart for container: {}", containerId);
-
-            // Set status to RESTARTING immediately
-            container.setStatus(Container.ContainerStatus.RESTARTING);
-            containerService.saveContainer(container);
-
-            // Start async restart process
-            containerService.restartContainerAsync(containerId);
-
-            // Return immediately with RESTARTING status
-            return ResponseEntity.ok(ContainerResponse.from(container));
+            log.info("Starting container: {}", containerId);
+            
+            // Check if container is already running
+            if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+                return ResponseEntity.badRequest().body(ContainerResponse.from(container));
+            }
+            
+            // Deploy/start the container
+            Container startedContainer = containerService.deployContainer(containerId);
+            return ResponseEntity.ok(ContainerResponse.from(startedContainer));
         } catch (IllegalArgumentException e) {
             log.error("Container not found: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            log.error("Error initiating container restart: {}", e.getMessage(), e);
+            log.error("Error starting container: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
