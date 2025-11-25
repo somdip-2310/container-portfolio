@@ -3,7 +3,9 @@ package dev.somdip.containerplatform.controller;
 import dev.somdip.containerplatform.dto.DashboardStats;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.model.Container;
+import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.model.User;
+import dev.somdip.containerplatform.repository.DeploymentRepository;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.DashboardService;
 import dev.somdip.containerplatform.service.UserService;
@@ -31,6 +33,7 @@ public class WebController {
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
+    private final DeploymentRepository deploymentRepository;
 
     @GetMapping("/")
     public String home() {
@@ -161,8 +164,16 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
-        // TODO: Implement deployments page
+
+        try {
+            String userId = getUserId(authentication);
+            List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, 50);
+            model.addAttribute("deployments", deployments);
+        } catch (Exception e) {
+            log.error("Error loading deployments", e);
+            model.addAttribute("deployments", List.of());
+        }
+
         return "deployments";
     }
     

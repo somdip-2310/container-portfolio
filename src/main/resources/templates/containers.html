@@ -83,10 +83,8 @@
                         <div class="flex items-start justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" th:text="${container.containerName}">container-name</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400"
-                                   th:text="${(container.image != null and #strings.contains(container.image, '/')) ? #strings.substring(container.image, container.image.lastIndexOf('/') + 1) : container.image} + ':' + container.imageTag">image:tag</p>
                             </div>
-                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (container.status == 'STOPPED' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : (container.status == 'FAILED' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200')))}"
+                            <span th:class="${'px-2 py-1 text-xs font-medium rounded ' + (container.status == 'RUNNING' ? 'bg-green-500 text-white' : (container.status == 'STOPPED' ? 'bg-yellow-500 text-white' : (container.status == 'FAILED' ? 'bg-red-500 text-white' : 'bg-orange-500 text-white')))}"
                                   th:text="${container.status}">Status</span>
                         </div>
 
@@ -154,15 +152,10 @@
                             </div>
                         </div>
 
-                        <!-- Measurement Period -->
-                        <div th:if="${container.resourceUsage != null && container.resourceUsage.measurementPeriodStart != null}"
-                             class="text-xs text-gray-500 dark:text-gray-400 mb-3 text-center">
+                        <!-- Deployment Time -->
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-3 text-center">
                             <i class="fas fa-clock mr-1"></i>
-                            Metrics from
-                            <span th:text="${#temporals.format(container.resourceUsage.measurementPeriodStart, 'MMM dd HH:mm')}">date</span>
-                            <span th:if="${container.resourceUsage.measurementPeriodEnd != null}">
-                                to <span th:text="${#temporals.format(container.resourceUsage.measurementPeriodEnd, 'MMM dd HH:mm')}">date</span>
-                            </span>
+                            Deployed: <span class="deployment-time" th:attr="data-timestamp=${container.createdAt}"></span>
                         </div>
 
                         <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -185,10 +178,6 @@
                             <span th:if="${container.customDomain == null and container.subdomain == null}">
                                 <i class="fas fa-globe mr-1"></i>
                                 <span class="text-gray-400">No domain</span>
-                            </span>
-                            <span>
-                                <i class="fas fa-clock mr-1"></i>
-                                <span th:text="${#temporals.format(container.createdAt, 'MMM dd')}">date</span>
                             </span>
                         </div>
 
@@ -1241,6 +1230,23 @@
             } else if (target.classList.contains('btn-show-menu')) {
                 e.preventDefault();
                 showContainerMenu(containerId);
+            }
+        });
+
+        // Format deployment times in user's timezone
+        document.querySelectorAll('.deployment-time').forEach(element => {
+            const timestamp = element.getAttribute('data-timestamp');
+            if (timestamp) {
+                const date = new Date(timestamp);
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                };
+                element.textContent = date.toLocaleString(undefined, options);
             }
         });
     </script>
