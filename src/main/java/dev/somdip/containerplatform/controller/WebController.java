@@ -53,6 +53,21 @@ public class WebController {
     public String register() {
         return "register";
     }
+
+    @GetMapping("/forgot-password")
+    public String forgotPassword() {
+        return "forgot-password";
+    }
+
+    @GetMapping("/verify-otp")
+    public String verifyOtp() {
+        return "verify-otp";
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPassword() {
+        return "reset-password";
+    }
     
 
     @GetMapping("/dashboard")
