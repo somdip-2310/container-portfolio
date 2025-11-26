@@ -437,3 +437,16 @@
                     storageUsageEl.textContent = '0GB/5GB';
                 }
             }
+
+            // Load data on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    loadContainerCount();
+                    loadResourceUsage();
+                });
+            } else {
+                loadContainerCount();
+                loadResourceUsage();
+            }
+        </script>
+    </div>
