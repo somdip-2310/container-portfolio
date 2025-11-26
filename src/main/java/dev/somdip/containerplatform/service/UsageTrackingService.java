@@ -92,32 +92,14 @@ public class UsageTrackingService {
     }
 
     /**
-     * Reset monthly usage counters for FREE plan users
-     * Runs on the 1st of each month at midnight
+     * DISABLED: Monthly reset removed - FREE plan now has lifetime 200-hour limit
+     * Users must upgrade to paid plans when limit is reached
+     * Bonus hours can be earned through feedback and bug reports
      */
-    @Scheduled(cron = "0 0 0 1 * *") // 1st day of month at 00:00
+    // @Scheduled(cron = "0 0 0 1 * *") // DISABLED - no monthly reset
     public void resetMonthlyUsage() {
-        log.info("Resetting monthly usage counters for FREE plan users");
-
-        try {
-            List<User> freeUsers = userRepository.findByPlan(User.UserPlan.FREE);
-
-            for (User user : freeUsers) {
-                try {
-                    user.setHoursUsed(0.0);
-                    user.setUsageResetAt(Instant.now().plus(30, ChronoUnit.DAYS));
-                    userRepository.save(user);
-                    log.info("Reset usage for user: {}", user.getUserId());
-                } catch (Exception e) {
-                    log.error("Error resetting usage for user: {}", user.getUserId(), e);
-                }
-            }
-
-            log.info("Completed monthly usage reset for {} users", freeUsers.size());
-
-        } catch (Exception e) {
-            log.error("Error in monthly usage reset job", e);
-        }
+        // NO LONGER USED - FREE plan has lifetime 200-hour limit, not monthly
+        log.info("Monthly reset is disabled - FREE plan uses lifetime hour limit");
     }
 
     /**
@@ -267,7 +249,9 @@ public class UsageTrackingService {
         }
 
         double hoursUsed = user.getHoursUsed() != null ? user.getHoursUsed() : 0.0;
-        return hoursUsed >= FREE_PLAN_HOURS_LIMIT;
+        double bonusHours = user.getBonusHours() != null ? user.getBonusHours() : 0.0;
+        double totalLimit = FREE_PLAN_HOURS_LIMIT + bonusHours; // 200 + bonus hours
+        return hoursUsed >= totalLimit;
     }
 
     private void shutdownUserContainers(User user) {
@@ -294,6 +278,7 @@ public class UsageTrackingService {
 
     /**
      * Get remaining hours for a user (mainly for FREE plan)
+     * Includes bonus hours from feedback and bug reports
      */
     public double getRemainingHours(User user) {
         if (user.getPlan() != User.UserPlan.FREE) {
@@ -301,8 +286,39 @@ public class UsageTrackingService {
         }
 
         double hoursUsed = user.getHoursUsed() != null ? user.getHoursUsed() : 0.0;
-        double remaining = FREE_PLAN_HOURS_LIMIT - hoursUsed;
+        double bonusHours = user.getBonusHours() != null ? user.getBonusHours() : 0.0;
+        double totalLimit = FREE_PLAN_HOURS_LIMIT + bonusHours;
+        double remaining = totalLimit - hoursUsed;
         return Math.max(0, remaining);
+    }
+
+    /**
+     * Get total hours limit for a user (base + bonus)
+     */
+    public double getTotalHoursLimit(User user) {
+        if (user.getPlan() != User.UserPlan.FREE) {
+            return -1; // Unlimited for paid plans
+        }
+
+        double bonusHours = user.getBonusHours() != null ? user.getBonusHours() : 0.0;
+        return FREE_PLAN_HOURS_LIMIT + bonusHours;
+    }
+
+    /**
+     * Add bonus hours to a user's account
+     */
+    public void addBonusHours(String userId, double hours, String reason) {
+        try {
+            User user = userRepository.findById(userId).orElseThrow();
+            double currentBonus = user.getBonusHours() != null ? user.getBonusHours() : 0.0;
+            user.setBonusHours(currentBonus + hours);
+            user.setUpdatedAt(Instant.now());
+            userRepository.save(user);
+            log.info("Added {} bonus hours to user {} (reason: {}). Total bonus: {}",
+                hours, userId, reason, user.getBonusHours());
+        } catch (Exception e) {
+            log.error("Error adding bonus hours to user {}: {}", userId, e.getMessage());
+        }
     }
 
     /**

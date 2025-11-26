@@ -5,7 +5,9 @@ import dev.somdip.containerplatform.dto.DashboardStats;
 import dev.somdip.containerplatform.dto.ResourceUsage;
 import dev.somdip.containerplatform.dto.Notification;
 import dev.somdip.containerplatform.dto.RecentActivity;
+import dev.somdip.containerplatform.dto.UsageLimitDTO;
 import dev.somdip.containerplatform.model.Container;
+import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.repository.ContainerRepository;
 import dev.somdip.containerplatform.repository.DeploymentRepository;
@@ -36,8 +38,9 @@ public class DashboardService {
     private final DeploymentRepository deploymentRepository;
     private final EcsClient ecsClient;
     private final CloudWatchClient cloudWatchClient;
+    private final UsageTrackingService usageTrackingService;
 
-   
+
 
     public DashboardStats getDashboardStats(String userId) {
         try {
@@ -349,15 +352,96 @@ public class DashboardService {
     
     private String formatTimeAgo(Instant instant) {
         if (instant == null) return "Unknown";
-        
+
         long minutes = ChronoUnit.MINUTES.between(instant, Instant.now());
         if (minutes < 1) return "Just now";
         if (minutes < 60) return minutes + " minute" + (minutes > 1 ? "s" : "") + " ago";
-        
+
         long hours = ChronoUnit.HOURS.between(instant, Instant.now());
         if (hours < 24) return hours + " hour" + (hours > 1 ? "s" : "") + " ago";
-        
+
         long days = ChronoUnit.DAYS.between(instant, Instant.now());
         return days + " day" + (days > 1 ? "s" : "") + " ago";
+    }
+
+    /**
+     * Get usage limit information for FREE tier users
+     */
+    public UsageLimitDTO getUsageLimitInfo(User user) {
+        if (user.getPlan() != User.UserPlan.FREE) {
+            // Unlimited for paid plans
+            return UsageLimitDTO.builder()
+                .hoursUsed(0.0)
+                .bonusHours(0.0)
+                .totalLimit(-1.0)
+                .remainingHours(-1.0)
+                .percentageUsed(0.0)
+                .warningLevel("none")
+                .canStartContainers(true)
+                .planName(user.getPlan().name())
+                .primaryMessage("Unlimited Hours")
+                .secondaryMessage("You're on a paid plan with unlimited container hours")
+                .build();
+        }
+
+        double hoursUsed = user.getHoursUsed() != null ? user.getHoursUsed() : 0.0;
+        double bonusHours = user.getBonusHours() != null ? user.getBonusHours() : 0.0;
+        double totalLimit = usageTrackingService.getTotalHoursLimit(user);
+        double remainingHours = usageTrackingService.getRemainingHours(user);
+        double percentageUsed = (hoursUsed / totalLimit) * 100.0;
+        boolean canStart = usageTrackingService.canStartContainer(user);
+
+        // Determine warning level
+        String warningLevel;
+        String primaryMessage;
+        String secondaryMessage;
+
+        if (percentageUsed >= 100) {
+            warningLevel = "exceeded";
+            primaryMessage = "🛑 Free hours exhausted";
+            secondaryMessage = "Your containers are suspended. Upgrade to resume instantly.";
+        } else if (percentageUsed >= 95) {
+            warningLevel = "critical";
+            primaryMessage = String.format("⚠️ Only %.0f hours left!", remainingHours);
+            secondaryMessage = "Don't let your project stop. Upgrade now for seamless transition.";
+        } else if (percentageUsed >= 75) {
+            warningLevel = "warning";
+            primaryMessage = String.format("⏰ You've used %.0f%% of your free hours", percentageUsed);
+            secondaryMessage = String.format("Only %.0f hours remaining. Consider upgrading to avoid interruption.", remainingHours);
+        } else {
+            warningLevel = "none";
+            primaryMessage = "No Monthly Limits. No Pressure. Just 200 Hours.";
+            secondaryMessage = "Perfect for learning, building side projects, and testing in production.";
+        }
+
+        // Calculate usage projection (simple estimation based on past usage)
+        // Assume hoursUsed accumulated over account lifetime, estimate monthly rate
+        double hoursPerMonth = 30.0; // Default estimate
+        int monthsRemaining = 6; // Default estimate
+
+        if (hoursUsed > 0 && user.getCreatedAt() != null) {
+            long daysSinceCreation = ChronoUnit.DAYS.between(user.getCreatedAt(), Instant.now());
+            if (daysSinceCreation > 0) {
+                hoursPerMonth = (hoursUsed / daysSinceCreation) * 30;
+                if (hoursPerMonth > 0) {
+                    monthsRemaining = (int) Math.ceil(remainingHours / hoursPerMonth);
+                }
+            }
+        }
+
+        return UsageLimitDTO.builder()
+            .hoursUsed(hoursUsed)
+            .bonusHours(bonusHours)
+            .totalLimit(totalLimit)
+            .remainingHours(remainingHours)
+            .percentageUsed(Math.round(percentageUsed * 10.0) / 10.0) // Round to 1 decimal
+            .warningLevel(warningLevel)
+            .canStartContainers(canStart)
+            .planName("FREE")
+            .hoursUsedThisMonth(hoursPerMonth)
+            .monthsRemainingEstimate(monthsRemaining)
+            .primaryMessage(primaryMessage)
+            .secondaryMessage(secondaryMessage)
+            .build();
     }
 }
