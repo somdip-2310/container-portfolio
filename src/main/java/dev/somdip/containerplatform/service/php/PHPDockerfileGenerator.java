@@ -30,8 +30,10 @@ public class PHPDockerfileGenerator {
     private String buildDockerfileContent(PHPApplicationInfo appInfo) {
         StringBuilder dockerfile = new StringBuilder();
 
-        // Base image selection
-        dockerfile.append("FROM php:").append(appInfo.getPhpVersion()).append("-fpm\n\n");
+        // Base image selection - using AWS Public ECR to avoid Docker Hub rate limits
+        // AWS Public ECR doesn't have rate limits and mirrors official Docker Hub images
+        String baseImage = "public.ecr.aws/docker/library/php:" + appInfo.getPhpVersion() + "-fpm";
+        dockerfile.append("FROM ").append(baseImage).append("\n\n");
 
         // Install system dependencies
         dockerfile.append("# Install system dependencies and nginx\n");
@@ -54,7 +56,8 @@ public class PHPDockerfileGenerator {
         // Install Composer if needed
         if (appInfo.isRequiresComposer()) {
             dockerfile.append("# Install Composer\n");
-            dockerfile.append("COPY --from=composer:latest /usr/bin/composer /usr/bin/composer\n\n");
+            // Use ECR composer image to avoid Docker Hub rate limits
+            dockerfile.append("COPY --from=257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/composer:latest /usr/bin/composer /usr/bin/composer\n\n");
         }
 
         // Set working directory
@@ -116,7 +119,7 @@ public class PHPDockerfileGenerator {
 
         // Start command
         dockerfile.append("# Start services\n");
-        dockerfile.append("CMD [\"/start.sh\"]\n");
+        dockerfile.append("CMD ["/start.sh"]\n");
 
         return dockerfile.toString();
     }
@@ -127,12 +130,16 @@ public class PHPDockerfileGenerator {
     public void generateStartupScript(Path sourceDirectory) throws IOException {
         log.info("Generating startup script");
 
-        String scriptContent = "#!/bin/bash\n" +
-                "set -e\n\n" +
-                "# Start PHP-FPM in background\n" +
-                "php-fpm -D\n\n" +
-                "# Start nginx in foreground\n" +
-                "nginx -g 'daemon off;'\n";
+        String scriptContent = """
+                #!/bin/bash
+                set -e
+
+                # Start PHP-FPM in background
+                php-fpm -D
+
+                # Start nginx in foreground
+                nginx -g 'daemon off;'
+                """;
 
         Path scriptPath = sourceDirectory.resolve("start.sh");
         Files.writeString(scriptPath, scriptContent);
