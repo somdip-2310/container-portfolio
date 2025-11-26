@@ -64,16 +64,24 @@ async function startContainer(containerId) {
             }
         });
 
+        // Handle successful response (200 OK or 202 Accepted)
         if (response.ok) {
-            updateProgressWithMessage(50, 'Start initiated successfully...');
+            updateProgressWithMessage(50, 'Container start initiated successfully...');
+            updateProgressWithMessage(70, 'Container is starting in the background...');
             setTimeout(() => {
                 updateProgress(100);
                 setTimeout(() => {
                     hideProgressModal();
-                    showToast('Container start initiated. Page will refresh...', 'success');
-                    setTimeout(() => location.reload(), 1500);
+                    showToast('Container is starting. Page will refresh to show status...', 'success');
+                    setTimeout(() => location.reload(), 2000);
                 }, 500);
             }, 1000);
+        } else if (response.status === 504 || response.status === 502 || response.status === 503) {
+            // Gateway timeout or service unavailable - container might still be starting
+            hideProgressModal();
+            showToast('Start request sent. Refreshing page to check status...', 'info');
+            // Wait a bit longer before refreshing to give the backend time to process
+            setTimeout(() => location.reload(), 3000);
         } else {
             hideProgressModal();
             const error = await response.text();
@@ -82,7 +90,13 @@ async function startContainer(containerId) {
     } catch (error) {
         hideProgressModal();
         console.error('Error starting container:', error);
-        showToast('Error starting container', 'error');
+        // Might be a network timeout - container could still be starting
+        if (error.name === 'TypeError' || error.message.includes('fetch')) {
+            showToast('Request timed out. Refreshing page to check if container is starting...', 'warning');
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            showToast('Error starting container: ' + error.message, 'error');
+        }
     }
 }
 
@@ -215,6 +229,21 @@ function switchDeployTab(tabName) {
     }
 }
 
+// Update filename display when file is selected
+function updateFileName(input) {
+    const fileName = input.files[0]?.name || '';
+    const fileNameDisplay = document.getElementById('selectedFileName');
+    if (fileNameDisplay) {
+        if (fileName) {
+            fileNameDisplay.textContent = 'Selected: ' + fileName;
+            fileNameDisplay.classList.remove('text-gray-500');
+            fileNameDisplay.classList.add('text-purple-600', 'font-medium');
+        } else {
+            fileNameDisplay.textContent = '';
+        }
+    }
+}
+
 // Show progress modal
 function showProgressModal(title, message) {
     const modal = document.getElementById('progressModal');
@@ -331,7 +360,7 @@ async function deployFromSource(event) {
 
 // Poll deployment status
 async function pollDeploymentStatus(deploymentId) {
-    const maxAttempts = 60;
+    const maxAttempts = 180; // 180 * 2 = 360 seconds (6 minutes)
     let attempts = 0;
 
     const poll = async () => {
@@ -361,18 +390,37 @@ async function pollDeploymentStatus(deploymentId) {
                 } else if (status.status === 'FAILED') {
                     hideProgressModal();
                     showToast('Deployment failed: ' + (status.errorMessage || 'Unknown error'), 'error');
+                } else if (status.status === 'IN_PROGRESS' || status.status === 'PENDING') {
+                    // Still in progress
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        // Show time elapsed every 30 seconds
+                        if (attempts % 15 === 0) {
+                            const elapsed = Math.floor(attempts * 2 / 60);
+                            updateProgressWithMessage(Math.min(30 + attempts, 85),
+                                'Deployment in progress... (' + elapsed + ' min elapsed)');
+                        }
+                        setTimeout(poll, 2000);
+                    } else {
+                        hideProgressModal();
+                        showToast('Deployment is taking longer than expected. Please check the Deployments page for status.', 'warning');
+                    }
                 } else {
                     attempts++;
                     if (attempts < maxAttempts) {
                         setTimeout(poll, 2000);
                     } else {
                         hideProgressModal();
-                        showToast('Deployment status check timed out', 'warning');
+                        showToast('Deployment status check timed out. Please check the Deployments page for status.', 'warning');
                     }
                 }
             }
         } catch (error) {
             console.error('Error polling deployment status:', error);
+            attempts++;
+            if (attempts < maxAttempts) {
+                setTimeout(poll, 2000);
+            }
         }
     };
 

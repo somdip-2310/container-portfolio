@@ -28,29 +28,32 @@ public class ContainerService {
     private final EcsService ecsService;
     private final DeploymentTrackingService deploymentTrackingService;
     private final ContainerHealthCheckService healthCheckService;
-    
+    private final AsyncContainerOperations asyncContainerOperations;
+
     @Value("${app.container.limits.free}")
     private int freeContainerLimit;
-    
+
     @Value("${app.container.limits.starter}")
     private int starterContainerLimit;
-    
+
     @Value("${app.container.limits.pro}")
     private int proContainerLimit;
-    
+
     @Value("${app.container.limits.scale}")
     private int scaleContainerLimit;
-    
+
     public ContainerService(ContainerRepository containerRepository,
                           UserRepository userRepository,
                           EcsService ecsService,
                           DeploymentTrackingService deploymentTrackingService,
-                          ContainerHealthCheckService healthCheckService) {
+                          ContainerHealthCheckService healthCheckService,
+                          AsyncContainerOperations asyncContainerOperations) {
         this.containerRepository = containerRepository;
         this.userRepository = userRepository;
         this.ecsService = ecsService;
         this.deploymentTrackingService = deploymentTrackingService;
         this.healthCheckService = healthCheckService;
+        this.asyncContainerOperations = asyncContainerOperations;
     }
     
     public Container createContainer(String userId, String name, String image, String imageTag, Integer port) {
@@ -322,52 +325,10 @@ public class ContainerService {
         container.setStatus(Container.ContainerStatus.STARTING);
         Container savedContainer = containerRepository.save(container);
 
-        // Trigger async deployment
-        deployContainerAsync(containerId);
+        // Trigger async deployment using separate service (must be separate class for @Async to work)
+        asyncContainerOperations.deployContainerAsync(containerId);
 
         return savedContainer;
-    }
-
-    /**
-     * Async method to perform the actual container deployment
-     */
-    @Async
-    public void deployContainerAsync(String containerId) {
-        log.info("Async deployment started for container: {}", containerId);
-
-        try {
-            Container container = getContainer(containerId);
-
-            // Deploy to ECS with deployment tracking
-            Deployment deployment = ecsService.deployContainer(container, container.getUserId());
-
-            // Start tracking deployment progress
-            deploymentTrackingService.trackDeployment(deployment.getDeploymentId());
-
-            // Update container with deployment info
-            container.setStatus(Container.ContainerStatus.RUNNING);
-            container.setLastDeployedAt(Instant.now());
-            Long deploymentCount = container.getDeploymentCount() != null ?
-                container.getDeploymentCount() : 0L;
-            container.setDeploymentCount(deploymentCount + 1);
-
-            containerRepository.save(container);
-
-            // Start health monitoring
-            healthCheckService.startHealthMonitoring(containerId);
-
-            log.info("Async deployment completed successfully for container: {}", containerId);
-
-        } catch (Exception e) {
-            log.error("Async deployment failed for container: {}", containerId, e);
-            try {
-                Container container = getContainer(containerId);
-                container.setStatus(Container.ContainerStatus.FAILED);
-                containerRepository.save(container);
-            } catch (Exception ex) {
-                log.error("Failed to update container status to FAILED: {}", containerId, ex);
-            }
-        }
     }
     
     public Container stopContainer(String containerId) {
