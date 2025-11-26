@@ -43,6 +43,13 @@
                     </div>
                 </div>
 
+                <div th:if="${param.resetSuccess}" class="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div class="flex items-center text-green-400">
+                        <i class="fas fa-check-circle mr-3"></i>
+                        <span>Password reset successfully! You can now login with your new password.</span>
+                    </div>
+                </div>
+
                 <form th:action="@{/login}" method="post" class="space-y-6">
                     <!-- Email -->
                     <div>
@@ -86,7 +93,7 @@
                             </label>
                         </div>
 
-                        <a href="/api/auth/forgot-password" class="text-sm font-medium text-purple-400 hover:text-purple-300 transition">
+                        <a href="/forgot-password" class="text-sm font-medium text-purple-400 hover:text-purple-300 transition">
                             Forgot password?
                         </a>
                     </div>
