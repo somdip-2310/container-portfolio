@@ -93,6 +93,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
+                .requestMatchers("/about", "/contact", "/terms", "/privacy", "/refund").permitAll()
                 .requestMatchers("/api/source/**").authenticated()
                 .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()

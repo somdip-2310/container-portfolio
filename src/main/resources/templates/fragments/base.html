@@ -277,21 +277,68 @@
     
     <!-- Footer Fragment -->
     <footer th:fragment="footer" class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex justify-between items-center">
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    &copy; 2024 Container Platform. All rights reserved.
-                </p>
-                <div class="flex space-x-6">
-                    <a href="/docs" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                        Documentation
-                    </a>
-                    <a href="/api" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                        API
-                    </a>
-                    <a href="/status" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                        Status
-                    </a>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                <!-- Company Info -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">SnapDeploy</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">A Product of AAR Labs</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Modern container deployment platform for developers
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Resources</h3>
+                    <div class="flex flex-col space-y-2">
+                        <a href="/docs" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            Documentation
+                        </a>
+                        <a href="/billing" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            Pricing
+                        </a>
+                        <a href="/api" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            API Reference
+                        </a>
+                        <a href="/status" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            System Status
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Legal & Contact -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Legal & Support</h3>
+                    <div class="flex flex-col space-y-2">
+                        <a href="/about" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            About Us
+                        </a>
+                        <a href="/contact" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            Contact Us
+                        </a>
+                        <a href="/terms" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            Terms & Conditions
+                        </a>
+                        <a href="/privacy" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            Privacy Policy
+                        </a>
+                        <a href="/refund" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            Refund Policy
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        &copy; 2025 AAR Labs. All rights reserved.
+                    </p>
+                    <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                        <span><i class="fas fa-envelope mr-1"></i> contact@snapdeploy.dev</span>
+                        <span><i class="fas fa-phone mr-1"></i> +91 9004233112</span>
+                    </div>
                 </div>
             </div>
         </div>

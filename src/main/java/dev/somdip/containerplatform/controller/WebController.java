@@ -403,9 +403,35 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
         // Domain management page
         return "domains";
+    }
+
+    // Compliance and Information Pages
+    @GetMapping("/about")
+    public String about() {
+        return "about";
+    }
+
+    @GetMapping("/contact")
+    public String contact() {
+        return "contact";
+    }
+
+    @GetMapping("/terms")
+    public String terms() {
+        return "terms";
+    }
+
+    @GetMapping("/privacy")
+    public String privacy() {
+        return "privacy";
+    }
+
+    @GetMapping("/refund")
+    public String refund() {
+        return "refund";
     }
 
 }
