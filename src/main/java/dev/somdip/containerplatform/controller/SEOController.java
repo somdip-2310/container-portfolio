@@ -2,9 +2,16 @@ package dev.somdip.containerplatform.controller;
 
 import dev.somdip.containerplatform.config.seo.PageSEO;
 import dev.somdip.containerplatform.config.seo.SEOConfig;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Controller for SEO-optimized landing pages
@@ -74,13 +81,21 @@ public class SEOController {
         return "seo/for-indie-developers";
     }
     
-    @GetMapping("/sitemap.xml")
-    public String sitemap() {
-        return "sitemap";
+    @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<String> sitemap() throws IOException {
+        ClassPathResource resource = new ClassPathResource("templates/sitemap.xml");
+        String content = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .body(content);
     }
-    
-    @GetMapping("/robots.txt")
-    public String robots() {
-        return "robots";
+
+    @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> robots() throws IOException {
+        ClassPathResource resource = new ClassPathResource("templates/robots.txt");
+        String content = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(content);
     }
 }
