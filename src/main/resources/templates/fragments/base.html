@@ -178,7 +178,7 @@
                             <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
                                 <span th:text="${#authentication?.name != null ? #strings.substring(#authentication.name, 0, 1).toUpperCase() + (#strings.indexOf(#authentication.name, ' ') > 0 ? #strings.substring(#authentication.name, #strings.indexOf(#authentication.name, ' ') + 1, #strings.indexOf(#authentication.name, ' ') + 2).toUpperCase() : (#strings.indexOf(#authentication.name, '@') > 1 ? #strings.substring(#authentication.name, 1, 2).toUpperCase() : '')) : 'U'}">SR</span>
                             </div>
-                            <span class="ml-3" th:text="${#authentication?.name ?: 'User'}">User</span>
+                            <span class="ml-3 font-semibold" th:text="${#authentication?.name != null ? #strings.substring(#authentication.name, 0, 1).toUpperCase() + (#strings.indexOf(#authentication.name, ' ') > 0 ? #strings.substring(#authentication.name, #strings.indexOf(#authentication.name, ' ') + 1, #strings.indexOf(#authentication.name, ' ') + 2).toUpperCase() : (#strings.indexOf(#authentication.name, '@') > 1 ? #strings.substring(#authentication.name, 1, 2).toUpperCase() : '')) : 'U'}">SR</span>
                             <i class="fas fa-chevron-down ml-2 text-xs"></i>
                         </button>
 
