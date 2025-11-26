@@ -3,6 +3,7 @@ package dev.somdip.containerplatform.controller;
 import dev.somdip.containerplatform.dto.DashboardStats;
 import dev.somdip.containerplatform.dto.RecentActivity;
 import dev.somdip.containerplatform.dto.Notification;
+import dev.somdip.containerplatform.dto.UsageLimitDTO;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.model.User;
@@ -102,12 +103,16 @@ public class WebController {
             DashboardStats stats = dashboardService.getDashboardStats(userId);
             Map<String, List<Double>> usageHistory = dashboardService.getResourceUsageHistory(containers, 7);
             List<RecentActivity> recentActivity = dashboardService.getRecentActivity(userId, 3);
-            
+
+            // Get usage limit info for FREE tier
+            UsageLimitDTO usageLimit = dashboardService.getUsageLimitInfo(user);
+
             // Add data to model
             model.addAttribute("username", user.getName());
             model.addAttribute("stats", stats);
             model.addAttribute("usageHistory", usageHistory);
             model.addAttribute("recentActivity", recentActivity);
+            model.addAttribute("usageLimit", usageLimit);
             
             // Add chart data as JSON for JavaScript
             model.addAttribute("cpuData", usageHistory.get("cpu"));
