@@ -1,0 +1,53 @@
+{
+  "Comment": "Add Zoho MX and SPF records for contact@snapdeploy.dev",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "snapdeploy.dev",
+        "Type": "MX",
+        "TTL": 3600,
+        "ResourceRecords": [
+          {
+            "Value": "10 mx.zoho.com"
+          },
+          {
+            "Value": "20 mx2.zoho.com"
+          },
+          {
+            "Value": "50 mx3.zoho.com"
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "snapdeploy.dev",
+        "Type": "TXT",
+        "TTL": 3600,
+        "ResourceRecords": [
+          {
+            "Value": "\"v=spf1 include:zoho.com ~all\""
+          },
+          {
+            "Value": "\"zoho-verification=zb81657151.zmverify.zoho.in\""
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_dmarc.snapdeploy.dev",
+        "Type": "TXT",
+        "TTL": 3600,
+        "ResourceRecords": [
+          {
+            "Value": "\"v=DMARC1; p=none; rua=mailto:contact@snapdeploy.dev\""
+          }
+        ]
+      }
+    }
+  ]
+}

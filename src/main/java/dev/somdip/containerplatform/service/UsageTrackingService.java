@@ -156,10 +156,17 @@ public class UsageTrackingService {
         log.info("Updated usage for user {}: {} hours used (added {} hours this interval)",
             user.getUserId(), newHours, totalHoursToAdd);
 
-        // Check if approaching limit (90% threshold)
-        if (user.getPlan() == User.UserPlan.FREE && newHours >= FREE_PLAN_HOURS_LIMIT * 0.9) {
-            log.warn("User {} is approaching FREE plan limit: {} / {} hours",
-                user.getUserId(), newHours, FREE_PLAN_HOURS_LIMIT);
+        // Check if limit exceeded and auto-shutdown containers immediately
+        if (user.getPlan() == User.UserPlan.FREE) {
+            if (hasExceededFreeLimit(user)) {
+                log.warn("User {} has EXCEEDED FREE plan limit: {} / {} hours - auto-stopping containers",
+                    user.getUserId(), newHours, getTotalHoursLimit(user));
+                shutdownUserContainers(user);
+            } else if (newHours >= FREE_PLAN_HOURS_LIMIT * 0.9) {
+                // Check if approaching limit (90% threshold)
+                log.warn("User {} is approaching FREE plan limit: {} / {} hours",
+                    user.getUserId(), newHours, FREE_PLAN_HOURS_LIMIT);
+            }
         }
     }
 

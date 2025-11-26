@@ -32,6 +32,7 @@ public class User {
     private Long totalDeployments;
     private Double hoursUsed; // Total container hours used (for FREE plan limit)
     private Double bonusHours; // Bonus hours earned (feedback, bug reports, etc.)
+    private Boolean feedbackBonusAwarded; // Track if feedback bonus has been awarded
     private Instant usageResetAt; // When usage counter resets (for FREE plan monthly reset)
     private UsageStats usageStats;
     
@@ -257,6 +258,15 @@ public class User {
 
     public void setBonusHours(Double bonusHours) {
         this.bonusHours = bonusHours;
+    }
+
+    @DynamoDbAttribute("feedbackBonusAwarded")
+    public Boolean getFeedbackBonusAwarded() {
+        return feedbackBonusAwarded;
+    }
+
+    public void setFeedbackBonusAwarded(Boolean feedbackBonusAwarded) {
+        this.feedbackBonusAwarded = feedbackBonusAwarded;
     }
 
     public enum UserPlan {

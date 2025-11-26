@@ -76,6 +76,10 @@ async function startContainer(containerId) {
                     setTimeout(() => location.reload(), 2000);
                 }, 500);
             }, 1000);
+        } else if (response.status === 402) {
+            // Payment Required - FREE tier hours exhausted
+            hideProgressModal();
+            showToast('⏰ Failed to start container: Your FREE tier hours have been exhausted. Upgrade to PRO for unlimited hours!', 'error');
         } else if (response.status === 504 || response.status === 502 || response.status === 503) {
             // Gateway timeout or service unavailable - container might still be starting
             hideProgressModal();
@@ -327,6 +331,10 @@ async function deployFromSource(event) {
             }
 
             hideDeployModal();
+        } else if (response.status === 402) {
+            // Payment Required - FREE tier hours exhausted
+            hideProgressModal();
+            showToast('⏰ Deployment failed: Your FREE tier hours have been exhausted. Upgrade to PRO for unlimited hours!', 'error');
         } else {
             hideProgressModal();
             let errorMessage = 'Unknown error';

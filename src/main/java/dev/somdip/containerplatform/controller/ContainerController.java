@@ -69,6 +69,16 @@ public class ContainerController {
             Authentication authentication) {
         try {
             String userId = getUserId(authentication);
+
+            // Check usage limits for FREE tier users BEFORE creating container
+            User user = userService.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (!usageTrackingService.canStartContainer(user)) {
+                log.warn("User {} cannot create container - FREE tier limit exceeded", userId);
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).build();
+            }
+
             Container container = containerService.createContainer(
                     userId,
                     request.getName(),

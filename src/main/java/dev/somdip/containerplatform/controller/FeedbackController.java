@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+
 @Slf4j
 @RestController
 @RequestMapping("/web/api/feedback")
@@ -48,26 +50,44 @@ public class FeedbackController {
                 request.getCategory()
             );
 
-            // Award bonus hours (only for FREE tier users)
+            // Award bonus hours (only for FREE tier users and only once)
             if (user.getPlan() == User.UserPlan.FREE) {
-                usageTrackingService.addBonusHours(
-                    user.getUserId(),
-                    FEEDBACK_BONUS_HOURS,
-                    "Feedback submission"
-                );
+                // Check if bonus was already awarded
+                boolean alreadyAwarded = user.getFeedbackBonusAwarded() != null && user.getFeedbackBonusAwarded();
 
-                // Refresh user to get updated bonus hours
-                user = userService.findByEmail(username).orElseThrow();
+                if (!alreadyAwarded) {
+                    // Award bonus hours and mark as awarded
+                    usageTrackingService.addBonusHours(
+                        user.getUserId(),
+                        FEEDBACK_BONUS_HOURS,
+                        "Feedback submission"
+                    );
 
-                double remainingHours = usageTrackingService.getRemainingHours(user);
+                    // Mark feedback bonus as awarded
+                    user.setFeedbackBonusAwarded(true);
+                    user.setUpdatedAt(Instant.now());
+                    userService.save(user);
 
-                return ResponseEntity.ok(FeedbackResponse.builder()
-                    .success(true)
-                    .message("Thank you for your feedback! You've been awarded 5 bonus minutes.") // TESTING: was "50 bonus hours"
-                    .bonusHoursAwarded(FEEDBACK_BONUS_HOURS)
-                    .newTotalBonus(user.getBonusHours())
-                    .remainingHours(remainingHours)
-                    .build());
+                    // Refresh user to get updated bonus hours
+                    user = userService.findByEmail(username).orElseThrow();
+
+                    double remainingHours = usageTrackingService.getRemainingHours(user);
+
+                    return ResponseEntity.ok(FeedbackResponse.builder()
+                        .success(true)
+                        .message("Thank you for your feedback! You've been awarded 5 bonus minutes.") // TESTING: was "50 bonus hours"
+                        .bonusHoursAwarded(FEEDBACK_BONUS_HOURS)
+                        .newTotalBonus(user.getBonusHours())
+                        .remainingHours(remainingHours)
+                        .build());
+                } else {
+                    // Already received bonus
+                    return ResponseEntity.ok(FeedbackResponse.builder()
+                        .success(true)
+                        .message("Thank you for your feedback! (You've already received your one-time feedback bonus)")
+                        .bonusHoursAwarded(0.0)
+                        .build());
+                }
             }
 
             return ResponseEntity.ok(FeedbackResponse.builder()

@@ -468,7 +468,7 @@
                                 Share Your Feedback
                             </h2>
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 ml-15">
+                        <p class="text-sm text-gray-700 dark:text-gray-200 ml-15 font-medium">
                             <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                                 <i class="fas fa-gift mr-1"></i>+50 Bonus Hours
                             </span>
@@ -485,21 +485,21 @@
                 <form id="feedbackForm" onsubmit="submitFeedback(event)" class="space-y-6">
                     <!-- Category -->
                     <div>
-                        <label for="feedbackCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label for="feedbackCategory" class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="fas fa-tag mr-2 text-green-500"></i>Category
                         </label>
                         <select id="feedbackCategory" name="category"
                                 class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
-                            <option value="feature">Feature Request</option>
-                            <option value="usability">Usability Improvement</option>
-                            <option value="performance">Performance Issue</option>
-                            <option value="other">Other</option>
+                            <option value="feature" class="text-gray-900 bg-white">Feature Request</option>
+                            <option value="usability" class="text-gray-900 bg-white">Usability Improvement</option>
+                            <option value="performance" class="text-gray-900 bg-white">Performance Issue</option>
+                            <option value="other" class="text-gray-900 bg-white">Other</option>
                         </select>
                     </div>
 
                     <!-- Feedback Message -->
                     <div>
-                        <label for="feedbackMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label for="feedbackMessage" class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="fas fa-pen mr-2 text-green-500"></i>Your Feedback *
                         </label>
                         <textarea id="feedbackMessage" name="message" required minlength="20" maxlength="1000" rows="6"
@@ -551,7 +551,7 @@
                             <span class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                                 <i class="fas fa-trophy mr-1"></i>Earn Rewards
                             </span>
-                            <span class="ml-2">0-50 bonus hours or 1 month free!</span>
+                            <span class="ml-2 text-gray-700 dark:text-gray-200">0-50 bonus hours or 1 month free!</span>
                         </p>
                     </div>
                     <button onclick="closeBugReportModal()"
@@ -564,7 +564,7 @@
                 <form id="bugReportForm" onsubmit="submitBugReport(event)" class="space-y-6">
                     <!-- Bug Title -->
                     <div>
-                        <label for="bugTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label for="bugTitle" class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="fas fa-heading mr-2 text-red-500"></i>Bug Title *
                         </label>
                         <input type="text" id="bugTitle" name="title" required minlength="10" maxlength="200"
@@ -577,21 +577,21 @@
 
                     <!-- Severity -->
                     <div>
-                        <label for="bugSeverity" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label for="bugSeverity" class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>Severity
                         </label>
                         <select id="bugSeverity" name="severity"
                                 class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
-                            <option value="low">🟢 Low - Minor issue, workaround available</option>
-                            <option value="medium" selected>🟡 Medium - Noticeable issue affecting functionality</option>
-                            <option value="high">🟠 High - Major issue blocking key features</option>
-                            <option value="critical">🔴 Critical - System crash or data loss</option>
+                            <option value="low" class="text-gray-900 bg-white">🟢 Low - Minor issue, workaround available</option>
+                            <option value="medium" selected class="text-gray-900 bg-white">🟡 Medium - Noticeable issue affecting functionality</option>
+                            <option value="high" class="text-gray-900 bg-white">🟠 High - Major issue blocking key features</option>
+                            <option value="critical" class="text-gray-900 bg-white">🔴 Critical - System crash or data loss</option>
                         </select>
                     </div>
 
                     <!-- Description -->
                     <div>
-                        <label for="bugDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label for="bugDescription" class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="fas fa-align-left mr-2 text-red-500"></i>Detailed Description *
                         </label>
                         <textarea id="bugDescription" name="description" required minlength="30" maxlength="2000" rows="5"
@@ -604,7 +604,7 @@
 
                     <!-- Steps to Reproduce -->
                     <div>
-                        <label for="bugSteps" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label for="bugSteps" class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="fas fa-list-ol mr-2 text-red-500"></i>Steps to Reproduce *
                         </label>
                         <textarea id="bugSteps" name="stepsToReproduce" required minlength="20" maxlength="1000" rows="4"
@@ -644,6 +644,10 @@
     
     <!-- Dashboard specific scripts -->
     <script th:inline="javascript">
+        // CSRF token for AJAX requests
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
         // Resource Usage Chart
         const resourceCtx = document.getElementById('resourceChart').getContext('2d');
 
