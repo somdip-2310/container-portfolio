@@ -94,6 +94,11 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
                 .requestMatchers("/about", "/contact", "/terms", "/privacy", "/refund").permitAll()
+                // SEO and marketing pages - must be public for search engines and AI tools
+                .requestMatchers("/heroku-alternative", "/railway-alternative", "/render-alternative").permitAll()
+                .requestMatchers("/docker-hosting", "/container-hosting").permitAll()
+                .requestMatchers("/for/**", "/pricing").permitAll()
+                .requestMatchers("/robots.txt", "/sitemap.xml").permitAll()
                 .requestMatchers("/api/source/**").authenticated()
                 .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()
