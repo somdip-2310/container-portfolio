@@ -8,66 +8,106 @@
     <!-- Main Content -->
     <main class="lg:ml-64 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- FREE Plan Usage Banner -->
+            <!-- FREE Plan Usage Banner - Premium Glass-morphism Design -->
             <div th:if="${usageLimit != null && usageLimit.planName == 'FREE'}"
-                 th:class="${usageLimit.warningLevel == 'exceeded' ? 'bg-red-100 dark:bg-red-900/30 border-red-500' :
-                           (usageLimit.warningLevel == 'critical' ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-500' :
-                           (usageLimit.warningLevel == 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-500' : 'bg-blue-100 dark:bg-blue-900/30 border-blue-500'))}"
-                 class="rounded-lg p-6 mb-8 border-l-4">
-                <div class="flex items-center justify-between flex-wrap gap-4">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center mb-3">
-                            <i th:class="${usageLimit.warningLevel == 'exceeded' ? 'fas fa-exclamation-triangle text-red-600' :
-                                         (usageLimit.warningLevel == 'critical' ? 'fas fa-exclamation-circle text-orange-600' :
-                                         (usageLimit.warningLevel == 'warning' ? 'fas fa-exclamation-circle text-yellow-600' : 'fas fa-info-circle text-blue-600'))}"
-                               class="mr-3 text-xl"></i>
-                            <h3 th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-900 dark:text-red-100' :
-                                          (usageLimit.warningLevel == 'critical' ? 'text-orange-900 dark:text-orange-100' :
-                                          (usageLimit.warningLevel == 'warning' ? 'text-yellow-900 dark:text-yellow-100' : 'text-blue-900 dark:text-blue-100'))}"
-                                class="text-lg font-semibold" th:text="${usageLimit.primaryMessage}">FREE Plan Usage</h3>
-                        </div>
-                        <div class="space-y-2">
-                            <p th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-800 dark:text-red-200' :
-                                         (usageLimit.warningLevel == 'critical' ? 'text-orange-800 dark:text-orange-200' :
-                                         (usageLimit.warningLevel == 'warning' ? 'text-yellow-800 dark:text-yellow-200' : 'text-blue-800 dark:text-blue-200'))}"
-                               class="text-sm" th:text="${usageLimit.secondaryMessage}">
-                                Perfect for learning, building side projects, and testing in production.
-                            </p>
-                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-3">
-                                <div th:class="${usageLimit.warningLevel == 'exceeded' ? 'bg-red-600' :
-                                               (usageLimit.warningLevel == 'critical' ? 'bg-orange-500' :
-                                               (usageLimit.warningLevel == 'warning' ? 'bg-yellow-500' : 'bg-blue-600'))}"
-                                     class="h-2.5 rounded-full transition-all"
-                                     th:style="'width: ' + ${usageLimit.percentageUsed > 100 ? 100 : usageLimit.percentageUsed} + '%'"></div>
+                 class="relative overflow-hidden rounded-2xl shadow-2xl mb-8 backdrop-blur-xl border transition-all duration-300 hover:shadow-3xl"
+                 th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-gradient-to-br from-red-500/10 via-red-600/5 to-red-700/10 border-red-500/30' :
+                                 (usageLimit.warningLevel == 'critical' ? 'bg-gradient-to-br from-orange-500/10 via-orange-600/5 to-orange-700/10 border-orange-500/30' :
+                                 (usageLimit.warningLevel == 'warning' ? 'bg-gradient-to-br from-yellow-500/10 via-yellow-600/5 to-yellow-700/10 border-yellow-500/30' : 'bg-gradient-to-br from-blue-500/10 via-purple-600/5 to-blue-700/10 border-blue-500/30'))}">
+
+                <!-- Animated Background Glow -->
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full blur-3xl opacity-20 animate-pulse"
+                     th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-red-500' :
+                                     (usageLimit.warningLevel == 'critical' ? 'bg-orange-500' :
+                                     (usageLimit.warningLevel == 'warning' ? 'bg-yellow-500' : 'bg-purple-500'))}"></div>
+
+                <div class="relative p-8">
+                    <div class="flex items-center justify-between flex-wrap gap-6">
+                        <div class="flex-1 min-w-0">
+                            <!-- Header with Icon -->
+                            <div class="flex items-center mb-4">
+                                <div class="flex items-center justify-center w-12 h-12 rounded-xl backdrop-blur-sm mr-4"
+                                     th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-red-500/20' :
+                                                     (usageLimit.warningLevel == 'critical' ? 'bg-orange-500/20' :
+                                                     (usageLimit.warningLevel == 'warning' ? 'bg-yellow-500/20' : 'bg-blue-500/20'))}">
+                                    <i th:class="${usageLimit.warningLevel == 'exceeded' ? 'fas fa-exclamation-triangle text-red-600 dark:text-red-400' :
+                                                 (usageLimit.warningLevel == 'critical' ? 'fas fa-exclamation-circle text-orange-600 dark:text-orange-400' :
+                                                 (usageLimit.warningLevel == 'warning' ? 'fas fa-exclamation-circle text-yellow-600 dark:text-yellow-400' : 'fas fa-infinity text-blue-600 dark:text-blue-400'))}"
+                                       class="text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-700 dark:text-red-300' :
+                                                  (usageLimit.warningLevel == 'critical' ? 'text-orange-700 dark:text-orange-300' :
+                                                  (usageLimit.warningLevel == 'warning' ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300'))}"
+                                        class="text-2xl font-bold" th:text="${usageLimit.primaryMessage}">FREE Plan Usage</h3>
+                                    <p th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-600 dark:text-red-400' :
+                                                 (usageLimit.warningLevel == 'critical' ? 'text-orange-600 dark:text-orange-400' :
+                                                 (usageLimit.warningLevel == 'warning' ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'))}"
+                                       class="text-sm mt-1" th:text="${usageLimit.secondaryMessage}">
+                                        Perfect for learning, building side projects, and testing in production.
+                                    </p>
+                                </div>
                             </div>
-                            <div class="flex justify-between items-center mt-2">
-                                <p th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-700 dark:text-red-300' :
-                                             (usageLimit.warningLevel == 'critical' ? 'text-orange-700 dark:text-orange-300' :
-                                             (usageLimit.warningLevel == 'warning' ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300'))}"
-                                   class="text-xs">
-                                    <span th:text="${#numbers.formatDecimal(usageLimit.hoursUsed, 1, 1)}">20</span> /
-                                    <span th:text="${#numbers.formatDecimal(usageLimit.totalLimit, 0, 0)}">200</span> hours used
-                                    (<span th:text="${#numbers.formatDecimal(usageLimit.percentageUsed, 1, 1)}">10</span>%)
-                                </p>
-                                <p th:if="${usageLimit.bonusHours > 0}"
-                                   class="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">
-                                    <i class="fas fa-gift mr-1"></i>
-                                    +<span th:text="${#numbers.formatDecimal(usageLimit.bonusHours, 0, 0)}">50</span> bonus hours
-                                </p>
+
+                            <!-- Progress Bar with Gradient -->
+                            <div class="w-full bg-white/10 backdrop-blur-sm rounded-full h-3 mb-4 overflow-hidden">
+                                <div class="h-3 rounded-full transition-all duration-500 ease-out relative"
+                                     th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                                                     (usageLimit.warningLevel == 'critical' ? 'bg-gradient-to-r from-orange-500 to-orange-600' :
+                                                     (usageLimit.warningLevel == 'warning' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-blue-500 to-purple-600'))}"
+                                     th:style="'width: ' + ${usageLimit.percentageUsed > 100 ? 100 : usageLimit.percentageUsed} + '%'">
+                                    <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                </div>
+                            </div>
+
+                            <!-- Usage Stats -->
+                            <div class="flex justify-between items-center flex-wrap gap-3">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Hours Used</p>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                            <span th:text="${#numbers.formatDecimal(usageLimit.hoursUsed, 1, 1)}">20</span> /
+                                            <span th:text="${#numbers.formatDecimal(usageLimit.totalLimit, 0, 0)}">200</span>
+                                        </p>
+                                    </div>
+                                    <div class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Progress</p>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                            <span th:text="${#numbers.formatDecimal(usageLimit.percentageUsed, 1, 1)}">10</span>%
+                                        </p>
+                                    </div>
+                                </div>
+                                <div th:if="${usageLimit.bonusHours > 0}"
+                                     class="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 px-4 py-2 rounded-lg">
+                                    <p class="text-xs text-green-700 dark:text-green-300 mb-1">
+                                        <i class="fas fa-gift mr-1"></i>Bonus Hours
+                                    </p>
+                                    <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                                        +<span th:text="${#numbers.formatDecimal(usageLimit.bonusHours, 0, 0)}">50</span> hours
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <button onclick="window.location.href='/billing'"
-                                class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition transform hover:scale-105 flex items-center whitespace-nowrap">
-                            <i class="fas fa-crown mr-2"></i>
-                            Upgrade to PRO
-                        </button>
-                        <button onclick="openFeedbackModal()"
-                                class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition transform hover:scale-105 flex items-center text-sm whitespace-nowrap">
-                            <i class="fas fa-comment mr-2"></i>
-                            Get +50 Hours
-                        </button>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col gap-3 min-w-fit">
+                            <button onclick="window.location.href='/billing'"
+                                    class="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center whitespace-nowrap">
+                                <div class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                                <i class="fas fa-crown mr-2 relative"></i>
+                                <span class="relative">Upgrade to PRO</span>
+                            </button>
+                            <button onclick="openFeedbackModal()"
+                                    class="group relative overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center whitespace-nowrap">
+                                <div class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                                <i class="fas fa-comment mr-2 relative"></i>
+                                <span class="relative">Get +50 Hours</span>
+                            </button>
+                            <button onclick="openBugReportModal()"
+                                    class="text-sm text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                                <i class="fas fa-bug mr-1"></i>Report a bug
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -413,20 +453,30 @@
         </div>
     </div>
 
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full">
-            <div class="p-6">
+    <!-- Feedback Modal - Premium Glass-morphism Design -->
+    <div id="feedbackModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white/10 dark:bg-gray-900/30 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full transform transition-all duration-300 hover:scale-[1.01]">
+            <div class="p-8">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                            <i class="fas fa-comment text-green-600 mr-2"></i>
-                            Share Your Feedback
-                        </h2>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Get +50 bonus hours for FREE tier users!</p>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-xl">
+                                <i class="fas fa-comment text-green-500 text-xl"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
+                                Share Your Feedback
+                            </h2>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 ml-15">
+                            <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="fas fa-gift mr-1"></i>+50 Bonus Hours
+                            </span>
+                            <span class="ml-2">for FREE tier users!</span>
+                        </p>
                     </div>
-                    <button onclick="closeFeedbackModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <button onclick="closeFeedbackModal()"
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors hover:rotate-90 transform duration-300">
                         <i class="fas fa-times text-2xl"></i>
                     </button>
                 </div>
@@ -435,11 +485,11 @@
                 <form id="feedbackForm" onsubmit="submitFeedback(event)" class="space-y-6">
                     <!-- Category -->
                     <div>
-                        <label for="feedbackCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Category
+                        <label for="feedbackCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                            <i class="fas fa-tag mr-2 text-green-500"></i>Category
                         </label>
                         <select id="feedbackCategory" name="category"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
                             <option value="feature">Feature Request</option>
                             <option value="usability">Usability Improvement</option>
                             <option value="performance">Performance Issue</option>
@@ -449,28 +499,32 @@
 
                     <!-- Feedback Message -->
                     <div>
-                        <label for="feedbackMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Your Feedback *
+                        <label for="feedbackMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                            <i class="fas fa-pen mr-2 text-green-500"></i>Your Feedback *
                         </label>
                         <textarea id="feedbackMessage" name="message" required minlength="20" maxlength="1000" rows="6"
                                   placeholder="Tell us what you think! What features would you like? What can we improve?"
-                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Minimum 20 characters, maximum 1000</p>
+                                  class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"></textarea>
+                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>Minimum 20 characters, maximum 1000
+                        </p>
                     </div>
 
                     <!-- Result Message -->
                     <div id="feedbackResult" class="hidden"></div>
 
                     <!-- Action Buttons -->
-                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-end space-x-3 pt-6 border-t border-white/10">
                         <button type="button" onclick="closeFeedbackModal()"
-                                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                            Cancel
+                                class="px-6 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-white/20 dark:hover:bg-gray-900/30 backdrop-blur-sm transition-all transform hover:scale-105">
+                            <i class="fas fa-times mr-2"></i>Cancel
                         </button>
                         <button type="submit"
-                                class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition transform hover:scale-105">
-                            <i class="fas fa-paper-plane mr-2"></i>
-                            Submit Feedback
+                                class="group relative overflow-hidden px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <div class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                            <span class="relative flex items-center">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Feedback
+                            </span>
                         </button>
                     </div>
                 </form>
@@ -478,20 +532,30 @@
         </div>
     </div>
 
-    <!-- Bug Report Modal -->
-    <div id="bugReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
+    <!-- Bug Report Modal - Premium Glass-morphism Design -->
+    <div id="bugReportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white/10 dark:bg-gray-900/30 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 hover:scale-[1.01]">
+            <div class="p-8">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                            <i class="fas fa-bug text-red-600 mr-2"></i>
-                            Report a Bug
-                        </h2>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Earn 0-50 bonus hours or 1 month free based on severity!</p>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-red-500/20 to-pink-500/20 backdrop-blur-sm rounded-xl">
+                                <i class="fas fa-bug text-red-500 text-xl"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
+                                Report a Bug
+                            </h2>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 ml-15">
+                            <span class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="fas fa-trophy mr-1"></i>Earn Rewards
+                            </span>
+                            <span class="ml-2">0-50 bonus hours or 1 month free!</span>
+                        </p>
                     </div>
-                    <button onclick="closeBugReportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <button onclick="closeBugReportModal()"
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors hover:rotate-90 transform duration-300">
                         <i class="fas fa-times text-2xl"></i>
                     </button>
                 </div>
@@ -500,64 +564,72 @@
                 <form id="bugReportForm" onsubmit="submitBugReport(event)" class="space-y-6">
                     <!-- Bug Title -->
                     <div>
-                        <label for="bugTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Bug Title *
+                        <label for="bugTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                            <i class="fas fa-heading mr-2 text-red-500"></i>Bug Title *
                         </label>
                         <input type="text" id="bugTitle" name="title" required minlength="10" maxlength="200"
                                placeholder="Brief description of the bug"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500">
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">10-200 characters</p>
+                               class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
+                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>10-200 characters
+                        </p>
                     </div>
 
                     <!-- Severity -->
                     <div>
-                        <label for="bugSeverity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Severity
+                        <label for="bugSeverity" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>Severity
                         </label>
                         <select id="bugSeverity" name="severity"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500">
-                            <option value="low">Low - Minor issue, workaround available</option>
-                            <option value="medium" selected>Medium - Noticeable issue affecting functionality</option>
-                            <option value="high">High - Major issue blocking key features</option>
-                            <option value="critical">Critical - System crash or data loss</option>
+                                class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
+                            <option value="low">🟢 Low - Minor issue, workaround available</option>
+                            <option value="medium" selected>🟡 Medium - Noticeable issue affecting functionality</option>
+                            <option value="high">🟠 High - Major issue blocking key features</option>
+                            <option value="critical">🔴 Critical - System crash or data loss</option>
                         </select>
                     </div>
 
                     <!-- Description -->
                     <div>
-                        <label for="bugDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Detailed Description *
+                        <label for="bugDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                            <i class="fas fa-align-left mr-2 text-red-500"></i>Detailed Description *
                         </label>
                         <textarea id="bugDescription" name="description" required minlength="30" maxlength="2000" rows="5"
                                   placeholder="What happened? What did you expect to happen?"
-                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">30-2000 characters</p>
+                                  class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
+                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>30-2000 characters
+                        </p>
                     </div>
 
                     <!-- Steps to Reproduce -->
                     <div>
-                        <label for="bugSteps" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Steps to Reproduce *
+                        <label for="bugSteps" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                            <i class="fas fa-list-ol mr-2 text-red-500"></i>Steps to Reproduce *
                         </label>
                         <textarea id="bugSteps" name="stepsToReproduce" required minlength="20" maxlength="1000" rows="4"
                                   placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."
-                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">20-1000 characters</p>
+                                  class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
+                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>20-1000 characters
+                        </p>
                     </div>
 
                     <!-- Result Message -->
                     <div id="bugReportResult" class="hidden"></div>
 
                     <!-- Action Buttons -->
-                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-end space-x-3 pt-6 border-t border-white/10">
                         <button type="button" onclick="closeBugReportModal()"
-                                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                            Cancel
+                                class="px-6 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-white/20 dark:hover:bg-gray-900/30 backdrop-blur-sm transition-all transform hover:scale-105">
+                            <i class="fas fa-times mr-2"></i>Cancel
                         </button>
                         <button type="submit"
-                                class="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition transform hover:scale-105">
-                            <i class="fas fa-bug mr-2"></i>
-                            Submit Bug Report
+                                class="group relative overflow-hidden px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <div class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                            <span class="relative flex items-center">
+                                <i class="fas fa-bug mr-2"></i>Submit Bug Report
+                            </span>
                         </button>
                     </div>
                 </form>
