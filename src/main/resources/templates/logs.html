@@ -135,6 +135,18 @@
         // Load containers on page load
         document.addEventListener('DOMContentLoaded', async () => {
             await loadContainers();
+
+            // Check for container ID in URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const containerId = urlParams.get('containerId');
+            if (containerId) {
+                // Wait a bit for containers to load
+                setTimeout(() => {
+                    const select = document.getElementById('containerSelect');
+                    select.value = containerId;
+                    loadContainerLogs();
+                }, 500);
+            }
         });
 
         async function loadContainers() {
@@ -166,6 +178,8 @@
             const containerId = document.getElementById('containerSelect').value;
             const lineCount = document.getElementById('lineCount').value;
 
+            console.log('Loading logs for container:', containerId, 'with', lineCount, 'lines');
+
             if (!containerId) {
                 document.getElementById('logsEmpty').classList.remove('hidden');
                 document.getElementById('logsContent').classList.add('hidden');
@@ -178,13 +192,19 @@
             document.getElementById('logsContent').classList.add('hidden');
 
             try {
-                const response = await fetch(`/web/api/containers/${containerId}/logs?lines=${lineCount}`, {
+                const url = `/web/api/containers/${containerId}/logs?lines=${lineCount}`;
+                console.log('Fetching logs from:', url);
+
+                const response = await fetch(url, {
                     credentials: 'same-origin',
                     headers: { [csrfHeader]: csrfToken }
                 });
 
+                console.log('Response status:', response.status);
+
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Received log data:', data);
                     currentLogs = data.logs || '';
 
                     document.getElementById('logsLoading').classList.add('hidden');
@@ -196,14 +216,16 @@
 
                     displayLogs(currentLogs);
                 } else {
-                    throw new Error('Failed to fetch logs');
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`Failed to fetch logs: ${response.status} - ${errorText}`);
                 }
             } catch (error) {
                 console.error('Error loading logs:', error);
                 document.getElementById('logsLoading').classList.add('hidden');
                 document.getElementById('logsContent').classList.remove('hidden');
                 document.getElementById('noLogsMessage').classList.remove('hidden');
-                showNotification('Failed to load logs', 'error');
+                showNotification('Failed to load logs: ' + error.message, 'error');
             }
         }
 

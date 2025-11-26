@@ -1,6 +1,7 @@
 package dev.somdip.containerplatform.service;
 
 import dev.somdip.containerplatform.model.Container;
+import dev.somdip.containerplatform.service.php.PHPDeploymentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,7 @@ public class SourceCodeDeploymentService {
     private final ProjectAnalyzer projectAnalyzer;
     private final DockerfileGenerator dockerfileGenerator;
     private final ContainerService containerService;
+    private final PHPDeploymentHandler phpDeploymentHandler;
 
     @Value("${aws.s3.bucket}")
     private String s3Bucket;
@@ -36,11 +38,13 @@ public class SourceCodeDeploymentService {
     public SourceCodeDeploymentService(S3Client s3Client,
                                       ProjectAnalyzer projectAnalyzer,
                                       DockerfileGenerator dockerfileGenerator,
-                                      ContainerService containerService) {
+                                      ContainerService containerService,
+                                      PHPDeploymentHandler phpDeploymentHandler) {
         this.s3Client = s3Client;
         this.projectAnalyzer = projectAnalyzer;
         this.dockerfileGenerator = dockerfileGenerator;
         this.containerService = containerService;
+        this.phpDeploymentHandler = phpDeploymentHandler;
     }
 
     public static class DeploymentResult {
@@ -119,25 +123,40 @@ public class SourceCodeDeploymentService {
             result.setProjectId(UUID.randomUUID().toString());
             result.setProjectType(projectInfo.getType());
 
-            // Check if Dockerfile exists, if not generate one
-            Path existingDockerfile = projectPath.resolve("Dockerfile");
-            if (Files.exists(existingDockerfile)) {
-                log.info("Found existing Dockerfile - replacing Docker Hub base images with ECR");
-                String originalDockerfile = Files.readString(existingDockerfile);
-                String modifiedDockerfile = dockerfileGenerator.replaceBaseImages(originalDockerfile);
+            // Check if this is a PHP project and handle it specially
+            if (phpDeploymentHandler.isPHPProject(projectPath)) {
+                log.info("Detected PHP project - using PHP-specific deployment");
 
-                // Write the modified Dockerfile back
-                dockerfileGenerator.writeDockerfile(projectPath, modifiedDockerfile);
+                // Generate PHP-specific Dockerfile, nginx config, and startup script
+                PHPDeploymentHandler.PHPDeploymentResult phpResult =
+                        phpDeploymentHandler.handlePHPDeployment(projectPath);
 
-                result.setDockerfileContent(modifiedDockerfile);
-                result.setDockerfileGenerated(false);
-                log.info("Dockerfile updated with ECR base images");
-            } else {
-                log.info("Generating Dockerfile for project type: {}", projectInfo.getType());
-                String dockerfileContent = dockerfileGenerator.generateDockerfile(projectInfo);
-                dockerfileGenerator.writeDockerfile(projectPath, dockerfileContent);
-                result.setDockerfileContent(dockerfileContent);
+                result.setDockerfileContent(phpResult.getDockerfileContent());
                 result.setDockerfileGenerated(true);
+                log.info("PHP deployment configured: {}", phpResult.getMessage());
+
+            } else {
+                // Original Dockerfile handling for non-PHP projects
+                // Check if Dockerfile exists, if not generate one
+                Path existingDockerfile = projectPath.resolve("Dockerfile");
+                if (Files.exists(existingDockerfile)) {
+                    log.info("Found existing Dockerfile - replacing Docker Hub base images with ECR");
+                    String originalDockerfile = Files.readString(existingDockerfile);
+                    String modifiedDockerfile = dockerfileGenerator.replaceBaseImages(originalDockerfile);
+
+                    // Write the modified Dockerfile back
+                    dockerfileGenerator.writeDockerfile(projectPath, modifiedDockerfile);
+
+                    result.setDockerfileContent(modifiedDockerfile);
+                    result.setDockerfileGenerated(false);
+                    log.info("Dockerfile updated with ECR base images");
+                } else {
+                    log.info("Generating Dockerfile for project type: {}", projectInfo.getType());
+                    String dockerfileContent = dockerfileGenerator.generateDockerfile(projectInfo);
+                    dockerfileGenerator.writeDockerfile(projectPath, dockerfileContent);
+                    result.setDockerfileContent(dockerfileContent);
+                    result.setDockerfileGenerated(true);
+                }
             }
 
             // Upload to S3
