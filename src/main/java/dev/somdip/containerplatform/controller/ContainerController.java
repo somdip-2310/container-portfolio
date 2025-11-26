@@ -9,9 +9,12 @@ import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.Deployment;
 import dev.somdip.containerplatform.repository.DeploymentRepository;
 import dev.somdip.containerplatform.security.CustomUserDetails;
+import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
 import dev.somdip.containerplatform.service.MetricsService;
+import dev.somdip.containerplatform.service.UsageTrackingService;
+import dev.somdip.containerplatform.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,15 +38,21 @@ public class ContainerController {
     private final DeploymentRepository deploymentRepository;
     private final LogStreamingService logStreamingService;
     private final MetricsService metricsService;
+    private final UsageTrackingService usageTrackingService;
+    private final UserService userService;
 
     public ContainerController(ContainerService containerService,
                              DeploymentRepository deploymentRepository,
                              LogStreamingService logStreamingService,
-                             MetricsService metricsService) {
+                             MetricsService metricsService,
+                             UsageTrackingService usageTrackingService,
+                             UserService userService) {
         this.containerService = containerService;
         this.deploymentRepository = deploymentRepository;
         this.logStreamingService = logStreamingService;
         this.metricsService = metricsService;
+        this.usageTrackingService = usageTrackingService;
+        this.userService = userService;
     }
 
     /**
@@ -152,6 +161,16 @@ public class ContainerController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
+            // Check usage limits for FREE tier users before deployment
+            String userId = getUserId(authentication);
+            User user = userService.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (!usageTrackingService.canStartContainer(user)) {
+                log.warn("User {} cannot deploy container - FREE tier limit exceeded", userId);
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).build();
+            }
+
             // Deploy the container
             container = containerService.deployContainer(containerId);
 
@@ -208,6 +227,16 @@ public class ContainerController {
             Container container = containerService.getContainer(containerId);
             if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Check usage limits for FREE tier users before restart
+            String userId = getUserId(authentication);
+            User user = userService.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (!usageTrackingService.canStartContainer(user)) {
+                log.warn("User {} cannot restart container - FREE tier limit exceeded", userId);
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).build();
             }
 
             // Stop the container if it's running

@@ -4,6 +4,7 @@ import dev.somdip.containerplatform.dto.container.CreateContainerRequest;
 import dev.somdip.containerplatform.dto.container.DeployContainerResponse;
 import dev.somdip.containerplatform.model.Container;
 import dev.somdip.containerplatform.model.SourceDeployment;
+import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.*;
 import org.slf4j.Logger;
@@ -28,15 +29,21 @@ public class SourceCodeController {
     private final ContainerService containerService;
     private final SourceCodeBuildService buildService;
     private final SourceDeploymentTrackingService deploymentTrackingService;
+    private final UsageTrackingService usageTrackingService;
+    private final UserService userService;
 
     public SourceCodeController(SourceCodeDeploymentService sourceCodeDeploymentService,
                                ContainerService containerService,
                                SourceCodeBuildService buildService,
-                               SourceDeploymentTrackingService deploymentTrackingService) {
+                               SourceDeploymentTrackingService deploymentTrackingService,
+                               UsageTrackingService usageTrackingService,
+                               UserService userService) {
         this.sourceCodeDeploymentService = sourceCodeDeploymentService;
         this.containerService = containerService;
         this.buildService = buildService;
         this.deploymentTrackingService = deploymentTrackingService;
+        this.usageTrackingService = usageTrackingService;
+        this.userService = userService;
     }
 
     @PostMapping("/deploy")
@@ -160,11 +167,20 @@ public class SourceCodeController {
 
                     log.info("Using ECR image: {}:{}", image, imageTag);
 
-                    // Create and deploy container (port will be auto-detected based on image type)
+                    // Create container (port will be auto-detected based on image type)
                     Container container = containerService.createContainer(
                         userId, containerName, image, imageTag, null);
 
                     deploymentTrackingService.updateContainerCreated(deploymentId, container.getContainerId());
+
+                    // Check usage limits before deployment
+                    User user = userService.findById(userId).orElseThrow();
+                    if (!usageTrackingService.canStartContainer(user)) {
+                        log.error("User {} cannot deploy container - FREE tier limit exceeded", userId);
+                        deploymentTrackingService.markFailed(deploymentId,
+                            "Cannot deploy: FREE tier limit exceeded. Please upgrade your plan or wait for hours to become available.");
+                        break;
+                    }
 
                     // Deploy the container
                     containerService.deployContainer(container.getContainerId());

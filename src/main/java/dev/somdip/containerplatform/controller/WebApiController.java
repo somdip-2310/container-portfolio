@@ -7,6 +7,7 @@ import dev.somdip.containerplatform.model.User;
 import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.ContainerService;
 import dev.somdip.containerplatform.service.LogStreamingService;
+import dev.somdip.containerplatform.service.UsageTrackingService;
 import dev.somdip.containerplatform.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -33,13 +34,16 @@ public class WebApiController {
     private final ContainerService containerService;
     private final LogStreamingService logStreamingService;
     private final UserService userService;
+    private final UsageTrackingService usageTrackingService;
 
     public WebApiController(ContainerService containerService,
                            LogStreamingService logStreamingService,
-                           UserService userService) {
+                           UserService userService,
+                           UsageTrackingService usageTrackingService) {
         this.containerService = containerService;
         this.logStreamingService = logStreamingService;
         this.userService = userService;
+        this.usageTrackingService = usageTrackingService;
     }
 
     /**
@@ -151,6 +155,16 @@ public class WebApiController {
                 return ResponseEntity.status(403).build();
             }
 
+            // Check usage limits for FREE tier users
+            String userId = getUserId(authentication);
+            User user = userService.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (!usageTrackingService.canStartContainer(user)) {
+                log.warn("User {} cannot start container - FREE tier limit exceeded", userId);
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).build();
+            }
+
             log.info("Starting container: {}", containerId);
 
             // Check if container is already running
@@ -212,6 +226,16 @@ public class WebApiController {
             Container container = containerService.getContainer(containerId);
             if (!container.getUserId().equals(getUserId(authentication))) {
                 return ResponseEntity.status(403).build();
+            }
+
+            // Check usage limits for FREE tier users
+            String userId = getUserId(authentication);
+            User user = userService.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (!usageTrackingService.canStartContainer(user)) {
+                log.warn("User {} cannot deploy container - FREE tier limit exceeded", userId);
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).build();
             }
 
             log.info("Starting/deploying container: {}", containerId);
