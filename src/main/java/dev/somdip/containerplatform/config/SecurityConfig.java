@@ -95,6 +95,8 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
                 .requestMatchers("/about", "/contact", "/terms", "/privacy", "/refund").permitAll()
+                // Documentation and public info pages
+                .requestMatchers("/docs", "/api", "/status").permitAll()
                 // SEO and marketing pages - must be public for search engines and AI tools
                 .requestMatchers("/heroku-alternative", "/railway-alternative", "/render-alternative").permitAll()
                 .requestMatchers("/docker-hosting", "/container-hosting").permitAll()

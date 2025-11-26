@@ -394,10 +394,14 @@ public class WebController {
     
     @GetMapping("/docs")
     public String documentation() {
-        // Redirect to documentation site or serve static docs
-        return "redirect:/docs/index.html";
+        return "docs";
     }
-    
+
+    @GetMapping("/api")
+    public String apiDocumentation() {
+        return "api";
+    }
+
     @GetMapping("/cli")
     public String cliInstallation(Model model, Authentication authentication) {
         if (authentication == null) {
