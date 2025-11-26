@@ -4,6 +4,7 @@ import dev.somdip.containerplatform.dto.feedback.BugReportRequest;
 import dev.somdip.containerplatform.dto.feedback.FeedbackRequest;
 import dev.somdip.containerplatform.dto.feedback.FeedbackResponse;
 import dev.somdip.containerplatform.model.User;
+import dev.somdip.containerplatform.repository.UserRepository;
 import dev.somdip.containerplatform.service.EmailService;
 import dev.somdip.containerplatform.service.UsageTrackingService;
 import dev.somdip.containerplatform.service.UserService;
@@ -23,6 +24,7 @@ import java.time.Instant;
 public class FeedbackController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
     private final EmailService emailService;
     private final UsageTrackingService usageTrackingService;
 
@@ -66,7 +68,7 @@ public class FeedbackController {
                     // Mark feedback bonus as awarded
                     user.setFeedbackBonusAwarded(true);
                     user.setUpdatedAt(Instant.now());
-                    userService.save(user);
+                    userRepository.save(user);
 
                     // Refresh user to get updated bonus hours
                     user = userService.findByEmail(username).orElseThrow();
