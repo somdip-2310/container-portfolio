@@ -1,0 +1,24 @@
+{
+  "Comment": "Update Zoho MX records with correct .in domains",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "snapdeploy.dev",
+        "Type": "MX",
+        "TTL": 3600,
+        "ResourceRecords": [
+          {
+            "Value": "10 mx.zoho.in"
+          },
+          {
+            "Value": "20 mx2.zoho.in"
+          },
+          {
+            "Value": "50 mx3.zoho.in"
+          }
+        ]
+      }
+    }
+  ]
+}

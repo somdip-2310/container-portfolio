@@ -442,6 +442,25 @@
                 };
             }
 
+            // Feedback and Bug Report functions (redirect to dashboard if modals not present)
+            window.openFeedbackModal = function() {
+                const modal = document.getElementById('feedbackModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                } else {
+                    window.location.href = '/dashboard?openFeedback=true';
+                }
+            };
+
+            window.openBugReportModal = function() {
+                const modal = document.getElementById('bugReportModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                } else {
+                    window.location.href = '/dashboard?openBugReport=true';
+                }
+            };
+
             // Load container count for sidebar
             async function loadContainerCount() {
                 const containerCountEl = document.getElementById('containerCount');

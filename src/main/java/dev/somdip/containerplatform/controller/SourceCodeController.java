@@ -61,6 +61,18 @@ public class SourceCodeController {
             String userId = userDetails.getUserId();
             log.info("Deploying from source for user: {}, container: {}", userId, containerName);
 
+            // Check usage limits for FREE tier users BEFORE deployment
+            User user = userService.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (!usageTrackingService.canStartContainer(user)) {
+                log.warn("User {} cannot deploy - FREE tier limit exceeded", userId);
+                return ResponseEntity.status(402).body(Map.of(
+                    "error", "FREE tier hours exhausted",
+                    "message", "Your FREE tier hours have been exhausted. Upgrade to PRO for unlimited hours!"
+                ));
+            }
+
             // Validate file
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));

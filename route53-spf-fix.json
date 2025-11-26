@@ -1,0 +1,21 @@
+{
+  "Comment": "Update SPF record to use zoho.in instead of zoho.com",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "snapdeploy.dev",
+        "Type": "TXT",
+        "TTL": 3600,
+        "ResourceRecords": [
+          {
+            "Value": "\"v=spf1 include:zoho.in ~all\""
+          },
+          {
+            "Value": "\"zoho-verification=zb81657151.zmverify.zoho.in\""
+          }
+        ]
+      }
+    }
+  ]
+}
