@@ -67,7 +67,7 @@ public class AsyncContainerOperations {
 
             log.info("Saving container to database with status: {}", container.getStatus());
             Container savedContainer = containerRepository.save(container);
-            log.info("Container saved successfully with ID: {} and status: {}", savedContainer.getId(), savedContainer.getStatus());
+            log.info("Container saved successfully with ID: {} and status: {}", savedContainer.getContainerId(), savedContainer.getStatus());
 
             // Start health monitoring
             log.info("Starting health monitoring for container: {}", containerId);
