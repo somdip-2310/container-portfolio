@@ -260,43 +260,113 @@ public class ContainerService {
 
     public Container deployContainer(String containerId) {
         log.info("Deploying container: {}", containerId);
-        
+
         Container container = getContainer(containerId);
-        
+
         if (container.getStatus() == Container.ContainerStatus.RUNNING) {
             throw new IllegalStateException("Container is already running");
         }
-        
+
         container.setStatus(Container.ContainerStatus.STARTING);
         containerRepository.save(container);
-        
+
         try {
             // Deploy to ECS with deployment tracking
             Deployment deployment = ecsService.deployContainer(container, container.getUserId());
-            
+
             // Start tracking deployment progress
             deploymentTrackingService.trackDeployment(deployment.getDeploymentId());
-            
+
             // Update container with deployment info
             container.setStatus(Container.ContainerStatus.RUNNING);
             container.setLastDeployedAt(Instant.now());
-            Long deploymentCount = container.getDeploymentCount() != null ? 
+            Long deploymentCount = container.getDeploymentCount() != null ?
                 container.getDeploymentCount() : 0L;
             container.setDeploymentCount(deploymentCount + 1);
-            
+
             Container savedContainer = containerRepository.save(container);
-            
+
             // Start health monitoring
             healthCheckService.startHealthMonitoring(containerId);
-            
+
             log.info("Container deployed successfully: {}", containerId);
             return savedContainer;
-            
+
         } catch (Exception e) {
             log.error("Failed to deploy container: {}", containerId, e);
             container.setStatus(Container.ContainerStatus.FAILED);
             containerRepository.save(container);
             throw new RuntimeException("Failed to deploy container", e);
+        }
+    }
+
+    /**
+     * Start a stopped container asynchronously
+     * Returns immediately with the container in STARTING status
+     */
+    public Container startContainerAsync(String containerId) {
+        log.info("Starting container asynchronously: {}", containerId);
+
+        Container container = getContainer(containerId);
+
+        if (container.getStatus() == Container.ContainerStatus.RUNNING) {
+            throw new IllegalStateException("Container is already running");
+        }
+
+        if (container.getStatus() == Container.ContainerStatus.STARTING) {
+            // Already starting, return current state
+            return container;
+        }
+
+        // Set status to STARTING and save
+        container.setStatus(Container.ContainerStatus.STARTING);
+        Container savedContainer = containerRepository.save(container);
+
+        // Trigger async deployment
+        deployContainerAsync(containerId);
+
+        return savedContainer;
+    }
+
+    /**
+     * Async method to perform the actual container deployment
+     */
+    @Async
+    public void deployContainerAsync(String containerId) {
+        log.info("Async deployment started for container: {}", containerId);
+
+        try {
+            Container container = getContainer(containerId);
+
+            // Deploy to ECS with deployment tracking
+            Deployment deployment = ecsService.deployContainer(container, container.getUserId());
+
+            // Start tracking deployment progress
+            deploymentTrackingService.trackDeployment(deployment.getDeploymentId());
+
+            // Update container with deployment info
+            container.setStatus(Container.ContainerStatus.RUNNING);
+            container.setLastDeployedAt(Instant.now());
+            Long deploymentCount = container.getDeploymentCount() != null ?
+                container.getDeploymentCount() : 0L;
+            container.setDeploymentCount(deploymentCount + 1);
+
+            containerRepository.save(container);
+
+            // Start health monitoring
+            healthCheckService.startHealthMonitoring(containerId);
+
+            log.info("Async deployment completed successfully for container: {}", containerId);
+
+        } catch (Exception e) {
+            log.error("Async deployment failed for container: {}", containerId, e);
+            try {
+                Container container = getContainer(containerId);
+                container.setStatus(Container.ContainerStatus.FAILED);
+                containerRepository.save(container);
+            } catch (Exception ex) {
+                log.error("Failed to update container status to FAILED: {}", containerId, ex);
+            }
         }
     }
     

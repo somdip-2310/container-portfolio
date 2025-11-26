@@ -182,6 +182,36 @@ function hideDeployModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        // Reset to docker image tab
+        switchDeployTab('dockerImage');
+    }
+}
+
+// Switch between deployment tabs (Docker Image vs Source Code)
+function switchDeployTab(tabName) {
+    const dockerImageTab = document.getElementById('dockerImageTab');
+    const sourceCodeTab = document.getElementById('sourceCodeTab');
+    const dockerImageForm = document.getElementById('deployForm');
+    const sourceCodeForm = document.getElementById('sourceCodeForm');
+
+    if (tabName === 'dockerImage') {
+        // Show Docker Image tab and form
+        dockerImageTab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+        dockerImageTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+        sourceCodeTab.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+        sourceCodeTab.classList.add('text-gray-500', 'dark:text-gray-400');
+
+        dockerImageForm.classList.remove('hidden');
+        sourceCodeForm.classList.add('hidden');
+    } else if (tabName === 'sourceCode') {
+        // Show Source Code tab and form
+        sourceCodeTab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+        sourceCodeTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+        dockerImageTab.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+        dockerImageTab.classList.add('text-gray-500', 'dark:text-gray-400');
+
+        sourceCodeForm.classList.remove('hidden');
+        dockerImageForm.classList.add('hidden');
     }
 }
 

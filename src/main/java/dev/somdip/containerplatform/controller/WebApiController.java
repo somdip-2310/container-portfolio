@@ -138,6 +138,7 @@ public class WebApiController {
     
     /**
      * Start a stopped container
+     * Returns immediately with 202 Accepted, container starts asynchronously
      */
     @PostMapping("/containers/{containerId}/start")
     public ResponseEntity<ContainerResponse> startContainer(
@@ -151,18 +152,23 @@ public class WebApiController {
             }
 
             log.info("Starting container: {}", containerId);
-            
+
             // Check if container is already running
             if (container.getStatus() == Container.ContainerStatus.RUNNING) {
                 return ResponseEntity.badRequest().body(ContainerResponse.from(container));
             }
-            
-            // Deploy/start the container
-            Container startedContainer = containerService.deployContainer(containerId);
-            return ResponseEntity.ok(ContainerResponse.from(startedContainer));
+
+            // Start the container asynchronously
+            Container startingContainer = containerService.startContainerAsync(containerId);
+
+            // Return 202 Accepted with container in STARTING status
+            return ResponseEntity.status(202).body(ContainerResponse.from(startingContainer));
         } catch (IllegalArgumentException e) {
             log.error("Container not found: {}", e.getMessage());
             return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            log.error("Invalid container state: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("Error starting container: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
