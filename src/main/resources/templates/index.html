@@ -1,118 +1,137 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Container Platform - Simple Container Hosting</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .header {
-            background-color: #007bff;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        .hero {
-            text-align: center;
-            padding: 4rem 0;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        .subtitle {
-            font-size: 1.5rem;
-            color: #666;
-            margin-bottom: 2rem;
-        }
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        .btn-secondary {
-            background-color: white;
-            color: #007bff;
-            border: 2px solid #007bff;
-        }
-        .btn-secondary:hover {
-            background-color: #007bff;
-            color: white;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 4rem;
-        }
-        .feature {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .feature h3 {
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h2>Container Platform</h2>
-    </div>
-    
-    <div class="container">
-        <div class="hero">
-            <h1>Deploy Containers in 60 Seconds</h1>
-            <p class="subtitle">Simple, fast, and reliable container hosting on AWS</p>
-            
-            <div class="cta-buttons">
-                <a href="/register" class="btn btn-primary">Get Started</a>
-                <a href="/login" class="btn btn-secondary">Login</a>
+<head th:replace="~{fragments/base :: head('SnapDeploy - Modern Container Deployment Platform')}"></head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+    <nav class="fixed w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-cube text-purple-400 text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">SnapDeploy</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-white transition">Features</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-white transition">Pricing</a>
+                    <a href="/about" class="text-gray-300 hover:text-white transition">About</a>
+                    <a href="/contact" class="text-gray-300 hover:text-white transition">Contact</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/login" class="text-white hover:text-purple-400 transition">Login</a>
+                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105">Get Started</a>
+                </div>
             </div>
         </div>
-        
-        <div class="features">
-            <div class="feature">
-                <h3>⚡ Lightning Fast</h3>
-                <p>Deploy any Docker container in under 60 seconds. From code to production instantly.</p>
-            </div>
-            
-            <div class="feature">
-                <h3>💰 50% Cheaper</h3>
-                <p>Half the cost of Heroku. Transparent pricing. No surprise bills.</p>
-            </div>
-            
-            <div class="feature">
-                <h3>🔒 Enterprise Security</h3>
-                <p>Built on AWS. Your data is safer than Fort Knox.</p>
+    </nav>
+    <div class="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center">
+                <div class="inline-flex items-center space-x-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-2 mb-8">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                    </span>
+                    <span class="text-purple-300 text-sm font-medium">New: Deploy from GitHub in one click</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                    Deploy Containers<br/>
+                    <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">In Seconds</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                    The fastest way to deploy Docker containers. From source code to production in under 60 seconds.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
+                    <a href="/register" class="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105 shadow-xl shadow-purple-500/50">
+                        Start Free Trial <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                    <a href="#demo" class="w-full sm:w-auto bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/20 transition">
+                        <i class="fas fa-play-circle mr-2"></i>Watch Demo
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+    <div id="features" class="py-20 bg-black/20 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-white mb-4">Why Developers Choose SnapDeploy</h2>
+                <p class="text-xl text-gray-400">Everything you need to deploy and scale</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-8 hover:border-purple-500/40 transition transform hover:scale-105">
+                    <div class="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-rocket text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Lightning Fast</h3>
+                    <p class="text-gray-400 mb-4">Deploy any Docker container in under 60 seconds.</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-8 hover:border-blue-500/40 transition transform hover:scale-105">
+                    <div class="w-14 h-14 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-dollar-sign text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Cost Effective</h3>
+                    <p class="text-gray-400 mb-4">Start free with 200 hours/month. From $39/month.</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-8 hover:border-green-500/40 transition transform hover:scale-105">
+                    <div class="w-14 h-14 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Enterprise Security</h3>
+                    <p class="text-gray-400 mb-4">Built on AWS. 99.9% uptime SLA.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="pricing" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
+                <p class="text-xl text-gray-400">Start free. Scale as you grow.</p>
+            </div>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <div class="text-sm text-purple-400 font-semibold mb-2">FREE TIER</div>
+                    <div class="text-4xl font-bold text-white mb-1">₹0</div>
+                    <div class="text-gray-400 text-sm mb-6">200 hours/month</div>
+                    <a href="/register" class="block w-full bg-white/10 text-white py-2 rounded-lg text-center hover:bg-white/20 transition mb-6">Get Started</a>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <div class="text-sm text-blue-400 font-semibold mb-2">STARTER</div>
+                    <div class="text-4xl font-bold text-white mb-1">$39</div>
+                    <div class="text-gray-400 text-sm mb-6">~₹3,250/month</div>
+                    <a href="/register" class="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 rounded-lg text-center transition mb-6">Start Trial</a>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-2 border-purple-500 rounded-2xl p-6 relative transform scale-105">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-4 py-1 rounded-full">POPULAR</span>
+                    </div>
+                    <div class="text-sm text-purple-400 font-semibold mb-2">PRO</div>
+                    <div class="text-4xl font-bold text-white mb-1">$89</div>
+                    <div class="text-gray-400 text-sm mb-6">~₹7,425/month</div>
+                    <a href="/register" class="block w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg text-center transition mb-6">Start Trial</a>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <div class="text-sm text-orange-400 font-semibold mb-2">BUSINESS</div>
+                    <div class="text-4xl font-bold text-white mb-1">$169</div>
+                    <div class="text-gray-400 text-sm mb-6">~₹14,100/month</div>
+                    <a href="/register" class="block w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 rounded-lg text-center transition mb-6">Start Trial</a>
+                </div>
+            </div>
+            <div class="text-center mt-12">
+                <a href="/billing" class="text-purple-400 hover:text-purple-300 transition">View detailed pricing <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="py-20 bg-gradient-to-r from-purple-600 to-pink-600">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold text-white mb-4">Ready to Deploy?</h2>
+            <p class="text-xl text-purple-100 mb-8">Join thousands of developers building with SnapDeploy</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="/register" class="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition transform hover:scale-105">Start Free Trial</a>
+                <a href="/contact" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/10 transition">Contact Sales</a>
+            </div>
+        </div>
+    </div>
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
 </body>
 </html>

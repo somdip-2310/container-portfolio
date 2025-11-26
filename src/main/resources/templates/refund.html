@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Refund Policy')}"></head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <nav th:replace="~{fragments/base :: navbar}"></nav>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Refund & Cancellation Policy</h1>
+            <p class="text-gray-600 dark:text-gray-400">Last updated on Nov 26 2025</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 prose prose-purple dark:prose-invert max-w-none">
+            <p><strong>AAR Labs</strong> is committed to providing quality services through SnapDeploy. This policy outlines terms for refunds and cancellations.</p>
+
+            <h2>1. Free Tier</h2>
+            <p>Our Free Tier includes 200 hours of runtime per month at no cost. As this is free, no refunds are applicable.</p>
+
+            <h2>2. Paid Subscriptions</h2>
+            <h3>2.1 No Refunds on Monthly Subscriptions</h3>
+            <p>All monthly subscription fees are non-refundable. When you cancel, you retain access until the current billing cycle ends.</p>
+
+            <h3>2.2 Exceptions</h3>
+            <p>Refunds may be considered for:</p>
+            <ul>
+                <li>Service outages preventing usage for extended periods</li>
+                <li>Duplicate charges or billing errors</li>
+                <li>Service not delivered as promised</li>
+            </ul>
+
+            <h2>3. Cancellation Policy</h2>
+            <h3>3.1 How to Cancel</h3>
+            <p>Cancel anytime through your account settings or email <a href="mailto:contact@snapdeploy.dev" class="text-purple-600 hover:text-purple-700">contact@snapdeploy.dev</a>.</p>
+
+            <h3>3.2 Effect of Cancellation</h3>
+            <ul>
+                <li>Subscription remains active until billing cycle ends</li>
+                <li>Access to paid features retained until paid period ends</li>
+                <li>Account downgrades to Free Tier after paid period</li>
+                <li>No refund for remaining days in billing cycle</li>
+            </ul>
+
+            <h2>4. Upgrades and Downgrades</h2>
+            <h3>4.1 Upgrades</h3>
+            <ul>
+                <li>Takes effect immediately</li>
+                <li>Prorated charge for remainder of billing cycle</li>
+            </ul>
+
+            <h3>4.2 Downgrades</h3>
+            <ul>
+                <li>Takes effect at end of current billing cycle</li>
+                <li>No refund for plan difference</li>
+            </ul>
+
+            <h2>5. Contact Us</h2>
+            <div class="mt-4 p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p class="text-gray-700 dark:text-gray-300 mb-2">
+                    <strong>AAR Labs</strong><br>
+                    29, R2, Kolte Patil Life Republic<br>
+                    Marunji, Pune, MAHARASHTRA 411057, India
+                </p>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Email: <a href="mailto:contact@snapdeploy.dev" class="text-purple-600 hover:text-purple-700">contact@snapdeploy.dev</a> (Subject: "Billing")<br>
+                    Phone: <a href="tel:+919004233112" class="text-purple-600 hover:text-purple-700">+91 9004233112</a>
+                </p>
+            </div>
+
+            <div class="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <strong>Note:</strong> This policy is in accordance with Indian consumer protection laws and payment gateway regulations.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+</body>
+</html>

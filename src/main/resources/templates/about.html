@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('About Us')}"></head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <nav th:replace="~{fragments/base :: navbar}"></nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">About SnapDeploy</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-400">
+                A Product of AAR Labs
+            </p>
+        </div>
+
+        <!-- Company Information -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Our Mission</h2>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                SnapDeploy is a modern container deployment platform designed to simplify the process of deploying,
+                managing, and scaling containerized applications. Built by AAR Labs, we are committed to providing
+                developers with powerful yet easy-to-use tools that streamline their development workflow.
+            </p>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                Our platform enables developers to deploy applications from source code or Docker images with just
+                a few clicks, while providing comprehensive monitoring, logging, and management capabilities.
+            </p>
+        </div>
+
+        <!-- AAR Labs Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">About AAR Labs</h2>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                AAR Labs is a technology company focused on building innovative solutions for developers and businesses.
+                We specialize in creating tools and platforms that enhance productivity and simplify complex technical processes.
+            </p>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                With a commitment to quality and user experience, AAR Labs continues to develop products that empower
+                developers to build and deploy applications more efficiently.
+            </p>
+        </div>
+
+        <!-- Features Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">What We Offer</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        <i class="fas fa-rocket text-purple-600 mr-2"></i>
+                        Easy Deployment
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Deploy from source code or Docker images in minutes with automated build pipelines.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        <i class="fas fa-chart-line text-purple-600 mr-2"></i>
+                        Real-time Monitoring
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Monitor your applications with comprehensive metrics and live log streaming.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        <i class="fas fa-shield-alt text-purple-600 mr-2"></i>
+                        Secure Infrastructure
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Built on AWS with industry-standard security practices and isolated environments.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        <i class="fas fa-dollar-sign text-purple-600 mr-2"></i>
+                        Flexible Pricing
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Choose from multiple plans that scale with your needs, starting with a free tier.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Details -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Company Information</h2>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">AAR Labs</h3>
+                    <p class="text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-map-marker-alt text-purple-600 mr-2"></i>
+                        29, R2, Kolte Patil Life Republic, Marunji, Hinjewadi, Pune 411057, India
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-envelope text-purple-600 mr-2"></i>
+                        <a href="mailto:contact@snapdeploy.dev" class="text-purple-600 hover:text-purple-700">
+                            contact@snapdeploy.dev
+                        </a>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-phone text-purple-600 mr-2"></i>
+                        <a href="tel:+919004233112" class="text-purple-600 hover:text-purple-700">
+                            +91 9004233112
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+</body>
+</html>

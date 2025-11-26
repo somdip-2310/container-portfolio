@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Privacy Policy')}"></head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <nav th:replace="~{fragments/base :: navbar}"></nav>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Privacy Policy</h1>
+            <p class="text-gray-600 dark:text-gray-400">Last updated on Nov 26 2025</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 prose prose-purple dark:prose-invert max-w-none">
+            <p>This Privacy Policy describes how <strong>AAR Labs</strong> ("we", "us", or "our") collects, uses, and shares your personal information when you use SnapDeploy.</p>
+
+            <h2>1. Information We Collect</h2>
+            <h3>1.1 Information You Provide</h3>
+            <ul>
+                <li>Account information (name, email address, password)</li>
+                <li>Billing information (payment details, billing address)</li>
+                <li>Profile information (company name, contact details)</li>
+                <li>Container and application data you deploy</li>
+            </ul>
+
+            <h3>1.2 Automatically Collected Information</h3>
+            <ul>
+                <li>Usage data (features used, pages visited)</li>
+                <li>Device information (IP address, browser type)</li>
+                <li>Log data (access times, errors, performance)</li>
+            </ul>
+
+            <h2>2. How We Use Your Information</h2>
+            <ul>
+                <li>Provide, maintain, and improve our services</li>
+                <li>Process payments and send billing notifications</li>
+                <li>Respond to requests and provide customer support</li>
+                <li>Detect, prevent, and address security issues</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+
+            <h2>3. Information Sharing</h2>
+            <p>We do not sell your personal information. We may share information with:</p>
+            <ul>
+                <li><strong>Service Providers:</strong> Payment processing (Razorpay), cloud hosting (AWS)</li>
+                <li><strong>Legal Requirements:</strong> When required by law or court order</li>
+                <li><strong>With Your Consent:</strong> When you give us explicit consent</li>
+            </ul>
+
+            <h2>4. Data Security</h2>
+            <ul>
+                <li>Encryption of data in transit and at rest</li>
+                <li>Regular security assessments</li>
+                <li>Access controls and authentication</li>
+            </ul>
+
+            <h2>5. Your Rights</h2>
+            <ul>
+                <li><strong>Access:</strong> Review your personal information</li>
+                <li><strong>Correction:</strong> Update or correct your data</li>
+                <li><strong>Deletion:</strong> Request account and data deletion</li>
+                <li><strong>Data Portability:</strong> Export your data</li>
+            </ul>
+
+            <h2>6. Contact Us</h2>
+            <div class="mt-4 p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p class="text-gray-700 dark:text-gray-300 mb-2">
+                    <strong>AAR Labs</strong><br>
+                    29, R2, Kolte Patil Life Republic<br>
+                    Marunji, Pune, MAHARASHTRA 411057, India
+                </p>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Email: <a href="mailto:contact@snapdeploy.dev" class="text-purple-600 hover:text-purple-700">contact@snapdeploy.dev</a><br>
+                    Phone: <a href="tel:+919004233112" class="text-purple-600 hover:text-purple-700">+91 9004233112</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/base :: footer}"></footer>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+</body>
+</html>
