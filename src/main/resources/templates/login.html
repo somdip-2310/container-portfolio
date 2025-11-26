@@ -1,139 +1,138 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SnapDeploy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen flex items-center justify-center p-4">
-    <div class="max-w-md w-full">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl mb-4">
-                <i class="fas fa-bolt text-white text-2xl"></i>
+<head th:replace="~{fragments/base :: head('Login - SnapDeploy')}"></head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center">
+                    <i class="fas fa-cube text-purple-400 text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">SnapDeploy</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="/register" class="text-white hover:text-purple-400 transition">Don't have an account?</a>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                SnapDeploy
-            </h1>
-            <p class="text-gray-600 mt-2">Deploy in a Snap 👆⚡</p>
         </div>
+    </nav>
 
-        <!-- Login Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Welcome back</h2>
-
-            <!-- Error/Success Messages -->
-            <div th:if="${param.error}" class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    <span>Invalid username or password.</span>
-                </div>
+    <!-- Login Form -->
+    <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20">
+        <div class="max-w-md w-full">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-2">Welcome Back</h2>
+                <p class="text-gray-400">Sign in to your account</p>
             </div>
 
-            <div th:if="${param.logout}" class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <span>You have been logged out successfully.</span>
+            <!-- Form Card -->
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <!-- Error/Success Messages -->
+                <div th:if="${param.error}" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div class="flex items-center text-red-400">
+                        <i class="fas fa-exclamation-circle mr-3"></i>
+                        <span>Invalid username or password.</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Login Form -->
-            <form th:action="@{/login}" method="post" class="space-y-6">
-                <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-envelope text-gray-400"></i>
-                        </div>
+                <div th:if="${param.logout}" class="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div class="flex items-center text-green-400">
+                        <i class="fas fa-check-circle mr-3"></i>
+                        <span>You have been logged out successfully.</span>
+                    </div>
+                </div>
+
+                <form th:action="@{/login}" method="post" class="space-y-6">
+                    <!-- Email -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-envelope mr-2 text-purple-400"></i>Email Address
+                        </label>
                         <input
                             type="email"
                             id="username"
                             name="username"
                             required
                             autofocus
-                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
                             placeholder="you@example.com">
                     </div>
-                </div>
 
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Password
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400"></i>
-                        </div>
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-lock mr-2 text-purple-400"></i>Password
+                        </label>
                         <input
                             type="password"
                             id="password"
                             name="password"
                             required
-                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
                             placeholder="••••••••">
                     </div>
-                </div>
 
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input
-                            id="remember-me"
-                            name="remember-me"
-                            type="checkbox"
-                            class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
-                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">
-                            Remember me
-                        </label>
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                                class="h-4 w-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500">
+                            <label for="remember-me" class="ml-2 block text-sm text-gray-300">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <a href="/api/auth/forgot-password" class="text-sm font-medium text-purple-400 hover:text-purple-300 transition">
+                            Forgot password?
+                        </a>
                     </div>
 
-                    <a href="/api/auth/forgot-password" class="text-sm font-medium text-purple-600 hover:text-purple-500">
-                        Forgot password?
-                    </a>
+                    <!-- Submit Button -->
+                    <button
+                        type="submit"
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105 shadow-xl shadow-purple-500/50">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-white/10"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-transparent text-gray-400">Don't have an account?</span>
+                    </div>
                 </div>
 
-                <button
-                    type="submit"
-                    class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition transform hover:scale-[1.02]">
-                    Sign In
-                </button>
-            </form>
-
-            <!-- Divider -->
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">or</span>
-                </div>
+                <!-- Register Link -->
+                <a href="/register" class="block w-full text-center bg-white/10 border border-white/20 text-white py-3 rounded-lg font-semibold hover:bg-white/20 transition">
+                    <i class="fas fa-rocket mr-2"></i>Create Account
+                </a>
             </div>
 
-            <!-- Register Link -->
-            <div class="text-center">
-                <p class="text-sm text-gray-600">
-                    Don't have an account?
-                    <a href="/register" class="font-medium text-purple-600 hover:text-purple-500">
-                        Sign up for free
-                    </a>
-                </p>
+            <!-- Features -->
+            <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                <div class="text-gray-400 text-sm">
+                    <i class="fas fa-bolt text-yellow-400 mb-1"></i>
+                    <div>Fast Deploy</div>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    <i class="fas fa-shield-alt text-blue-400 mb-1"></i>
+                    <div>Secure</div>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    <i class="fas fa-cloud text-purple-400 mb-1"></i>
+                    <div>AWS Powered</div>
+                </div>
             </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="mt-8 text-center text-sm text-gray-600">
-            <p>
-                © 2024 SnapDeploy. All rights reserved.
-            </p>
-            <p class="mt-2">
-                <a href="#" class="text-purple-600 hover:text-purple-500">Privacy Policy</a>
-                <span class="mx-2">•</span>
-                <a href="#" class="text-purple-600 hover:text-purple-500">Terms of Service</a>
-            </p>
         </div>
     </div>
+
+    <div th:replace="~{fragments/base :: scripts}"></div>
 </body>
 </html>

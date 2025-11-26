@@ -1,110 +1,169 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Container Platform</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-        .register-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 {
-            margin-top: 0;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-        input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .links {
-            text-align: center;
-            margin-top: 1rem;
-        }
-        .links a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .links a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="register-container">
-        <h2>Create Account</h2>
-        
-        <form id="registerForm">
-            <div class="form-group">
-                <label for="fullName">Full Name:</label>
-                <input type="text" id="fullName" name="fullName" required>
+<head th:replace="~{fragments/base :: head('Register - SnapDeploy')}"></head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center">
+                    <i class="fas fa-cube text-purple-400 text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">SnapDeploy</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="/login" class="text-white hover:text-purple-400 transition">Already have an account?</a>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+        </div>
+    </nav>
+
+    <!-- Registration Form -->
+    <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20">
+        <div class="max-w-md w-full">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-2">Create Account</h2>
+                <p class="text-gray-400">Start deploying containers in seconds</p>
             </div>
-            
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required minlength="8">
+
+            <!-- Form Card -->
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <form id="registerForm" class="space-y-6">
+                    <!-- Full Name -->
+                    <div>
+                        <label for="fullName" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-user mr-2 text-purple-400"></i>Full Name
+                        </label>
+                        <input type="text"
+                               id="fullName"
+                               name="fullName"
+                               required
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                               placeholder="John Doe">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-envelope mr-2 text-purple-400"></i>Email
+                        </label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               required
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                               placeholder="you@example.com">
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-lock mr-2 text-purple-400"></i>Password
+                        </label>
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               required
+                               minlength="8"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                               placeholder="At least 8 characters">
+                        <p class="mt-2 text-xs text-gray-500">Must be at least 8 characters long</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105 shadow-xl shadow-purple-500/50">
+                        <i class="fas fa-rocket mr-2"></i>Create Account
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-white/10"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-transparent text-gray-400">Already have an account?</span>
+                    </div>
+                </div>
+
+                <!-- Login Link -->
+                <a href="/login" class="block w-full text-center bg-white/10 border border-white/20 text-white py-3 rounded-lg font-semibold hover:bg-white/20 transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                </a>
             </div>
-            
-            <button type="submit">Register</button>
-        </form>
-        
-        <div class="links">
-            <a href="/login">Already have an account? Login</a>
+
+            <!-- Features -->
+            <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                <div class="text-gray-400 text-sm">
+                    <i class="fas fa-check-circle text-green-400 mb-1"></i>
+                    <div>200 Free Hours</div>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    <i class="fas fa-check-circle text-green-400 mb-1"></i>
+                    <div>No Credit Card</div>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    <i class="fas fa-check-circle text-green-400 mb-1"></i>
+                    <div>Deploy in 60s</div>
+                </div>
+            </div>
         </div>
     </div>
-    
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
     <script>
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const colors = {
+                'success': 'bg-green-500',
+                'error': 'bg-red-500',
+                'info': 'bg-blue-500',
+                'warning': 'bg-yellow-500'
+            };
+
+            const icons = {
+                'success': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'info': 'fa-info-circle',
+                'warning': 'fa-exclamation-triangle'
+            };
+
+            toast.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-80 transform transition-all duration-300 translate-x-0`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} text-xl"></i>
+                <span class="flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
+            const button = e.target.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating account...';
+
             const formData = {
                 fullName: document.getElementById('fullName').value,
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value
             };
-            
+
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
@@ -113,19 +172,27 @@
                     },
                     body: JSON.stringify(formData)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
-                    alert('Registration successful! Your API key is: ' + data.apiKey);
-                    window.location.href = '/login';
+                    showToast('Registration successful! Redirecting to login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 1500);
                 } else {
-                    alert('Registration failed: ' + (data.message || 'Unknown error'));
+                    showToast(data.message || 'Registration failed. Please try again.', 'error');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
                 }
             } catch (error) {
-                alert('Registration failed: ' + error.message);
+                showToast('An error occurred. Please try again.', 'error');
+                button.disabled = false;
+                button.innerHTML = originalText;
             }
         });
     </script>
+
+    <div th:replace="~{fragments/base :: scripts}"></div>
 </body>
 </html>

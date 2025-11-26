@@ -17,39 +17,48 @@
             <!-- Quick Actions -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <!-- Contact Support -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition p-6 text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full mb-4">
-                        <i class="fas fa-envelope text-3xl text-purple-600 dark:text-purple-400"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-purple-500/10 to-pink-500/10 dark:from-purple-500/20 dark:to-pink-500/20 border border-purple-200 dark:border-purple-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-6 text-center">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4 shadow-lg">
+                            <i class="fas fa-envelope text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Contact Support</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Get help from our support team</p>
+                        <button onclick="showContactModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-105 shadow-lg">
+                            Send Message
+                        </button>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Contact Support</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Get help from our support team</p>
-                    <button onclick="showContactModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                        Send Message
-                    </button>
                 </div>
 
                 <!-- Documentation -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition p-6 text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
-                        <i class="fas fa-book text-3xl text-blue-600 dark:text-blue-400"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 border border-blue-200 dark:border-blue-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-6 text-center">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full mb-4 shadow-lg">
+                            <i class="fas fa-book text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Documentation</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Browse our comprehensive guides</p>
+                        <a href="/docs" class="inline-block bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-105 shadow-lg">
+                            View Docs
+                        </a>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Documentation</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Browse our comprehensive guides</p>
-                    <a href="/docs" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                        View Docs
-                    </a>
                 </div>
 
                 <!-- Community -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition p-6 text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-                        <i class="fas fa-users text-3xl text-green-600 dark:text-green-400"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-green-500/20 dark:to-emerald-500/20 border border-green-200 dark:border-green-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-6 text-center">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full mb-4 shadow-lg">
+                            <i class="fas fa-users text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Community</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Join our Discord community</p>
+                        <a href="https://discord.gg/snapdeploy" target="_blank" class="inline-block bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-2 px-6 rounded-lg transition transform hover:scale-105 shadow-lg">
+                            Join Discord
+                        </a>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Community</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Join our Discord community</p>
-                    <a href="https://discord.gg/snapdeploy" target="_blank" class="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                        Join Discord
-                    </a>
                 </div>
             </div>
 
