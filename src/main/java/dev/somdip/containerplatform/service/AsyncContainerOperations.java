@@ -20,13 +20,13 @@ public class AsyncContainerOperations {
     private final EcsService ecsService;
     private final ContainerRepository containerRepository;
     private final DeploymentTrackingService deploymentTrackingService;
-    private final HealthCheckService healthCheckService;
+    private final ContainerHealthCheckService healthCheckService;
 
     public AsyncContainerOperations(
             EcsService ecsService,
             ContainerRepository containerRepository,
             DeploymentTrackingService deploymentTrackingService,
-            HealthCheckService healthCheckService) {
+            ContainerHealthCheckService healthCheckService) {
         this.ecsService = ecsService;
         this.containerRepository = containerRepository;
         this.deploymentTrackingService = deploymentTrackingService;
