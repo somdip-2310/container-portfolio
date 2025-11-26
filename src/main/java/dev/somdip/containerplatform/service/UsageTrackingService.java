@@ -32,8 +32,9 @@ public class UsageTrackingService {
     @Value("${aws.ecs.cluster}")
     private String clusterName;
 
-    // FREE plan limit: 200 hours
-    public static final double FREE_PLAN_HOURS_LIMIT = 200.0;
+    // FREE plan limit: 200 hours (TESTING: 15 minutes = 0.25 hours)
+    // TODO: Change back to 200.0 for production
+    public static final double FREE_PLAN_HOURS_LIMIT = 0.25; // 15 minutes for testing
 
     // Cache to store last tracking time for each container
     private final Map<String, Instant> lastTrackingTime = new HashMap<>();
