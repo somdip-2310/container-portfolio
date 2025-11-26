@@ -336,32 +336,37 @@ public class ContainerService {
     
     public Container stopContainer(String containerId) {
         log.info("Stopping container: {}", containerId);
-        
+
         Container container = getContainer(containerId);
-        
-        if (container.getStatus() != Container.ContainerStatus.RUNNING) {
-            throw new IllegalStateException("Container is not running");
+
+        // Check if container is already stopped in database
+        if (container.getStatus() == Container.ContainerStatus.STOPPED) {
+            log.info("Container {} is already stopped", containerId);
+            return container;
         }
-        
+
         container.setStatus(Container.ContainerStatus.STOPPING);
         containerRepository.save(container);
-        
+
         try {
             // Stop health monitoring
             healthCheckService.stopHealthMonitoring(containerId);
-            
+
             if (container.getServiceArn() != null) {
                 ecsService.stopService(container.getServiceArn(), containerId);
             }
-            
-            container.setStatus(Container.ContainerStatus.STOPPED);
-            return containerRepository.save(container);
+
+            log.info("Successfully stopped container {} in ECS", containerId);
         } catch (Exception e) {
-            log.error("Failed to stop container: {}", containerId, e);
-            container.setStatus(Container.ContainerStatus.FAILED);
-            containerRepository.save(container);
-            throw new RuntimeException("Failed to stop container", e);
+            // Log error but still update database status to avoid stuck RUNNING state
+            log.error("Error stopping container {} in ECS: {}", containerId, e.getMessage());
+            log.info("Updating database status to STOPPED anyway to sync with ECS state");
         }
+
+        // Always update status to STOPPED to sync database with ECS
+        container.setStatus(Container.ContainerStatus.STOPPED);
+        container.setUpdatedAt(LocalDateTime.now());
+        return containerRepository.save(container);
     }
     /**
      * Restart a container asynchronously
