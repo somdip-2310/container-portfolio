@@ -437,20 +437,3 @@
                     storageUsageEl.textContent = '0GB/5GB';
                 }
             }
-                        if (storagePercentage >= 100) {
-                            storageUsageBarEl.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
-                        } else if (storagePercentage >= 80) {
-                            storageUsageBarEl.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-500';
-                        } else {
-                            storageUsageBarEl.className = 'bg-green-600 h-2 rounded-full transition-all duration-500';
-                        }
-                    } else {
-                        containerUsageEl.textContent = '0/1';
-                        storageUsageEl.textContent = '0GB/5GB';
-                    }
-                } catch (error) {
-                    console.error('Error loading resource usage:', error);
-                    containerUsageEl.textContent = '0/1';
-                    storageUsageEl.textContent = '0GB/5GB';
-                }
-            }
