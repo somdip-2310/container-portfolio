@@ -52,76 +52,96 @@
                 <p class="mt-2 text-gray-600 dark:text-gray-400">Welcome back! Here's an overview of your container platform.</p>
             </div>
             
-            <!-- Stats Grid -->
+            <!-- Stats Grid - Premium Design -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- Total Containers -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Containers</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${stats.totalContainers}">12</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                <span class="text-green-600" th:if="${stats.containerGrowth > 0}">↑ <span th:text="${stats.containerGrowth}">2</span></span>
-                                <span class="text-red-600" th:if="${stats.containerGrowth < 0}">↓ <span th:text="${-stats.containerGrowth}">0</span></span>
-                                <span th:if="${stats.containerGrowth == 0}">No change</span>
-                                from last month
-                            </p>
-                        </div>
-                        <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
-                            <i class="fas fa-cube text-blue-600 dark:text-blue-400 text-2xl"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
+                    <div class="relative p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-blue-100">Total Containers</p>
+                                <p class="text-4xl font-bold text-white mt-2" th:text="${stats.totalContainers}">12</p>
+                                <p class="text-sm text-blue-100 mt-2">
+                                    <span class="bg-white/20 px-2 py-1 rounded" th:if="${stats.containerGrowth > 0}">↑ <span th:text="${stats.containerGrowth}">2</span> this month</span>
+                                    <span class="bg-white/20 px-2 py-1 rounded" th:if="${stats.containerGrowth < 0}">↓ <span th:text="${-stats.containerGrowth}">0</span> this month</span>
+                                    <span class="bg-white/20 px-2 py-1 rounded" th:if="${stats.containerGrowth == 0}">No change</span>
+                                </p>
+                            </div>
+                            <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                                <i class="fas fa-cube text-white text-3xl"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Running Containers -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Running</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${stats.runningContainers}">0</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                <span class="text-green-600">Active</span>
-                            </p>
-                        </div>
-                        <div class="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
-                            <i class="fas fa-play-circle text-green-600 dark:text-green-400 text-2xl"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
+                    <div class="relative p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-green-100">Running Now</p>
+                                <p class="text-4xl font-bold text-white mt-2" th:text="${stats.runningContainers}">0</p>
+                                <p class="text-sm text-green-100 mt-2">
+                                    <span class="bg-white/20 px-2 py-1 rounded inline-flex items-center">
+                                        <span class="flex h-2 w-2 mr-2">
+                                            <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-white opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                        Active
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                                <i class="fas fa-play-circle text-white text-3xl"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- CPU Usage -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">CPU Usage</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" th:text="${#numbers.formatDecimal(stats.cpuUsagePercent, 1, 1)} + '%'">0%</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                <span th:text="${#numbers.formatDecimal(stats.cpuUsagePercent * stats.totalCpuVCores / 100, 1, 1)}">0</span> /
-                                <span th:text="${#numbers.formatDecimal(stats.totalCpuVCores, 1, 1)}">0</span> vCPU
-                            </p>
-                        </div>
-                        <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-lg">
-                            <i class="fas fa-microchip text-yellow-600 dark:text-yellow-400 text-2xl"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
+                    <div class="relative p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-orange-100">CPU Usage</p>
+                                <p class="text-4xl font-bold text-white mt-2" th:text="${#numbers.formatDecimal(stats.cpuUsagePercent, 1, 1)} + '%'">0%</p>
+                                <p class="text-sm text-orange-100 mt-2">
+                                    <span class="bg-white/20 px-2 py-1 rounded">
+                                        <span th:text="${#numbers.formatDecimal(stats.cpuUsagePercent * stats.totalCpuVCores / 100, 1, 1)}">0</span> /
+                                        <span th:text="${#numbers.formatDecimal(stats.totalCpuVCores, 1, 1)}">0</span> vCPU
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                                <i class="fas fa-microchip text-white text-3xl"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Memory Usage -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Memory Usage</p>
-                            <!-- Show MB if less than 1 GB, otherwise show GB -->
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2"
-                               th:text="${stats.memoryUsageGB < 1.0} ?
-                                       (${#numbers.formatDecimal(stats.memoryUsageGB * 1024, 0, 0)} + 'MB') :
-                                       (${#numbers.formatDecimal(stats.memoryUsageGB, 1, 1)} + 'GB')">0MB</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                of <span th:text="${#numbers.formatDecimal(stats.totalMemoryGB, 1, 1)}">0</span>GB total
-                            </p>
-                        </div>
-                        <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
-                            <i class="fas fa-memory text-purple-600 dark:text-purple-400 text-2xl"></i>
+                <div class="relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
+                    <div class="relative p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-purple-100">Memory Usage</p>
+                                <p class="text-4xl font-bold text-white mt-2"
+                                   th:text="${stats.memoryUsageGB < 1.0} ?
+                                           (${#numbers.formatDecimal(stats.memoryUsageGB * 1024, 0, 0)} + 'MB') :
+                                           (${#numbers.formatDecimal(stats.memoryUsageGB, 1, 1)} + 'GB')">0MB</p>
+                                <p class="text-sm text-purple-100 mt-2">
+                                    <span class="bg-white/20 px-2 py-1 rounded">
+                                        of <span th:text="${#numbers.formatDecimal(stats.totalMemoryGB, 1, 1)}">0</span>GB total
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                                <i class="fas fa-memory text-white text-3xl"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
