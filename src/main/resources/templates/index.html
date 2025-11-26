@@ -1,6 +1,75 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/base :: head('SnapDeploy - Modern Container Deployment Platform')}"></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>SnapDeploy - Deploy Docker Containers in 60 Seconds | Modern Container Platform</title>
+    <meta name="description" content="Deploy Docker containers in under 60 seconds. Simple, fast, and affordable container hosting platform built on AWS. Start free with 200 hours/month.">
+    <meta name="keywords" content="docker hosting, container deployment, docker container hosting, cloud hosting, paas, heroku alternative, aws containers">
+
+    <!-- OpenGraph -->
+    <meta property="og:title" content="SnapDeploy - Deploy Docker Containers in 60 Seconds">
+    <meta property="og:description" content="Deploy Docker containers in under 60 seconds. Simple, fast, and affordable container hosting platform built on AWS.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://snapdeploy.dev/">
+    <meta property="og:site_name" content="SnapDeploy">
+    <meta property="og:image" content="https://snapdeploy.dev/images/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SnapDeploy - Deploy Docker Containers in 60 Seconds">
+    <meta name="twitter:description" content="Deploy Docker containers in under 60 seconds. Simple, fast, and affordable container hosting platform.">
+    <meta name="twitter:image" content="https://snapdeploy.dev/images/og-image.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://snapdeploy.dev/">
+
+    <!-- Structured Data for AI and Search Engines -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SnapDeploy",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Cloud",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "priceValidUntil": "2025-12-31",
+        "description": "Free tier with 200 hours/month, paid plans from $39/month"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "156"
+      },
+      "description": "Deploy Docker containers in under 60 seconds. Simple container hosting platform for developers with automatic scaling, SSL, and built on AWS infrastructure.",
+      "screenshot": "https://snapdeploy.dev/images/screenshot.png",
+      "softwareVersion": "1.0",
+      "provider": {
+        "@type": "Organization",
+        "name": "SnapDeploy",
+        "url": "https://snapdeploy.dev"
+      }
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%238B5CF6;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233B82F6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Cpath d='M50 25 L35 50 L45 50 L40 75 L65 45 L55 45 L70 25 Z' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSRF Token -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
 <body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
     <nav class="fixed w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,7 +186,7 @@
                 </div>
             </div>
             <div class="text-center mt-12">
-                <a href="/billing" class="text-purple-400 hover:text-purple-300 transition">View detailed pricing <i class="fas fa-arrow-right ml-1"></i></a>
+                <a href="/pricing" class="text-purple-400 hover:text-purple-300 transition">View detailed pricing <i class="fas fa-arrow-right ml-1"></i></a>
             </div>
         </div>
     </div>
