@@ -108,6 +108,12 @@ public class PHPDockerfileGenerator {
         dockerfile.append("COPY nginx.conf /etc/nginx/nginx.conf\n");
         dockerfile.append("COPY default.conf /etc/nginx/conf.d/default.conf\n\n");
 
+        // Create nginx directories and test configuration
+        dockerfile.append("# Create nginx directories and test configuration\n");
+        dockerfile.append("RUN mkdir -p /var/log/nginx /var/lib/nginx /var/run \\\n");
+        dockerfile.append("    && chown -R www-data:www-data /var/log/nginx /var/lib/nginx \\\n");
+        dockerfile.append("    && nginx -t\n\n");
+
         // Copy startup script
         dockerfile.append("# Copy startup script\n");
         dockerfile.append("COPY start.sh /start.sh\n");
@@ -134,10 +140,37 @@ public class PHPDockerfileGenerator {
                 #!/bin/bash
                 set -e
 
+                echo "Starting PHP-FPM and nginx..."
+
                 # Start PHP-FPM in background
+                echo "Starting PHP-FPM..."
                 php-fpm -D
+                if [ $? -eq 0 ]; then
+                    echo "PHP-FPM started successfully"
+                else
+                    echo "ERROR: PHP-FPM failed to start"
+                    exit 1
+                fi
+
+                # Wait a moment for PHP-FPM to initialize
+                sleep 2
+
+                # Verify PHP-FPM is running
+                if ! pgrep -x php-fpm > /dev/null; then
+                    echo "ERROR: PHP-FPM is not running"
+                    exit 1
+                fi
+
+                # Test nginx configuration
+                echo "Testing nginx configuration..."
+                nginx -t
+                if [ $? -ne 0 ]; then
+                    echo "ERROR: nginx configuration test failed"
+                    exit 1
+                fi
 
                 # Start nginx in foreground
+                echo "Starting nginx on port 8000..."
                 nginx -g 'daemon off;'
                 """;
 

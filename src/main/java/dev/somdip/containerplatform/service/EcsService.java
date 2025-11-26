@@ -53,7 +53,13 @@ public class EcsService {
     
     @Value("${aws.cloudwatch.logGroup.users}")
     private String logGroup;
-    
+
+    // Configurable timeout for service stabilization (in seconds)
+    // Default: 15 minutes (900s) to handle large applications and slow startups
+    // Can be increased for very large deployments via application.properties
+    @Value("${aws.ecs.deployment.timeout.seconds:900}")
+    private int deploymentTimeoutSeconds;
+
     public EcsService(EcsClient ecsClient, 
                      ElasticLoadBalancingV2Client elbClient,
                      TargetGroupService targetGroupService,
@@ -192,37 +198,53 @@ public class EcsService {
     }
     
     private void waitForServiceStable(String serviceArn) throws InterruptedException {
-        log.info("Waiting for service to stabilize: {}", serviceArn);
-        
-        int maxAttempts = 30;
+        log.info("Waiting for service to stabilize: {} (timeout: {}s)", serviceArn, deploymentTimeoutSeconds);
+
+        int checkIntervalSeconds = 10;
+        int maxAttempts = deploymentTimeoutSeconds / checkIntervalSeconds;
         int attempt = 0;
-        
+        long startTime = System.currentTimeMillis();
+
         while (attempt < maxAttempts) {
             DescribeServicesRequest request = DescribeServicesRequest.builder()
                 .cluster(clusterName)
                 .services(serviceArn)
                 .build();
-            
+
             DescribeServicesResponse response = ecsClient.describeServices(request);
-            
+
             if (!response.services().isEmpty()) {
                 software.amazon.awssdk.services.ecs.model.Service service = response.services().get(0);
-                
-                if (service.runningCount() == service.desiredCount() &&
-                    service.deployments().size() == 1) {
-                    log.info("Service is stable with {} running tasks", service.runningCount());
+
+                // More lenient stability check:
+                // 1. Running count meets desired count
+                // 2. At least one PRIMARY deployment exists (new deployment is active)
+                boolean hasRunningTasks = service.runningCount() >= service.desiredCount() && service.desiredCount() > 0;
+                boolean hasPrimaryDeployment = service.deployments().stream()
+                    .anyMatch(d -> "PRIMARY".equals(d.status()));
+
+                if (hasRunningTasks && hasPrimaryDeployment) {
+                    long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
+                    log.info("Service is stable after {}s with {} running tasks (Deployments: {})",
+                        elapsedSeconds, service.runningCount(), service.deployments().size());
                     return;
                 }
-                
-                log.debug("Service not stable yet. Running: {}, Desired: {}, Deployments: {}",
-                    service.runningCount(), service.desiredCount(), service.deployments().size());
+
+                long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
+                log.info("Service not stable yet ({}s elapsed). Running: {}/{}, Deployments: {}, Status: {}",
+                    elapsedSeconds, service.runningCount(), service.desiredCount(),
+                    service.deployments().size(),
+                    service.deployments().stream().map(d -> d.status()).collect(Collectors.joining(", ")));
             }
-            
+
             attempt++;
-            Thread.sleep(10000); // Wait 10 seconds
+            Thread.sleep(checkIntervalSeconds * 1000);
         }
-        
-        throw new RuntimeException("Service did not stabilize within timeout");
+
+        long totalSeconds = (System.currentTimeMillis() - startTime) / 1000;
+        throw new RuntimeException(String.format(
+            "Service did not stabilize within timeout (%ds / %d attempts). Elapsed: %ds",
+            deploymentTimeoutSeconds, maxAttempts, totalSeconds));
     }
     
     private String getRunningTaskArn(String serviceArn) {
