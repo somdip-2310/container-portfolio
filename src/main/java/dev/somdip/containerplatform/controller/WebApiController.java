@@ -284,8 +284,8 @@ public class WebApiController {
         return switch (plan) {
             case FREE -> 1;
             case STARTER -> 3;
-            case PRO -> 10;
-            case SCALE -> 25;
+            case PRO -> 8;
+            case BUSINESS -> 20;
             case ENTERPRISE -> Integer.MAX_VALUE;
         };
     }
@@ -295,7 +295,7 @@ public class WebApiController {
             case FREE -> 5;
             case STARTER -> 20;
             case PRO -> 100;
-            case SCALE -> 500;
+            case BUSINESS -> 50;
             case ENTERPRISE -> Integer.MAX_VALUE;
         };
     }

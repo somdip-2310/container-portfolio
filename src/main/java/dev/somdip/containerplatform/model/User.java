@@ -250,7 +250,7 @@ public class User {
     }
 
     public enum UserPlan {
-        FREE, STARTER, PRO, SCALE, ENTERPRISE
+        FREE, STARTER, PRO, BUSINESS, ENTERPRISE
     }
 
     public enum UserStatus {

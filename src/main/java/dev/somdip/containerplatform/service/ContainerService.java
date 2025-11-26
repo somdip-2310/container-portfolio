@@ -39,8 +39,11 @@ public class ContainerService {
     @Value("${app.container.limits.pro}")
     private int proContainerLimit;
 
-    @Value("${app.container.limits.scale}")
-    private int scaleContainerLimit;
+    @Value("${app.container.limits.business}")
+    private int businessContainerLimit;
+
+    @Value("${app.container.limits.enterprise}")
+    private int enterpriseContainerLimit;
 
     public ContainerService(ContainerRepository containerRepository,
                           UserRepository userRepository,
@@ -459,10 +462,10 @@ public class ContainerService {
                 return starterContainerLimit;
             case PRO:
                 return proContainerLimit;
-            case SCALE:
-                return scaleContainerLimit;
+            case BUSINESS:
+                return businessContainerLimit;
             case ENTERPRISE:
-                return Integer.MAX_VALUE;
+                return enterpriseContainerLimit;
             default:
                 return freeContainerLimit;
         }
