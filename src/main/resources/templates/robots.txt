@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /containers
+Disallow: /deployments
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://snapdeploy.dev/sitemap.xml
