@@ -119,7 +119,7 @@ public class PHPDockerfileGenerator {
 
         // Start command
         dockerfile.append("# Start services\n");
-        dockerfile.append("CMD ["/start.sh"]\n");
+        dockerfile.append("CMD [\"/start.sh\"]\n");
 
         return dockerfile.toString();
     }
