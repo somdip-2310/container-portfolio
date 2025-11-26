@@ -53,6 +53,21 @@ public class WebController {
     public String register() {
         return "register";
     }
+
+    @GetMapping("/forgot-password")
+    public String forgotPassword() {
+        return "forgot-password";
+    }
+
+    @GetMapping("/verify-otp")
+    public String verifyOtp() {
+        return "verify-otp";
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPassword() {
+        return "reset-password";
+    }
     
 
     @GetMapping("/dashboard")
@@ -379,10 +394,14 @@ public class WebController {
     
     @GetMapping("/docs")
     public String documentation() {
-        // Redirect to documentation site or serve static docs
-        return "redirect:/docs/index.html";
+        return "docs";
     }
-    
+
+    @GetMapping("/api")
+    public String apiDocumentation() {
+        return "api";
+    }
+
     @GetMapping("/cli")
     public String cliInstallation(Model model, Authentication authentication) {
         if (authentication == null) {

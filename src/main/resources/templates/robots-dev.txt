@@ -1,0 +1,5 @@
+# Development Environment - Block all crawling
+# This file is served on containers.somdip.dev
+
+User-agent: *
+Disallow: /

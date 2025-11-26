@@ -107,4 +107,49 @@ public class AuthController {
                     .body(new MessageResponse("Error: " + e.getMessage()));
         }
     }
+
+    // Password Reset Endpoints
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            userService.initiatePasswordReset(request.getEmail());
+            return ResponseEntity.ok(new MessageResponse(
+                "If an account with that email exists, we've sent a password reset code."));
+        } catch (Exception e) {
+            log.error("Forgot password failed: {}", e.getMessage());
+            // Don't reveal if email exists or not for security
+            return ResponseEntity.ok(new MessageResponse(
+                "If an account with that email exists, we've sent a password reset code."));
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) {
+        try {
+            boolean isValid = userService.verifyOTP(request.getEmail(), request.getOtp());
+            if (isValid) {
+                return ResponseEntity.ok(new MessageResponse("OTP verified successfully"));
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(new MessageResponse("Invalid or expired OTP"));
+            }
+        } catch (Exception e) {
+            log.error("OTP verification failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            userService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+            return ResponseEntity.ok(new MessageResponse("Password reset successfully"));
+        } catch (Exception e) {
+            log.error("Password reset failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
 }

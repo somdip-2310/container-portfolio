@@ -5,7 +5,9 @@ import dev.somdip.containerplatform.dto.auth.ApiKeyResponse;
 import dev.somdip.containerplatform.dto.auth.JwtResponse;
 import dev.somdip.containerplatform.dto.auth.LoginRequest;
 import dev.somdip.containerplatform.dto.auth.RegisterRequest;
+import dev.somdip.containerplatform.model.PasswordResetToken;
 import dev.somdip.containerplatform.model.User;
+import dev.somdip.containerplatform.repository.PasswordResetTokenRepository;
 import dev.somdip.containerplatform.repository.UserRepository;
 import dev.somdip.containerplatform.utils.JwtUtils;
 import org.slf4j.Logger;
@@ -13,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -26,13 +30,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final EmailService emailService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private static final int OTP_EXPIRY_MINUTES = 10;
+    private static final int MAX_OTP_ATTEMPTS = 5;
 
-    public UserService(UserRepository userRepository, 
-                      PasswordEncoder passwordEncoder, 
-                      JwtUtils jwtUtils) {
+    public UserService(UserRepository userRepository,
+                      PasswordEncoder passwordEncoder,
+                      JwtUtils jwtUtils,
+                      EmailService emailService,
+                      PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
+        this.emailService = emailService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public JwtResponse register(RegisterRequest request) {
@@ -143,7 +155,124 @@ public class UserService {
 
     private String generateApiKey() {
         // Generate a secure API key
-        return "sk_" + UUID.randomUUID().toString().replace("-", "") + 
+        return "sk_" + UUID.randomUUID().toString().replace("-", "") +
                UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+    }
+
+    // Password Reset Methods
+
+    public void initiatePasswordReset(String email) {
+        log.debug("Initiating password reset for email: {}", email);
+
+        // Check if user exists
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            // For security, don't reveal if email exists or not
+            log.warn("Password reset requested for non-existent email: {}", email);
+            return; // Return silently
+        }
+
+        User user = userOptional.get();
+
+        // Generate 6-digit OTP
+        String otp = generateOTP();
+
+        // Create password reset token
+        PasswordResetToken token = new PasswordResetToken();
+        token.setEmail(email);
+        token.setOtp(otp);
+        token.setCreatedAt(Instant.now());
+        token.setExpiryTime(Instant.now().plus(OTP_EXPIRY_MINUTES, ChronoUnit.MINUTES));
+        token.setAttempts(0);
+        token.setUsed(false);
+
+        // Save token
+        passwordResetTokenRepository.save(token);
+
+        // Send OTP email
+        try {
+            emailService.sendPasswordResetOTP(email, otp, user.getEmail());
+            log.info("Password reset OTP sent to: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to send password reset email to: {}", email, e);
+            throw new RuntimeException("Failed to send reset email. Please try again later.");
+        }
+    }
+
+    public boolean verifyOTP(String email, String otp) {
+        log.debug("Verifying OTP for email: {}", email);
+
+        Optional<PasswordResetToken> tokenOptional = passwordResetTokenRepository.findByEmail(email);
+        if (tokenOptional.isEmpty()) {
+            log.warn("No password reset token found for email: {}", email);
+            return false;
+        }
+
+        PasswordResetToken token = tokenOptional.get();
+
+        // Check if already used
+        if (token.isUsed()) {
+            log.warn("OTP already used for email: {}", email);
+            return false;
+        }
+
+        // Check if expired
+        if (token.isExpired()) {
+            log.warn("OTP expired for email: {}", email);
+            passwordResetTokenRepository.delete(email);
+            return false;
+        }
+
+        // Check attempts
+        if (token.getAttempts() >= MAX_OTP_ATTEMPTS) {
+            log.warn("Max OTP attempts exceeded for email: {}", email);
+            passwordResetTokenRepository.delete(email);
+            return false;
+        }
+
+        // Verify OTP
+        if (!token.getOtp().equals(otp)) {
+            // Increment attempts
+            token.setAttempts(token.getAttempts() + 1);
+            passwordResetTokenRepository.save(token);
+            log.warn("Invalid OTP for email: {} | Attempts: {}", email, token.getAttempts());
+            return false;
+        }
+
+        log.info("OTP verified successfully for email: {}", email);
+        return true;
+    }
+
+    public void resetPassword(String email, String otp, String newPassword) {
+        log.debug("Resetting password for email: {}", email);
+
+        // Verify OTP again
+        if (!verifyOTP(email, otp)) {
+            throw new RuntimeException("Invalid or expired OTP");
+        }
+
+        // Find user
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        User user = userOptional.get();
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+
+        // Mark OTP as used and delete token
+        passwordResetTokenRepository.delete(email);
+
+        log.info("Password reset successfully for user: {}", user.getUserId());
+    }
+
+    private String generateOTP() {
+        SecureRandom random = new SecureRandom();
+        int otp = 100000 + random.nextInt(900000); // 6-digit OTP
+        return String.valueOf(otp);
     }
 }

@@ -89,11 +89,19 @@ public class SecurityConfig {
                 .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/deployments/**", "/api/source/**"))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/register", "/static/**", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/forgot-password", "/verify-otp", "/reset-password").permitAll()
                 .requestMatchers("/health", "/health/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
                 .requestMatchers("/about", "/contact", "/terms", "/privacy", "/refund").permitAll()
+                // Documentation and public info pages
+                .requestMatchers("/docs", "/api", "/status").permitAll()
+                // SEO and marketing pages - must be public for search engines and AI tools
+                .requestMatchers("/heroku-alternative", "/railway-alternative", "/render-alternative").permitAll()
+                .requestMatchers("/docker-hosting", "/container-hosting").permitAll()
+                .requestMatchers("/for/**", "/pricing").permitAll()
+                .requestMatchers("/robots.txt", "/sitemap.xml").permitAll()
                 .requestMatchers("/api/source/**").authenticated()
                 .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()
@@ -123,7 +131,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://containers.somdip.dev"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "https://containers.somdip.dev",
+            "https://snapdeploy.dev",
+            "https://www.snapdeploy.dev"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

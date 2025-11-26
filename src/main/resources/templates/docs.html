@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - SnapDeploy</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center">
+                    <i class="fas fa-cube text-purple-400 text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">SnapDeploy</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-white hover:text-purple-400 transition">Home</a>
+                    <a href="/login" class="text-white hover:text-purple-400 transition">Sign In</a>
+                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-32 pb-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex gap-8">
+                <!-- Sidebar -->
+                <aside class="w-64 flex-shrink-0">
+                    <div class="sticky top-24 bg-white/5 border border-white/10 rounded-xl p-6">
+                        <h3 class="text-white font-semibold mb-4">Documentation</h3>
+                        <nav class="space-y-2">
+                            <a href="#getting-started" class="block text-gray-400 hover:text-purple-400 transition">Getting Started</a>
+                            <a href="#deployment" class="block text-gray-400 hover:text-purple-400 transition">Deployment Guide</a>
+                            <a href="#api-reference" class="block text-gray-400 hover:text-purple-400 transition">API Reference</a>
+                            <a href="#cli" class="block text-gray-400 hover:text-purple-400 transition">CLI Usage</a>
+                            <a href="#docker" class="block text-gray-400 hover:text-purple-400 transition">Docker Integration</a>
+                            <a href="#monitoring" class="block text-gray-400 hover:text-purple-400 transition">Monitoring</a>
+                            <a href="#troubleshooting" class="block text-gray-400 hover:text-purple-400 transition">Troubleshooting</a>
+                        </nav>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-1">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h1 class="text-4xl font-bold text-white mb-4">SnapDeploy Documentation</h1>
+                        <p class="text-xl text-gray-400">Learn how to deploy and manage containers with SnapDeploy</p>
+                    </div>
+
+                    <!-- Getting Started -->
+                    <section id="getting-started" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fas fa-rocket text-purple-400 mr-3"></i>Getting Started
+                        </h2>
+                        <p class="text-gray-300 mb-4">Deploy your first container in under 60 seconds.</p>
+
+                        <div class="bg-black/30 rounded-lg p-4 mb-4 font-mono text-sm">
+                            <div class="text-gray-400"># 1. Create an account</div>
+                            <div class="text-green-400">curl https://snapdeploy.dev/register</div>
+                            <div class="text-gray-400 mt-2"># 2. Deploy a container</div>
+                            <div class="text-green-400">snapdeploy deploy --image nginx:latest</div>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-4 mt-6">
+                            <div class="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+                                <i class="fas fa-bolt text-purple-400 text-2xl mb-2"></i>
+                                <h3 class="text-white font-semibold mb-2">Quick Deploy</h3>
+                                <p class="text-gray-400 text-sm">Deploy in 60 seconds</p>
+                            </div>
+                            <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                                <i class="fas fa-code text-blue-400 text-2xl mb-2"></i>
+                                <h3 class="text-white font-semibold mb-2">API First</h3>
+                                <p class="text-gray-400 text-sm">RESTful API & CLI</p>
+                            </div>
+                            <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                                <i class="fas fa-shield-alt text-green-400 text-2xl mb-2"></i>
+                                <h3 class="text-white font-semibold mb-2">Secure</h3>
+                                <p class="text-gray-400 text-sm">Built on AWS</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Deployment Guide -->
+                    <section id="deployment" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fas fa-upload text-purple-400 mr-3"></i>Deployment Guide
+                        </h2>
+
+                        <h3 class="text-xl font-semibold text-white mb-3">Deploy from Docker Image</h3>
+                        <div class="bg-black/30 rounded-lg p-4 mb-4 font-mono text-sm">
+                            <div class="text-green-400">POST /api/containers/deploy</div>
+                            <div class="text-gray-400 mt-2">{</div>
+                            <div class="text-gray-400 ml-4">"imageName": "nginx:latest",</div>
+                            <div class="text-gray-400 ml-4">"containerName": "my-app",</div>
+                            <div class="text-gray-400 ml-4">"cpu": "512",</div>
+                            <div class="text-gray-400 ml-4">"memory": "1024"</div>
+                            <div class="text-gray-400">}</div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-white mb-3">Deploy from GitHub</h3>
+                        <div class="bg-black/30 rounded-lg p-4 mb-4 font-mono text-sm">
+                            <div class="text-green-400">POST /api/deployments/github</div>
+                            <div class="text-gray-400 mt-2">{</div>
+                            <div class="text-gray-400 ml-4">"repoUrl": "https://github.com/user/repo",</div>
+                            <div class="text-gray-400 ml-4">"branch": "main"</div>
+                            <div class="text-gray-400">}</div>
+                        </div>
+                    </section>
+
+                    <!-- API Reference -->
+                    <section id="api-reference" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fas fa-code text-purple-400 mr-3"></i>API Reference
+                        </h2>
+                        <p class="text-gray-300 mb-4">Full API documentation for integrating with SnapDeploy.</p>
+
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-green-500 bg-green-500/10 p-4 rounded-r-lg">
+                                <div class="font-mono text-sm text-green-400 mb-2">GET /api/containers</div>
+                                <p class="text-gray-300">List all your containers</p>
+                            </div>
+                            <div class="border-l-4 border-blue-500 bg-blue-500/10 p-4 rounded-r-lg">
+                                <div class="font-mono text-sm text-blue-400 mb-2">POST /api/containers/deploy</div>
+                                <p class="text-gray-300">Deploy a new container</p>
+                            </div>
+                            <div class="border-l-4 border-yellow-500 bg-yellow-500/10 p-4 rounded-r-lg">
+                                <div class="font-mono text-sm text-yellow-400 mb-2">PUT /api/containers/{id}</div>
+                                <p class="text-gray-300">Update container configuration</p>
+                            </div>
+                            <div class="border-l-4 border-red-500 bg-red-500/10 p-4 rounded-r-lg">
+                                <div class="font-mono text-sm text-red-400 mb-2">DELETE /api/containers/{id}</div>
+                                <p class="text-gray-300">Stop and delete a container</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <a href="/api" class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition">
+                                View Full API Documentation <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- CLI Usage -->
+                    <section id="cli" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fas fa-terminal text-purple-400 mr-3"></i>CLI Usage
+                        </h2>
+
+                        <h3 class="text-xl font-semibold text-white mb-3">Installation</h3>
+                        <div class="bg-black/30 rounded-lg p-4 mb-4 font-mono text-sm">
+                            <div class="text-gray-400"># Install via npm</div>
+                            <div class="text-green-400">npm install -g @snapdeploy/cli</div>
+                            <div class="text-gray-400 mt-2"># Or via curl</div>
+                            <div class="text-green-400">curl -fsSL https://cli.snapdeploy.dev/install.sh | sh</div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-white mb-3">Common Commands</h3>
+                        <div class="bg-black/30 rounded-lg p-4 font-mono text-sm space-y-2">
+                            <div><span class="text-purple-400">snapdeploy</span> <span class="text-gray-400">login</span></div>
+                            <div><span class="text-purple-400">snapdeploy</span> <span class="text-gray-400">deploy --image nginx</span></div>
+                            <div><span class="text-purple-400">snapdeploy</span> <span class="text-gray-400">list</span></div>
+                            <div><span class="text-purple-400">snapdeploy</span> <span class="text-gray-400">logs &lt;container-id&gt;</span></div>
+                            <div><span class="text-purple-400">snapdeploy</span> <span class="text-gray-400">stop &lt;container-id&gt;</span></div>
+                        </div>
+                    </section>
+
+                    <!-- Docker Integration -->
+                    <section id="docker" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fab fa-docker text-purple-400 mr-3"></i>Docker Integration
+                        </h2>
+                        <p class="text-gray-300 mb-4">SnapDeploy supports any Docker image from Docker Hub or private registries.</p>
+
+                        <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
+                            <h3 class="text-white font-semibold mb-3">Supported Features</h3>
+                            <ul class="space-y-2 text-gray-300">
+                                <li><i class="fas fa-check text-green-400 mr-2"></i>Public Docker Hub images</li>
+                                <li><i class="fas fa-check text-green-400 mr-2"></i>Private Docker registries</li>
+                                <li><i class="fas fa-check text-green-400 mr-2"></i>Environment variables</li>
+                                <li><i class="fas fa-check text-green-400 mr-2"></i>Custom ports and volumes</li>
+                                <li><i class="fas fa-check text-green-400 mr-2"></i>Health checks</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <!-- Monitoring -->
+                    <section id="monitoring" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fas fa-chart-line text-purple-400 mr-3"></i>Monitoring
+                        </h2>
+                        <p class="text-gray-300 mb-4">Real-time metrics and logs for all your containers.</p>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-purple-500/10 border border-purple-500/20 rounded-lg p-6">
+                                <h3 class="text-white font-semibold mb-3">Metrics Available</h3>
+                                <ul class="space-y-2 text-gray-300 text-sm">
+                                    <li>• CPU Usage</li>
+                                    <li>• Memory Usage</li>
+                                    <li>• Network I/O</li>
+                                    <li>• Request Count</li>
+                                    <li>• Response Times</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
+                                <h3 class="text-white font-semibold mb-3">Log Management</h3>
+                                <ul class="space-y-2 text-gray-300 text-sm">
+                                    <li>• Real-time log streaming</li>
+                                    <li>• 7-day retention</li>
+                                    <li>• Full-text search</li>
+                                    <li>• Log export</li>
+                                    <li>• Alert configuration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Troubleshooting -->
+                    <section id="troubleshooting" class="bg-white/5 border border-white/10 rounded-xl p-8 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-4">
+                            <i class="fas fa-wrench text-purple-400 mr-3"></i>Troubleshooting
+                        </h2>
+
+                        <div class="space-y-4">
+                            <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <summary class="text-white font-semibold cursor-pointer">Container won't start</summary>
+                                <div class="mt-3 text-gray-300 text-sm">
+                                    <p>Check your container logs: <code class="bg-black/30 px-2 py-1 rounded">snapdeploy logs &lt;container-id&gt;</code></p>
+                                    <p class="mt-2">Common issues:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>Invalid Docker image name</li>
+                                        <li>Insufficient memory allocation</li>
+                                        <li>Port conflicts</li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <summary class="text-white font-semibold cursor-pointer">Deployment is slow</summary>
+                                <div class="mt-3 text-gray-300 text-sm">
+                                    <p>Large Docker images take longer to pull. Consider:</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>Using smaller base images (Alpine Linux)</li>
+                                        <li>Optimizing your Dockerfile layers</li>
+                                        <li>Using private registry closer to our servers</li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <summary class="text-white font-semibold cursor-pointer">How to get support</summary>
+                                <div class="mt-3 text-gray-300 text-sm">
+                                    <p>We're here to help!</p>
+                                    <ul class="list-disc ml-6 mt-2">
+                                        <li>Email: <a href="mailto:support@snapdeploy.dev" class="text-purple-400 hover:text-purple-300">support@snapdeploy.dev</a></li>
+                                        <li>Discord: <a href="#" class="text-purple-400 hover:text-purple-300">Join our community</a></li>
+                                        <li>GitHub: <a href="#" class="text-purple-400 hover:text-purple-300">Report issues</a></li>
+                                    </ul>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <!-- CTA -->
+                    <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-8 text-center">
+                        <h2 class="text-3xl font-bold text-white mb-4">Ready to Deploy?</h2>
+                        <p class="text-purple-100 mb-6">Start deploying containers in under 60 seconds</p>
+                        <a href="/register" class="inline-block bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                            Get Started Free
+                        </a>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black/20 backdrop-blur-sm border-t border-white/10 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2025 SnapDeploy. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
