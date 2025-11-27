@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title th:text="${seo.title}">SnapDeploy for Startups - Deploy Fast, Scale Faster</title>
+    <meta name="description" th:content="${seo.description}">
+    <meta name="keywords" th:content="${seo.keywords}">
+    
+    <!-- OpenGraph -->
+    <meta property="og:title" th:content="${seo.title}">
+    <meta property="og:description" th:content="${seo.description}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://snapdeploy.dev/for-startups">
+    <meta property="og:site_name" content="SnapDeploy">
+    <meta property="og:image" content="https://snapdeploy.dev/images/og-image.png">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" th:content="${seo.title}">
+    <meta name="twitter:description" th:content="${seo.description}">
+    <meta name="twitter:image" content="https://snapdeploy.dev/images/og-image.png">
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://snapdeploy.dev/for-startups">
+    
+    <!-- Structured Data for AI -->
+    <script type="application/ld+json" th:utext="${structuredData}"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center">
+                    <i class="fas fa-cube text-purple-400 text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">SnapDeploy</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="/pricing" class="text-white hover:text-purple-400 transition">Pricing</a>
+                    <a href="/login" class="text-white hover:text-purple-400 transition">Sign In</a>
+                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition">
+                        Get Started Free
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
+                SnapDeploy for Startups
+            </h1>
+            <p class="text-xl text-gray-300 mb-4">
+                Ship faster. Scale smarter. Spend less on infrastructure.
+            </p>
+            <p class="text-lg text-purple-300 mb-8">
+                Focus on building your product while we handle deployment, scaling, and DevOps
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105">
+                    Start Free Trial
+                </a>
+                <a href="/pricing" class="bg-white/10 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/20 transition">
+                    See Pricing
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-4xl font-bold text-white text-center mb-12">
+                Why Startups Choose SnapDeploy
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Ship Features Faster</h3>
+                    <p class="text-gray-300">
+                        Deploy in 60 seconds, not hours. Spend time building features your customers want, not managing servers.
+                    </p>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <div class="text-4xl mb-4">💰</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Keep Costs Low</h3>
+                    <p class="text-gray-300">
+                        Start free, then scale affordably. Transparent pricing from $39/month means no surprise bills eating into your runway.
+                    </p>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <div class="text-4xl mb-4">📈</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Scale Automatically</h3>
+                    <p class="text-gray-300">
+                        Handle traffic spikes during launches and viral moments. Auto-scaling keeps your app running smoothly.
+                    </p>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <div class="text-4xl mb-4">🛡️</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Enterprise Security</h3>
+                    <p class="text-gray-300">
+                        Free SSL, DDoS protection, and encrypted secrets. Enterprise-grade security from day one.
+                    </p>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <div class="text-4xl mb-4">👥</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">No DevOps Needed</h3>
+                    <p class="text-gray-300">
+                        Your small team can move fast without hiring DevOps engineers. We handle the infrastructure complexity.
+                    </p>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Focus on Product</h3>
+                    <p class="text-gray-300">
+                        Stop worrying about Kubernetes, load balancers, and server management. Build what matters.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="py-20 px-4 bg-black/30">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-4xl font-bold text-white text-center mb-12">
+                Perfect for Every Stage of Your Startup
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold text-white mb-4">Pre-Launch MVP</h3>
+                    <p class="text-gray-300 mb-4">
+                        Use our free tier to build and test your MVP. 200 hours/month to validate your idea without spending a dime.
+                    </p>
+                    <ul class="text-gray-400 space-y-2">
+                        <li>✓ Free SSL & custom domains</li>
+                        <li>✓ Real-time monitoring</li>
+                        <li>✓ Instant deployments</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold text-white mb-4">Growing Product</h3>
+                    <p class="text-gray-300 mb-4">
+                        Scale from free to $39/month as you gain traction. Get 2GB RAM and unlimited uptime.
+                    </p>
+                    <ul class="text-gray-400 space-y-2">
+                        <li>✓ Auto-scaling included</li>
+                        <li>✓ Advanced monitoring</li>
+                        <li>✓ Email support</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold text-white mb-4">Scaling Fast</h3>
+                    <p class="text-gray-300 mb-4">
+                        Upgrade to Pro or Business as you grow. Handle thousands of users with confidence.
+                    </p>
+                    <ul class="text-gray-400 space-y-2">
+                        <li>✓ 4-8 GB RAM options</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Advanced security</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial Section -->
+    <section class="py-20 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-bold text-white mb-12">
+                Built for Fast-Moving Teams
+            </h2>
+            
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8 mb-8">
+                <p class="text-xl text-gray-300 mb-6 italic">
+                    "As a bootstrapped startup, we needed reliable hosting without the enterprise price tag. SnapDeploy gave us everything we needed to launch and scale. We deployed our MVP in an afternoon and haven't looked back."
+                </p>
+                <p class="text-purple-400 font-semibold">- Sarah Chen, Founder @ TechStartup</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 text-center">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-4xl font-bold text-purple-400 mb-2">60s</div>
+                    <div class="text-gray-300">Average Deploy Time</div>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-4xl font-bold text-purple-400 mb-2">500+</div>
+                    <div class="text-gray-300">Startups Trust Us</div>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-4xl font-bold text-purple-400 mb-2">99.9%</div>
+                    <div class="text-gray-300">Uptime SLA</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 px-4 bg-gradient-to-r from-purple-600 to-pink-600">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+                Ready to Ship Faster?
+            </h2>
+            <p class="text-xl text-white/90 mb-8">
+                Start with our free tier. Scale when you're ready. No credit card required.
+            </p>
+            <a href="/register" class="inline-block bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition transform hover:scale-105">
+                Start Building Today
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black/30 py-12 px-4">
+        <div class="max-w-6xl mx-auto text-center text-gray-400">
+            <p>&copy; 2025 SnapDeploy. All rights reserved.</p>
+            <div class="mt-4 space-x-4">
+                <a href="/pricing" class="hover:text-white transition">Pricing</a>
+                <a href="/docker-hosting" class="hover:text-white transition">Docker Hosting</a>
+                <a href="/for/startups" class="hover:text-white transition">For Startups</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
