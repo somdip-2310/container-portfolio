@@ -38,6 +38,11 @@
                             <i class="fas fa-code mr-2"></i>
                             API
                         </button>
+                        <button onclick="switchTab('github')" id="githubTab"
+                                class="tab-button border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 py-4 px-1 font-medium text-sm">
+                            <i class="fab fa-github mr-2"></i>
+                            GitHub
+                        </button>
                     </nav>
                 </div>
             </div>
@@ -304,6 +309,109 @@
                 </div>
             </div>
 
+            <!-- GitHub Tab -->
+            <div id="githubContent" class="tab-content hidden">
+                <!-- GitHub Connection Status -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">GitHub Connection</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Connect your GitHub account to deploy from repositories</p>
+                    </div>
+                    <div class="p-6" id="githubConnectionStatus">
+                        <!-- Loading state -->
+                        <div id="githubLoading" class="flex items-center justify-center py-8">
+                            <i class="fas fa-spinner fa-spin text-2xl text-purple-500 mr-3"></i>
+                            <span class="text-gray-600 dark:text-gray-400">Checking GitHub connection...</span>
+                        </div>
+
+                        <!-- Not connected state -->
+                        <div id="githubNotConnected" class="hidden">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-gray-200 dark:bg-gray-600 p-3 rounded-full">
+                                        <i class="fab fa-github text-2xl text-gray-600 dark:text-gray-300"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">GitHub not connected</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Connect to deploy directly from your repositories</div>
+                                    </div>
+                                </div>
+                                <a href="/auth/github/connect" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-lg transition flex items-center">
+                                    <i class="fab fa-github mr-2"></i>
+                                    Connect GitHub
+                                </a>
+                            </div>
+
+                            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                    <i class="fas fa-code-branch text-purple-600 dark:text-purple-400 text-xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-900 dark:text-white">Auto Deploy</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Push to deploy automatically</p>
+                                </div>
+                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <i class="fas fa-lock text-blue-600 dark:text-blue-400 text-xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-900 dark:text-white">Private Repos</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Deploy from private repositories</p>
+                                </div>
+                                <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                    <i class="fas fa-history text-green-600 dark:text-green-400 text-xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-900 dark:text-white">Build History</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Track all your deployments</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connected state -->
+                        <div id="githubConnected" class="hidden">
+                            <div class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                <div class="flex items-center space-x-4">
+                                    <img id="githubAvatar" src="" alt="GitHub Avatar" class="w-12 h-12 rounded-full border-2 border-green-500">
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white flex items-center">
+                                            <span id="githubUsername">username</span>
+                                            <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Connected</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400" id="githubEmail">email@example.com</div>
+                                    </div>
+                                </div>
+                                <button onclick="disconnectGitHub()" class="text-red-600 hover:text-red-700 font-medium py-2 px-4 rounded-lg transition border border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20">
+                                    <i class="fas fa-unlink mr-2"></i>
+                                    Disconnect
+                                </button>
+                            </div>
+
+                            <div class="mt-6">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Granted Permissions</h4>
+                                <div class="flex flex-wrap gap-2" id="githubScopes">
+                                    <!-- Scopes will be populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Linked Repositories -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow" id="linkedReposSection">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Linked Repositories</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Repositories connected to your containers</p>
+                        </div>
+                        <button onclick="showLinkRepoModal()" id="linkRepoBtn" class="hidden bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                            <i class="fas fa-plus mr-2"></i>
+                            Link Repository
+                        </button>
+                    </div>
+                    <div class="p-6" id="linkedReposList">
+                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-code-branch text-4xl mb-3 opacity-50"></i>
+                            <p>No repositories linked yet</p>
+                            <p class="text-sm">Connect GitHub first to link repositories</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Danger Zone -->
             <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow border-2 border-red-200 dark:border-red-900">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -389,6 +497,170 @@
                 console.error('Error regenerating API key:', error);
                 alert('Error regenerating API key');
             }
+        }
+
+        // GitHub Integration Functions
+        async function checkGitHubConnection() {
+            try {
+                const response = await fetch('/auth/github/status');
+                const data = await response.json();
+
+                document.getElementById('githubLoading').classList.add('hidden');
+
+                if (data.connected) {
+                    document.getElementById('githubConnected').classList.remove('hidden');
+                    document.getElementById('githubNotConnected').classList.add('hidden');
+                    document.getElementById('linkRepoBtn').classList.remove('hidden');
+
+                    document.getElementById('githubUsername').textContent = data.username || 'Unknown';
+                    document.getElementById('githubEmail').textContent = data.email || '';
+                    if (data.avatarUrl) {
+                        document.getElementById('githubAvatar').src = data.avatarUrl;
+                    }
+
+                    // Show scopes
+                    const scopesContainer = document.getElementById('githubScopes');
+                    scopesContainer.innerHTML = '';
+                    if (data.scopes && data.scopes.length > 0) {
+                        data.scopes.forEach(scope => {
+                            const badge = document.createElement('span');
+                            badge.className = 'px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded';
+                            badge.textContent = scope;
+                            scopesContainer.appendChild(badge);
+                        });
+                    }
+
+                    // Load linked repositories
+                    loadLinkedRepositories();
+                } else {
+                    document.getElementById('githubConnected').classList.add('hidden');
+                    document.getElementById('githubNotConnected').classList.remove('hidden');
+                    document.getElementById('linkRepoBtn').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error checking GitHub connection:', error);
+                document.getElementById('githubLoading').classList.add('hidden');
+                document.getElementById('githubNotConnected').classList.remove('hidden');
+            }
+        }
+
+        async function disconnectGitHub() {
+            if (!confirm('Are you sure you want to disconnect your GitHub account? This will remove all linked repositories.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/github/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to disconnect GitHub account');
+                }
+            } catch (error) {
+                console.error('Error disconnecting GitHub:', error);
+                alert('Error disconnecting GitHub account');
+            }
+        }
+
+        async function loadLinkedRepositories() {
+            try {
+                const response = await fetch('/api/github/linked');
+                const repos = await response.json();
+
+                const container = document.getElementById('linkedReposList');
+
+                if (repos.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-code-branch text-4xl mb-3 opacity-50"></i>
+                            <p>No repositories linked yet</p>
+                            <p class="text-sm mt-2">Link a repository to a container for automatic deployments</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = repos.map(repo => `
+                    <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg mb-3">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                <i class="fab fa-github text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-white">
+                                    <a href="${repo.repoUrl}" target="_blank" class="hover:text-purple-600">${repo.repoFullName}</a>
+                                </div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    Branch: <span class="font-mono">${repo.deployBranch}</span>
+                                    ${repo.autoDeploy ? '<span class="ml-2 text-green-600"><i class="fas fa-check-circle"></i> Auto-deploy</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 text-xs font-medium rounded ${getStatusClass(repo.status)}">
+                                ${repo.status}
+                            </span>
+                            <button onclick="unlinkRepository('${repo.repoLinkId}')" class="text-red-500 hover:text-red-700 p-2" title="Unlink repository">
+                                <i class="fas fa-unlink"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading linked repositories:', error);
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'ACTIVE': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+                case 'PENDING_WEBHOOK': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
+                case 'WEBHOOK_ERROR': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+                default: return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200';
+            }
+        }
+
+        async function unlinkRepository(repoLinkId) {
+            if (!confirm('Are you sure you want to unlink this repository?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/github/link/${repoLinkId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadLinkedRepositories();
+                } else {
+                    alert('Failed to unlink repository');
+                }
+            } catch (error) {
+                console.error('Error unlinking repository:', error);
+                alert('Error unlinking repository');
+            }
+        }
+
+        function showLinkRepoModal() {
+            // TODO: Implement modal for linking repository to container
+            alert('Link Repository feature coming soon! Use the container settings page to link a repository.');
+        }
+
+        // Check GitHub connection when GitHub tab is selected
+        document.getElementById('githubTab').addEventListener('click', function() {
+            checkGitHubConnection();
+        });
+
+        // Check connection on page load if hash is #github
+        if (window.location.hash === '#github') {
+            switchTab('github');
+            checkGitHubConnection();
         }
     </script>
 </body>
