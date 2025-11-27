@@ -390,23 +390,13 @@
                     </div>
                 </div>
 
-                <!-- Linked Repositories -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow" id="linkedReposSection">
-                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Linked Repositories</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Repositories connected to your containers</p>
-                        </div>
-                        <button onclick="showLinkRepoModal()" id="linkRepoBtn" class="hidden bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                            <i class="fas fa-plus mr-2"></i>
-                            Link Repository
-                        </button>
-                    </div>
-                    <div class="p-6" id="linkedReposList">
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-code-branch text-4xl mb-3 opacity-50"></i>
-                            <p>No repositories linked yet</p>
-                            <p class="text-sm">Connect GitHub first to link repositories</p>
+                <!-- Link Repository Info -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">
+                            <p class="font-medium mb-1">Link Repositories via Deploy Modal</p>
+                            <p>To link a GitHub repository to a container, use the <strong>"Deploy Your Application"</strong> button on the <a href="/containers" class="underline hover:text-blue-800 dark:hover:text-blue-200">Containers</a> page and select the <strong>GitHub</strong> tab.</p>
                         </div>
                     </div>
                 </div>
@@ -510,7 +500,6 @@
                 if (data.connected) {
                     document.getElementById('githubConnected').classList.remove('hidden');
                     document.getElementById('githubNotConnected').classList.add('hidden');
-                    document.getElementById('linkRepoBtn').classList.remove('hidden');
 
                     document.getElementById('githubUsername').textContent = data.username || 'Unknown';
                     document.getElementById('githubEmail').textContent = data.email || '';
@@ -529,13 +518,9 @@
                             scopesContainer.appendChild(badge);
                         });
                     }
-
-                    // Load linked repositories
-                    loadLinkedRepositories();
                 } else {
                     document.getElementById('githubConnected').classList.add('hidden');
                     document.getElementById('githubNotConnected').classList.remove('hidden');
-                    document.getElementById('linkRepoBtn').classList.add('hidden');
                 }
             } catch (error) {
                 console.error('Error checking GitHub connection:', error);
@@ -566,90 +551,6 @@
                 console.error('Error disconnecting GitHub:', error);
                 alert('Error disconnecting GitHub account');
             }
-        }
-
-        async function loadLinkedRepositories() {
-            try {
-                const response = await fetch('/api/github/linked');
-                const repos = await response.json();
-
-                const container = document.getElementById('linkedReposList');
-
-                if (repos.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-code-branch text-4xl mb-3 opacity-50"></i>
-                            <p>No repositories linked yet</p>
-                            <p class="text-sm mt-2">Link a repository to a container for automatic deployments</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = repos.map(repo => `
-                    <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg mb-3">
-                        <div class="flex items-center space-x-4">
-                            <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                                <i class="fab fa-github text-xl"></i>
-                            </div>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">
-                                    <a href="${repo.repoUrl}" target="_blank" class="hover:text-purple-600">${repo.repoFullName}</a>
-                                </div>
-                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    Branch: <span class="font-mono">${repo.deployBranch}</span>
-                                    ${repo.autoDeploy ? '<span class="ml-2 text-green-600"><i class="fas fa-check-circle"></i> Auto-deploy</span>' : ''}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="px-2 py-1 text-xs font-medium rounded ${getStatusClass(repo.status)}">
-                                ${repo.status}
-                            </span>
-                            <button onclick="unlinkRepository('${repo.repoLinkId}')" class="text-red-500 hover:text-red-700 p-2" title="Unlink repository">
-                                <i class="fas fa-unlink"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading linked repositories:', error);
-            }
-        }
-
-        function getStatusClass(status) {
-            switch (status) {
-                case 'ACTIVE': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
-                case 'PENDING_WEBHOOK': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
-                case 'WEBHOOK_ERROR': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
-                default: return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200';
-            }
-        }
-
-        async function unlinkRepository(repoLinkId) {
-            if (!confirm('Are you sure you want to unlink this repository?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/github/link/${repoLinkId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    loadLinkedRepositories();
-                } else {
-                    alert('Failed to unlink repository');
-                }
-            } catch (error) {
-                console.error('Error unlinking repository:', error);
-                alert('Error unlinking repository');
-            }
-        }
-
-        function showLinkRepoModal() {
-            // TODO: Implement modal for linking repository to container
-            alert('Link Repository feature coming soon! Use the container settings page to link a repository.');
         }
 
         // Check GitHub connection when GitHub tab is selected
