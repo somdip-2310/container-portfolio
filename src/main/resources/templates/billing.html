@@ -242,12 +242,12 @@
                     <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">STARTER</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                            <span class="monthly-price">$39</span>
-                            <span class="quarterly-price hidden">$35</span>
-                            <span class="annual-price hidden">$33</span>
+                            <span class="monthly-price" data-usd="39">$39</span>
+                            <span class="quarterly-price hidden" data-usd="35">$35</span>
+                            <span class="annual-price hidden" data-usd="33">$33</span>
                             <span class="text-sm text-gray-500">/mo</span>
                         </div>
-                        <p class="text-xs text-gray-500 mb-1">~₹3,250/mo</p>
+                        <p class="text-xs text-gray-500 mb-1 inr-display" data-monthly="39" data-quarterly="35" data-annual="33">~₹3,250/mo</p>
                         <p class="text-xs text-gray-500 mb-4">Indie developers, Freelancers</p>
                         <ul class="space-y-2 mb-6 flex-grow text-sm">
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">3 Containers</span></li>
@@ -267,12 +267,12 @@
                         </div>
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">PRO</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                            <span class="monthly-price">$89</span>
-                            <span class="quarterly-price hidden">$80</span>
-                            <span class="annual-price hidden">$75</span>
+                            <span class="monthly-price" data-usd="89">$89</span>
+                            <span class="quarterly-price hidden" data-usd="80">$80</span>
+                            <span class="annual-price hidden" data-usd="75">$75</span>
                             <span class="text-sm text-gray-500">/mo</span>
                         </div>
-                        <p class="text-xs text-gray-500 mb-1">~₹7,425/mo</p>
+                        <p class="text-xs text-gray-500 mb-1 inr-display" data-monthly="89" data-quarterly="80" data-annual="75">~₹7,425/mo</p>
                         <p class="text-xs text-gray-500 mb-4">Small startups, Agencies</p>
                         <ul class="space-y-2 mb-6 flex-grow text-sm">
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">8 Containers</span></li>
@@ -289,12 +289,12 @@
                     <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">BUSINESS</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                            <span class="monthly-price">$169</span>
-                            <span class="quarterly-price hidden">$152</span>
-                            <span class="annual-price hidden">$142</span>
+                            <span class="monthly-price" data-usd="169">$169</span>
+                            <span class="quarterly-price hidden" data-usd="152">$152</span>
+                            <span class="annual-price hidden" data-usd="142">$142</span>
                             <span class="text-sm text-gray-500">/mo</span>
                         </div>
-                        <p class="text-xs text-gray-500 mb-1">~₹14,100/mo</p>
+                        <p class="text-xs text-gray-500 mb-1 inr-display" data-monthly="169" data-quarterly="152" data-annual="142">~₹14,100/mo</p>
                         <p class="text-xs text-gray-500 mb-4">Growing companies, Teams</p>
                         <ul class="space-y-2 mb-6 flex-grow text-sm">
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">20 Containers</span></li>
@@ -328,8 +328,40 @@
     </div>
 
     <script>
+        let exchangeRate = 83.5; // Fallback rate
+        let currentBillingPeriod = 'monthly';
+
+        // Fetch live exchange rate on page load
+        async function fetchExchangeRate() {
+            try {
+                const response = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR');
+                const data = await response.json();
+                if (data.rates && data.rates.INR) {
+                    exchangeRate = data.rates.INR;
+                    updateAllInrDisplays();
+                }
+            } catch (error) {
+                console.log('Using fallback exchange rate');
+            }
+        }
+
+        function formatInr(usd) {
+            const inr = Math.round(usd * exchangeRate / 50) * 50; // Round to nearest 50
+            return inr.toLocaleString('en-IN');
+        }
+
+        function updateAllInrDisplays() {
+            document.querySelectorAll('.inr-display').forEach(el => {
+                const usd = parseFloat(el.dataset[currentBillingPeriod]);
+                if (usd) {
+                    el.textContent = '~₹' + formatInr(usd) + '/mo';
+                }
+            });
+        }
+
         function showUpgradeModal() {
             document.getElementById('upgradeModal').classList.remove('hidden');
+            fetchExchangeRate(); // Refresh rate when modal opens
         }
 
         function hideUpgradeModal() {
@@ -341,6 +373,8 @@
         }
 
         function switchBilling(period) {
+            currentBillingPeriod = period;
+
             // Update button styles
             document.querySelectorAll('#monthlyBtn, #quarterlyBtn, #annualBtn').forEach(btn => {
                 btn.classList.remove('bg-purple-600', 'text-white');
@@ -367,7 +401,15 @@
             document.querySelectorAll(`.${period}-price`).forEach(el => {
                 el.classList.remove('hidden');
             });
+
+            // Update INR displays for the new billing period
+            updateAllInrDisplays();
         }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchExchangeRate();
+        });
     </script>
 </body>
 </html>
