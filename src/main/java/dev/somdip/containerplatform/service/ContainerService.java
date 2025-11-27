@@ -366,7 +366,7 @@ public class ContainerService {
 
         // Always update status to STOPPED to sync database with ECS
         container.setStatus(Container.ContainerStatus.STOPPED);
-        container.setUpdatedAt(LocalDateTime.now());
+        container.setUpdatedAt(Instant.now());
         return containerRepository.save(container);
     }
     /**
