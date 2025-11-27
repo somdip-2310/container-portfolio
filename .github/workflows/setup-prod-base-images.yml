@@ -1,0 +1,109 @@
+name: Setup Production Base Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm pushing base images to production ECR'
+        required: true
+        default: 'no'
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 696390945474
+
+jobs:
+  push-base-images:
+    name: Push Base Images to Production ECR
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'yes'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (Production)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push Node.js base image
+        run: |
+          docker pull node:18-alpine
+          docker tag node:18-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/node:18-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/node:18-alpine
+
+      - name: Push Python base image
+        run: |
+          docker pull python:3.11-slim
+          docker tag python:3.11-slim ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/python:3.11-slim
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/python:3.11-slim
+
+      - name: Push Java JDK base image
+        run: |
+          docker pull eclipse-temurin:17-jdk-alpine
+          docker tag eclipse-temurin:17-jdk-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/eclipse-temurin:17-jdk-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/eclipse-temurin:17-jdk-alpine
+
+      - name: Push Java JRE base image
+        run: |
+          docker pull eclipse-temurin:17-jre-alpine
+          docker tag eclipse-temurin:17-jre-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/eclipse-temurin:17-jre-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/eclipse-temurin:17-jre-alpine
+
+      - name: Push Go base image
+        run: |
+          docker pull golang:1.21-alpine
+          docker tag golang:1.21-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/golang:1.21-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/golang:1.21-alpine
+
+      - name: Push Alpine base image
+        run: |
+          docker pull alpine:latest
+          docker tag alpine:latest ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/alpine:latest
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/alpine:latest
+
+      - name: Push PHP base image
+        run: |
+          docker pull php:8.2-fpm-alpine
+          docker tag php:8.2-fpm-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/php:8.2-fpm-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/php:8.2-fpm-alpine
+
+      - name: Push Composer base image
+        run: |
+          docker pull composer:latest
+          docker tag composer:latest ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/composer:latest
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/composer:latest
+
+      - name: Push Ruby base image
+        run: |
+          docker pull ruby:3.2-alpine
+          docker tag ruby:3.2-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/ruby:3.2-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/ruby:3.2-alpine
+
+      - name: Push .NET SDK base image
+        run: |
+          docker pull mcr.microsoft.com/dotnet/sdk:7.0-alpine
+          docker tag mcr.microsoft.com/dotnet/sdk:7.0-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/dotnet-sdk:7.0-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/dotnet-sdk:7.0-alpine
+
+      - name: Push .NET ASP.NET base image
+        run: |
+          docker pull mcr.microsoft.com/dotnet/aspnet:7.0-alpine
+          docker tag mcr.microsoft.com/dotnet/aspnet:7.0-alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/dotnet-aspnet:7.0-alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/dotnet-aspnet:7.0-alpine
+
+      - name: Push Nginx base image
+        run: |
+          docker pull nginx:alpine
+          docker tag nginx:alpine ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/nginx:alpine
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/nginx:alpine
+
+      - name: Summary
+        run: echo "All base images pushed to production ECR!"
