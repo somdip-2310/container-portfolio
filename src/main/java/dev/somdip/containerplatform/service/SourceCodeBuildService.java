@@ -27,14 +27,17 @@ public class SourceCodeBuildService {
     @Value("${aws.region}")
     private String awsRegion;
 
-    @Value("${aws.account-id}")
+    @Value("${aws.accountId}")
     private String awsAccountId;
 
-    @Value("${aws.s3.bucket}")
+    @Value("${aws.s3.bucket.assets}")
     private String s3Bucket;
 
     @Value("${aws.ecr.repository-prefix:container-platform}")
     private String ecrRepositoryPrefix;
+
+    @Value("${aws.codebuild.serviceRoleArn}")
+    private String codeBuildServiceRoleArn;
 
     public SourceCodeBuildService(CodeBuildClient codeBuildClient, EcrClient ecrClient) {
         this.codeBuildClient = codeBuildClient;
@@ -194,7 +197,7 @@ public class SourceCodeBuildService {
                     .computeType(ComputeType.BUILD_GENERAL1_SMALL)
                     .privilegedMode(true) // Required for Docker builds
                     .build())
-                .serviceRole("arn:aws:iam::" + awsAccountId + ":role/ContainerPlatformServiceRole")
+                .serviceRole(codeBuildServiceRoleArn)
                 .build();
 
             codeBuildClient.createProject(createRequest);
