@@ -77,9 +77,9 @@ public class ContainerService {
             throw new IllegalArgumentException("Invalid container name. Use only lowercase letters, numbers, and hyphens");
         }
 
-        // Validate that the image is a supported technology stack
-        if (!isSupportedImageType(image)) {
-            throw new IllegalArgumentException("Unsupported container image type. Supported stacks: nginx, node, python, java, golang, php, ruby, dotnet");
+        // Validate image format (allow any valid Docker image reference)
+        if (!isValidDockerImageReference(image)) {
+            throw new IllegalArgumentException("Invalid Docker image format. Examples: nginx, myuser/myapp, ghcr.io/org/app");
         }
 
         String subdomain = generateSubdomain(name);
@@ -485,43 +485,82 @@ public class ContainerService {
     }
 
     /**
-     * Validates if the container image is a supported technology stack
+     * Validates Docker image reference format.
+     * Accepts:
+     * - Simple names: nginx, redis, postgres
+     * - User/repo: myuser/myapp
+     * - Full registry: ghcr.io/org/app, quay.io/user/app
+     * - ECR: 123456789.dkr.ecr.us-east-1.amazonaws.com/repo
      */
-    private boolean isSupportedImageType(String image) {
+    private boolean isValidDockerImageReference(String image) {
         if (image == null || image.trim().isEmpty()) {
             return false;
         }
 
-        String imageLower = image.toLowerCase();
+        // Remove tag if present for validation
+        String imageWithoutTag = image.split(":")[0];
 
-        // Allow ECR images from our account (built from source deployments)
-        if (imageLower.contains(".dkr.ecr.") && imageLower.contains(".amazonaws.com")) {
-            log.info("Validated ECR image: {}", image);
-            return true;
+        // Basic length validation
+        if (imageWithoutTag.length() > 255) {
+            log.warn("Image name too long: {}", image);
+            return false;
         }
 
-        // List of supported technology stacks
-        List<String> supportedStacks = Arrays.asList(
-            "nginx", "httpd", "apache",      // Static web servers
-            "node",                          // Node.js
-            "python",                        // Python
-            "java", "temurin", "openjdk", "tomcat", "maven",  // Java
-            "golang", "go",                  // Go
-            "php",                           // PHP
-            "ruby", "rails",                 // Ruby
-            "dotnet", "aspnet"               // .NET
-        );
-
-        // Check if the image contains any supported stack identifier
-        for (String stack : supportedStacks) {
-            if (imageLower.contains(stack)) {
-                log.info("Validated supported image type: {} (detected: {})", image, stack);
-                return true;
-            }
+        // Check for valid characters - allow alphanumeric, dots, hyphens, underscores, and slashes
+        if (!imageWithoutTag.matches("^[a-zA-Z0-9][a-zA-Z0-9._/-]*[a-zA-Z0-9]$") &&
+            !imageWithoutTag.matches("^[a-zA-Z0-9]$")) {
+            log.warn("Invalid image format: {}", image);
+            return false;
         }
 
-        log.warn("Unsupported image type detected: {}", image);
-        return false;
+        // Check for invalid patterns
+        if (imageWithoutTag.contains("//") || imageWithoutTag.contains("..")) {
+            log.warn("Invalid image format (double slashes or dots): {}", image);
+            return false;
+        }
+
+        log.info("Validated Docker image reference: {} (registry: {})", image, getRegistryType(image));
+        return true;
+    }
+
+    /**
+     * Determines the registry type from image reference
+     */
+    private ImageRegistryType getRegistryType(String image) {
+        if (image.contains(".dkr.ecr.") && image.contains(".amazonaws.com")) {
+            return ImageRegistryType.ECR;
+        } else if (image.startsWith("ghcr.io/")) {
+            return ImageRegistryType.GHCR;
+        } else if (image.startsWith("quay.io/")) {
+            return ImageRegistryType.QUAY;
+        } else if (image.contains(".") && image.contains("/")) {
+            return ImageRegistryType.CUSTOM;
+        } else {
+            return ImageRegistryType.DOCKER_HUB;
+        }
+    }
+
+    public enum ImageRegistryType {
+        DOCKER_HUB,
+        GHCR,
+        QUAY,
+        ECR,
+        CUSTOM
+    }
+
+    /**
+     * Extracts the image name from a full reference.
+     * ghcr.io/user/myapp:latest -> myapp
+     * nginx:alpine -> nginx
+     * myuser/myapp -> myapp
+     */
+    private String extractImageName(String image) {
+        // Remove tag
+        String withoutTag = image.split(":")[0];
+
+        // Get last path component
+        String[] parts = withoutTag.split("/");
+        return parts[parts.length - 1].toLowerCase();
     }
 
     private String generateSubdomain(String containerName) {
@@ -554,68 +593,91 @@ public class ContainerService {
     }
     
     /**
-     * Auto-detect the default port based on the image name/type
-     * Uses pattern matching to handle both Docker Hub and ECR image names
+     * Auto-detect the default port based on the image name/type.
+     * For unknown images, defaults to 8080.
      */
     private Integer getDefaultPortForImage(String image) {
         if (image == null) return 8080;
 
+        // Extract just the image name (remove registry prefix and tag)
+        String imageName = extractImageName(image);
         String imageLower = image.toLowerCase();
 
-        // Static web servers (nginx, apache, httpd) - port 80
-        if (imageLower.contains("nginx") || imageLower.contains("httpd") || imageLower.contains("apache")) {
+        // Static web servers - port 80
+        if (imageName.contains("nginx") || imageName.contains("httpd") ||
+            imageName.contains("apache") || imageName.contains("caddy")) {
             log.info("Detected static web server for image {}, using default port 80", image);
             return 80;
         }
 
-        // Node.js applications - port 3000
-        if (imageLower.contains("node")) {
+        // Node.js - port 3000
+        if (imageName.contains("node") || imageName.contains("nextjs") ||
+            imageName.contains("express") || imageName.contains("nestjs")) {
             log.info("Detected Node.js application for image {}, using default port 3000", image);
             return 3000;
         }
 
-        // Python applications (Flask, Django, FastAPI) - port 8000
-        if (imageLower.contains("python") || imageLower.contains("django") || imageLower.contains("flask") || imageLower.contains("fastapi")) {
+        // Python - port 8000
+        if (imageName.contains("python") || imageName.contains("django") ||
+            imageName.contains("flask") || imageName.contains("fastapi") ||
+            imageName.contains("uvicorn") || imageName.contains("gunicorn")) {
             log.info("Detected Python application for image {}, using default port 8000", image);
             return 8000;
         }
 
-        // Java applications (Spring Boot, Tomcat, Maven, Gradle) - port 8080
-        if (imageLower.contains("java") || imageLower.contains("maven") ||
-            imageLower.contains("gradle") || imageLower.contains("tomcat") ||
-            imageLower.contains("spring") || imageLower.contains("openjdk") ||
-            imageLower.contains("temurin") || imageLower.contains("eclipse-temurin")) {
+        // Java - port 8080
+        if (imageName.contains("java") || imageName.contains("maven") ||
+            imageName.contains("gradle") || imageName.contains("tomcat") ||
+            imageName.contains("spring") || imageName.contains("openjdk") ||
+            imageName.contains("temurin") || imageName.contains("quarkus") ||
+            imageLower.contains("eclipse-temurin")) {
             log.info("Detected Java application for image {}, using default port 8080", image);
             return 8080;
         }
 
-        // Go applications - port 8080
-        if (imageLower.contains("golang") || imageLower.contains("go:") || imageLower.contains("/go")) {
+        // Go - port 8080
+        if (imageName.contains("golang") || imageName.equals("go")) {
             log.info("Detected Go application for image {}, using default port 8080", image);
             return 8080;
         }
 
-        // PHP applications (with Composer support) - port 8000
-        if (imageLower.contains("php") || imageLower.contains("composer")) {
-            log.info("Detected PHP application for image {}, using default port 8000", image);
-            return 8000;
+        // PHP - port 9000 (FPM) or 80 (Apache)
+        if (imageName.contains("php")) {
+            if (imageLower.contains("fpm")) {
+                log.info("Detected PHP-FPM for image {}, using default port 9000", image);
+                return 9000;
+            }
+            log.info("Detected PHP application for image {}, using default port 80", image);
+            return 80;
         }
 
-        // Ruby/Rails applications - port 3000
-        if (imageLower.contains("ruby") || imageLower.contains("rails")) {
+        // Ruby/Rails - port 3000
+        if (imageName.contains("ruby") || imageName.contains("rails")) {
             log.info("Detected Ruby application for image {}, using default port 3000", image);
             return 3000;
         }
 
-        // .NET applications (ASP.NET, mcr.microsoft.com) - port 8080
-        if (imageLower.contains("dotnet") || imageLower.contains("aspnet") ||
+        // .NET - port 80 (Kestrel default in containers)
+        if (imageName.contains("dotnet") || imageName.contains("aspnet") ||
             imageLower.contains("mcr.microsoft.com")) {
-            log.info("Detected .NET application for image {}, using default port 8080", image);
-            return 8080;
+            log.info("Detected .NET application for image {}, using default port 80", image);
+            return 80;
         }
 
-        // Default fallback
-        log.warn("Could not detect image type for {}, defaulting to port 8080", image);
+        // Databases (warn user these likely won't work as web apps)
+        if (imageName.contains("postgres") || imageName.contains("mysql") ||
+            imageName.contains("mongo") || imageName.contains("redis") ||
+            imageName.contains("mariadb")) {
+            log.warn("Database image detected: {}. This may not work as a web application.", image);
+            // Return common database ports
+            if (imageName.contains("postgres")) return 5432;
+            if (imageName.contains("mysql") || imageName.contains("mariadb")) return 3306;
+            if (imageName.contains("mongo")) return 27017;
+            if (imageName.contains("redis")) return 6379;
+        }
+
+        // Default for unknown images
+        log.info("Unknown image type for {}, using default port 8080", image);
         return 8080;
     }
 }

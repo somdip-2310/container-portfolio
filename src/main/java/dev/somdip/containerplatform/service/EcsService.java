@@ -376,75 +376,93 @@ public class EcsService {
     }
 
     /**
-     * Detect appropriate health check path based on container image type
+     * Detects the appropriate health check path based on container image.
+     * For unknown images, defaults to /health with fallback to / via health-proxy.
      */
     private String detectHealthCheckPath(Container container) {
         String image = container.getImage().toLowerCase();
+        String imageName = extractImageName(image);
 
-        // Static site servers (nginx, apache, httpd)
-        if (image.contains("nginx") || image.contains("httpd") || image.contains("apache")) {
-            log.info("Detected static web server (nginx/apache) for container {}, using / health check", container.getContainerId());
+        // Static web servers - use root
+        if (imageName.contains("nginx") || imageName.contains("httpd") ||
+            imageName.contains("apache") || imageName.contains("caddy")) {
+            log.info("Detected web server for container {}, using / health check", container.getContainerId());
             return "/";
         }
 
-        // Node.js applications
-        if (image.contains("node")) {
-            log.info("Detected Node.js application for container {}, using /health health check", container.getContainerId());
-            return "/health";
-        }
-
-        // Python applications (Flask, Django, FastAPI)
-        if (image.contains("python")) {
-            log.info("Detected Python application for container {}, using /health health check", container.getContainerId());
-            return "/health";
-        }
-
-        // Java applications (Spring Boot, Tomcat)
-        if (image.contains("java") || image.contains("temurin") || image.contains("openjdk") || image.contains("tomcat")) {
-            log.info("Detected Java application for container {}, using /actuator/health health check", container.getContainerId());
+        // Spring Boot / Java - use /actuator/health
+        if (imageName.contains("spring") || imageName.contains("quarkus") ||
+            (imageName.contains("java") && !imageName.contains("tomcat"))) {
+            log.info("Detected Java app for container {}, using /actuator/health", container.getContainerId());
             return "/actuator/health";
         }
 
-        // Go applications
-        if (image.contains("golang") || image.contains("go:") || image.contains("/go")) {
-            log.info("Detected Go application for container {}, using /health health check", container.getContainerId());
-            return "/health";
-        }
-
-        // PHP applications
-        if (image.contains("php")) {
-            log.info("Detected PHP application for container {}, using / health check", container.getContainerId());
+        // Tomcat - use root
+        if (imageName.contains("tomcat")) {
+            log.info("Detected Tomcat for container {}, using / health check", container.getContainerId());
             return "/";
         }
 
-        // Ruby applications (Rails)
-        if (image.contains("ruby") || image.contains("rails")) {
-            log.info("Detected Ruby/Rails application for container {}, using /health health check", container.getContainerId());
+        // Java images without Spring (Maven builds, etc.) - use /actuator/health
+        if (image.contains("temurin") || image.contains("openjdk") || image.contains("maven") || image.contains("gradle")) {
+            log.info("Detected Java application for container {}, using /actuator/health", container.getContainerId());
+            return "/actuator/health";
+        }
+
+        // Node.js frameworks often use /health or /healthz
+        if (imageName.contains("node") || imageName.contains("express") ||
+            imageName.contains("nextjs") || imageName.contains("nestjs")) {
+            log.info("Detected Node.js app for container {}, using /health", container.getContainerId());
+            return "/health";
+        }
+
+        // Python frameworks
+        if (imageName.contains("python") || imageName.contains("django") ||
+            imageName.contains("flask") || imageName.contains("fastapi") ||
+            imageName.contains("uvicorn") || imageName.contains("gunicorn")) {
+            log.info("Detected Python app for container {}, using /health", container.getContainerId());
+            return "/health";
+        }
+
+        // Go applications
+        if (imageName.contains("golang") || imageName.equals("go")) {
+            log.info("Detected Go app for container {}, using /health", container.getContainerId());
+            return "/health";
+        }
+
+        // PHP applications - use root
+        if (imageName.contains("php")) {
+            log.info("Detected PHP app for container {}, using / health check", container.getContainerId());
+            return "/";
+        }
+
+        // Ruby/Rails applications
+        if (imageName.contains("ruby") || imageName.contains("rails")) {
+            log.info("Detected Ruby app for container {}, using /health", container.getContainerId());
             return "/health";
         }
 
         // .NET applications
-        if (image.contains("dotnet") || image.contains("aspnet")) {
-            log.info("Detected .NET application for container {}, using /health health check", container.getContainerId());
+        if (imageName.contains("dotnet") || imageName.contains("aspnet") ||
+            image.contains("mcr.microsoft.com")) {
+            log.info("Detected .NET app for container {}, using /health", container.getContainerId());
             return "/health";
         }
 
-        // Apache (another static web server)
-        if (image.contains("httpd") || image.contains("apache2")) {
-            log.info("Detected Apache web server for container {}, using / health check", container.getContainerId());
-            return "/";
-        }
-
-        // Tomcat (Java application server)
-        if (image.contains("tomcat")) {
-            log.info("Detected Tomcat application server for container {}, using / health check", container.getContainerId());
-            return "/";
-        }
-
-        // If we reach here, it's an unsupported type that somehow passed validation
-        // This should not happen, but we'll log a warning and default to /health
-        log.warn("Unknown container type for {}, this should have been caught during validation. Defaulting to /health", container.getContainerId());
+        // Default for unknown - health-proxy will try multiple paths
+        log.info("Unknown image type for container {}, using /health (health-proxy will handle)", container.getContainerId());
         return "/health";
+    }
+
+    /**
+     * Extracts the image name from a full reference.
+     * ghcr.io/user/myapp:latest -> myapp
+     * nginx:alpine -> nginx
+     */
+    private String extractImageName(String image) {
+        String withoutTag = image.split(":")[0];
+        String[] parts = withoutTag.split("/");
+        return parts[parts.length - 1].toLowerCase();
     }
     
     private String createOrUpdateService(Container container) {
