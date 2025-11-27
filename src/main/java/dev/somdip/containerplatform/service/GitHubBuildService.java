@@ -332,7 +332,7 @@ public class GitHubBuildService {
             containerRepository.save(container);
 
             // Deploy to ECS
-            ecsService.deployContainer(container);
+            ecsService.deployContainer(container, container.getUserId());
 
             // Update deployment as successful
             deployment.setStatus(Deployment.DeploymentStatus.COMPLETED);
