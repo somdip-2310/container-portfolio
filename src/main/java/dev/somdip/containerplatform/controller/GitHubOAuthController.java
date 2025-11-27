@@ -33,7 +33,7 @@ public class GitHubOAuthController {
     public RedirectView connect(Authentication authentication) {
         if (!oAuthService.isConfigured()) {
             log.warn("GitHub OAuth not configured");
-            return new RedirectView("/dashboard/settings?github_error=not_configured");
+            return new RedirectView("/settings?github_error=not_configured#github");
         }
 
         String userId = getUserId(authentication);
@@ -56,7 +56,7 @@ public class GitHubOAuthController {
 
         if (error != null) {
             log.error("GitHub OAuth error: {} - {}", error, errorDesc);
-            return new RedirectView("/dashboard/settings?github_error=" + error);
+            return new RedirectView("/settings?github_error=" + error + "#github");
         }
 
         try {
@@ -65,11 +65,11 @@ public class GitHubOAuthController {
 
             log.info("GitHub connected successfully for user: {}, GitHub: {}",
                 userId, connection.getGithubUsername());
-            return new RedirectView("/dashboard/settings?github_connected=true");
+            return new RedirectView("/settings?github_connected=true#github");
 
         } catch (Exception e) {
             log.error("GitHub OAuth callback failed", e);
-            return new RedirectView("/dashboard/settings?github_error=callback_failed");
+            return new RedirectView("/settings?github_error=callback_failed#github");
         }
     }
 
