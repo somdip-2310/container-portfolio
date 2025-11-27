@@ -121,7 +121,7 @@ application-local.properties
 application-prod.properties
 application-*.properties
 !application-test.properties
-
+!application-production.properties
 # AWS credentials (NEVER commit these!)
 .aws/
 aws.properties
