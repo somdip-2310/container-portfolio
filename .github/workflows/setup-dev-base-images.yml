@@ -1,20 +1,20 @@
-name: Setup Production Base Images
+name: Setup Development Base Images
 
 on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type "yes" to confirm pushing base images to production ECR'
+        description: 'Type "yes" to confirm pushing base images to development ECR'
         required: true
         default: 'no'
 
 env:
   AWS_REGION: us-east-1
-  AWS_ACCOUNT_ID: 696390945474
+  AWS_ACCOUNT_ID: 257394460825
 
 jobs:
   push-base-images:
-    name: Push Base Images to Production ECR
+    name: Push Base Images to Development ECR
     runs-on: ubuntu-latest
     if: github.event.inputs.confirm == 'yes'
 
@@ -22,11 +22,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (Production)
+      - name: Configure AWS credentials (Development)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -112,4 +112,4 @@ jobs:
           docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/base-images/nginx:alpine
 
       - name: Summary
-        run: echo "All base images pushed to production ECR!"
+        run: echo "All base images pushed to development ECR!"
