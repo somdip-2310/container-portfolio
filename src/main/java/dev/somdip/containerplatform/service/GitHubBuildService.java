@@ -86,9 +86,15 @@ public class GitHubBuildService {
 
             log.info("CodeBuild started: buildId={}", buildId);
 
-            // Update deployment with build ID
-            deployment.setBuildId(buildId);
-            deployment.setStatus(Deployment.DeploymentStatus.BUILDING);
+            // Update deployment with build ID (stored in metadata)
+            Map<String, String> metadata = deployment.getMetadata();
+            if (metadata == null) {
+                metadata = new HashMap<>();
+            }
+            metadata.put("buildId", buildId);
+            deployment.setMetadata(metadata);
+            deployment.setStatus(Deployment.DeploymentStatus.IN_PROGRESS);
+            deployment.setStartedAt(Instant.now());
             deploymentRepository.save(deployment);
 
             // Update linked repo with last deployed info
@@ -142,15 +148,22 @@ public class GitHubBuildService {
         Deployment deployment = new Deployment();
         deployment.setDeploymentId(UUID.randomUUID().toString());
         deployment.setContainerId(container.getContainerId());
+        deployment.setContainerName(container.getName());
         deployment.setUserId(linkedRepo.getUserId());
         deployment.setStatus(Deployment.DeploymentStatus.PENDING);
-        deployment.setTrigger(Deployment.DeploymentTrigger.GITHUB_PUSH);
-        deployment.setCommitSha(commitSha);
-        deployment.setCommitMessage(commitMessage != null ? commitMessage.substring(0, Math.min(200, commitMessage.length())) : null);
-        deployment.setTriggeredBy(triggeredBy);
+        deployment.setType(Deployment.DeploymentType.UPDATE);
+        deployment.setInitiatedBy(triggeredBy);
         deployment.setCreatedAt(Instant.now());
-        deployment.setImage(container.getImage());
-        deployment.setEnvironmentVariables(container.getEnvironmentVariables());
+        deployment.setPreviousImage(container.getImage());
+
+        // Store GitHub-specific info in metadata
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("trigger", "GITHUB_PUSH");
+        metadata.put("commitSha", commitSha);
+        if (commitMessage != null) {
+            metadata.put("commitMessage", commitMessage.substring(0, Math.min(200, commitMessage.length())));
+        }
+        deployment.setMetadata(metadata);
 
         return deploymentRepository.save(deployment);
     }
@@ -305,12 +318,12 @@ public class GitHubBuildService {
     private void handleBuildSuccess(Deployment deployment, Container container,
                                      LinkedRepository linkedRepo) {
         try {
-            // Update deployment status
-            deployment.setStatus(Deployment.DeploymentStatus.DEPLOYING);
-            deploymentRepository.save(deployment);
+            // Get commit SHA from metadata
+            Map<String, String> metadata = deployment.getMetadata();
+            String commitSha = metadata != null ? metadata.get("commitSha") : "unknown";
 
             // Get the built image URI
-            String imageTag = deployment.getCommitSha().substring(0, Math.min(7, deployment.getCommitSha().length()));
+            String imageTag = commitSha.substring(0, Math.min(7, commitSha.length()));
             String ecrRepo = ecrRepositoryPrefix + "/user-" + container.getUserId();
             String imageUri = ecrRegistry + "/" + ecrRepo + ":" + imageTag;
 
@@ -322,9 +335,12 @@ public class GitHubBuildService {
             ecsService.deployContainer(container);
 
             // Update deployment as successful
-            deployment.setStatus(Deployment.DeploymentStatus.DEPLOYED);
+            deployment.setStatus(Deployment.DeploymentStatus.COMPLETED);
             deployment.setCompletedAt(Instant.now());
-            deployment.setImageUri(imageUri);
+            deployment.setNewImage(imageUri);
+            if (deployment.getStartedAt() != null) {
+                deployment.setDurationMillis(Instant.now().toEpochMilli() - deployment.getStartedAt().toEpochMilli());
+            }
             deploymentRepository.save(deployment);
 
             // Clear any previous error

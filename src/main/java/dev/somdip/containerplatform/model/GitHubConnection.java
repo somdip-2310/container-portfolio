@@ -55,7 +55,6 @@ public class GitHubConnection {
     public List<String> getScopes() { return scopes; }
     public void setScopes(List<String> scopes) { this.scopes = scopes; }
 
-    @DynamoDbConvertedBy(ConnectionStatusConverter.class)
     public ConnectionStatus getStatus() { return status; }
     public void setStatus(ConnectionStatus status) { this.status = status; }
 
@@ -73,30 +72,4 @@ public class GitHubConnection {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-
-    // Converter for ConnectionStatus enum
-    public static class ConnectionStatusConverter implements software.amazon.awssdk.enhanced.dynamodb.AttributeConverter<ConnectionStatus> {
-        @Override
-        public software.amazon.awssdk.services.dynamodb.model.AttributeValue transformFrom(ConnectionStatus status) {
-            return software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder()
-                .s(status != null ? status.name() : null)
-                .build();
-        }
-
-        @Override
-        public ConnectionStatus transformTo(software.amazon.awssdk.services.dynamodb.model.AttributeValue attributeValue) {
-            String value = attributeValue.s();
-            return value != null ? ConnectionStatus.valueOf(value) : null;
-        }
-
-        @Override
-        public software.amazon.awssdk.enhanced.dynamodb.EnhancedType<ConnectionStatus> type() {
-            return software.amazon.awssdk.enhanced.dynamodb.EnhancedType.of(ConnectionStatus.class);
-        }
-
-        @Override
-        public software.amazon.awssdk.services.dynamodb.model.AttributeValue.Type attributeValueType() {
-            return software.amazon.awssdk.services.dynamodb.model.AttributeValue.Type.S;
-        }
-    }
 }

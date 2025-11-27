@@ -121,11 +121,9 @@ public class LinkedRepository {
     public String getWebhookSecret() { return webhookSecret; }
     public void setWebhookSecret(String webhookSecret) { this.webhookSecret = webhookSecret; }
 
-    @DynamoDbConvertedBy(WebhookStatusConverter.class)
     public WebhookStatus getWebhookStatus() { return webhookStatus; }
     public void setWebhookStatus(WebhookStatus webhookStatus) { this.webhookStatus = webhookStatus; }
 
-    @DynamoDbConvertedBy(LinkStatusConverter.class)
     public LinkStatus getStatus() { return status; }
     public void setStatus(LinkStatus status) { this.status = status; }
 
@@ -143,56 +141,4 @@ public class LinkedRepository {
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-
-    // Converter for LinkStatus enum
-    public static class LinkStatusConverter implements software.amazon.awssdk.enhanced.dynamodb.AttributeConverter<LinkStatus> {
-        @Override
-        public software.amazon.awssdk.services.dynamodb.model.AttributeValue transformFrom(LinkStatus status) {
-            return software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder()
-                .s(status != null ? status.name() : null)
-                .build();
-        }
-
-        @Override
-        public LinkStatus transformTo(software.amazon.awssdk.services.dynamodb.model.AttributeValue attributeValue) {
-            String value = attributeValue.s();
-            return value != null ? LinkStatus.valueOf(value) : null;
-        }
-
-        @Override
-        public software.amazon.awssdk.enhanced.dynamodb.EnhancedType<LinkStatus> type() {
-            return software.amazon.awssdk.enhanced.dynamodb.EnhancedType.of(LinkStatus.class);
-        }
-
-        @Override
-        public software.amazon.awssdk.services.dynamodb.model.AttributeValue.Type attributeValueType() {
-            return software.amazon.awssdk.services.dynamodb.model.AttributeValue.Type.S;
-        }
-    }
-
-    // Converter for WebhookStatus enum
-    public static class WebhookStatusConverter implements software.amazon.awssdk.enhanced.dynamodb.AttributeConverter<WebhookStatus> {
-        @Override
-        public software.amazon.awssdk.services.dynamodb.model.AttributeValue transformFrom(WebhookStatus status) {
-            return software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder()
-                .s(status != null ? status.name() : null)
-                .build();
-        }
-
-        @Override
-        public WebhookStatus transformTo(software.amazon.awssdk.services.dynamodb.model.AttributeValue attributeValue) {
-            String value = attributeValue.s();
-            return value != null ? WebhookStatus.valueOf(value) : null;
-        }
-
-        @Override
-        public software.amazon.awssdk.enhanced.dynamodb.EnhancedType<WebhookStatus> type() {
-            return software.amazon.awssdk.enhanced.dynamodb.EnhancedType.of(WebhookStatus.class);
-        }
-
-        @Override
-        public software.amazon.awssdk.services.dynamodb.model.AttributeValue.Type attributeValueType() {
-            return software.amazon.awssdk.services.dynamodb.model.AttributeValue.Type.S;
-        }
-    }
 }
