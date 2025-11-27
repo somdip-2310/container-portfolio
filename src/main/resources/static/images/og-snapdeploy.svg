@@ -1,0 +1,25 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="50%" style="stop-color:#4a1d6a"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#EC4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g transform="translate(100, 200)">
+    <rect width="80" height="80" rx="16" fill="url(#accent)"/>
+    <path d="M40 20 L28 45 L36 45 L32 60 L52 38 L44 38 L56 20 Z" fill="white"/>
+  </g>
+  <text x="200" y="260" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="white">SnapDeploy</text>
+  <text x="100" y="340" font-family="Arial, sans-serif" font-size="36" fill="#A78BFA">Deploy Containers in 60 Seconds</text>
+  <text x="100" y="420" font-family="Arial, sans-serif" font-size="24" fill="#9CA3AF">The fastest way to deploy Docker containers.</text>
+  <text x="100" y="460" font-family="Arial, sans-serif" font-size="24" fill="#9CA3AF">Free tier with 200 hours/month. Better than Heroku.</text>
+  <rect x="100" y="500" width="240" height="60" rx="12" fill="url(#accent)"/>
+  <text x="140" y="540" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">Get Started Free</text>
+  <text x="1000" y="590" font-family="Arial, sans-serif" font-size="20" fill="#6B7280">snapdeploy.dev</text>
+</svg>
