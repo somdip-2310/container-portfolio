@@ -44,13 +44,15 @@ public class FeedbackController {
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Send feedback email to contact@snapdeploy.dev
+            // ALWAYS send feedback email to contact@snapdeploy.dev (every submission)
+            log.info("Sending feedback email for user: {} ({})", user.getName(), user.getEmail());
             emailService.sendFeedbackNotification(
                 user.getEmail(),
                 user.getName(),
                 request.getMessage(),
                 request.getCategory()
             );
+            log.info("Feedback email sent successfully to contact@snapdeploy.dev");
 
             // Award bonus hours (only for FREE tier users and only once)
             if (user.getPlan() == User.UserPlan.FREE) {
@@ -59,6 +61,7 @@ public class FeedbackController {
 
                 if (!alreadyAwarded) {
                     // Award bonus hours and mark as awarded
+                    log.info("Awarding first-time feedback bonus to user: {}", user.getEmail());
                     usageTrackingService.addBonusHours(
                         user.getUserId(),
                         FEEDBACK_BONUS_HOURS,
@@ -83,7 +86,8 @@ public class FeedbackController {
                         .remainingHours(remainingHours)
                         .build());
                 } else {
-                    // Already received bonus
+                    // Already received bonus - email was still sent above
+                    log.info("User {} already received feedback bonus, but email was sent", user.getEmail());
                     return ResponseEntity.ok(FeedbackResponse.builder()
                         .success(true)
                         .message("Thank you for your feedback! (You've already received your one-time feedback bonus)")
@@ -92,6 +96,8 @@ public class FeedbackController {
                 }
             }
 
+            // Non-FREE tier users - email was still sent above
+            log.info("Feedback received from non-FREE user: {}", user.getEmail());
             return ResponseEntity.ok(FeedbackResponse.builder()
                 .success(true)
                 .message("Thank you for your feedback!")
