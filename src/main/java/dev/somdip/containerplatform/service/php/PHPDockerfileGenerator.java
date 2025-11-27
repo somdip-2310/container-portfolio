@@ -1,6 +1,7 @@
 package dev.somdip.containerplatform.service.php;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -13,6 +14,12 @@ import java.nio.file.Path;
 @Slf4j
 @Service
 public class PHPDockerfileGenerator {
+
+    private final String ecrRegistry;
+
+    public PHPDockerfileGenerator(@Value("${aws.ecr.baseImages.registry}") String ecrRegistry) {
+        this.ecrRegistry = ecrRegistry;
+    }
 
     /**
      * Generate Dockerfile for the detected PHP application
@@ -57,7 +64,7 @@ public class PHPDockerfileGenerator {
         if (appInfo.isRequiresComposer()) {
             dockerfile.append("# Install Composer\n");
             // Use ECR composer image to avoid Docker Hub rate limits
-            dockerfile.append("COPY --from=257394460825.dkr.ecr.us-east-1.amazonaws.com/base-images/composer:latest /usr/bin/composer /usr/bin/composer\n\n");
+            dockerfile.append("COPY --from=" + ecrRegistry + "/base-images/composer:latest /usr/bin/composer /usr/bin/composer\n\n");
         }
 
         // Set working directory
