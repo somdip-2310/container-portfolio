@@ -494,12 +494,18 @@ public class ContainerService {
 
         String imageLower = image.toLowerCase();
 
+        // Allow ECR images from our account (built from source deployments)
+        if (imageLower.contains(".dkr.ecr.") && imageLower.contains(".amazonaws.com")) {
+            log.info("Validated ECR image: {}", image);
+            return true;
+        }
+
         // List of supported technology stacks
         List<String> supportedStacks = Arrays.asList(
             "nginx", "httpd", "apache",      // Static web servers
             "node",                          // Node.js
             "python",                        // Python
-            "java", "temurin", "openjdk", "tomcat",  // Java
+            "java", "temurin", "openjdk", "tomcat", "maven",  // Java
             "golang", "go",                  // Go
             "php",                           // PHP
             "ruby", "rails",                 // Ruby
