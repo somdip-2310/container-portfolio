@@ -51,6 +51,9 @@ public class EcsService {
     @Value("${aws.alb.targetGroup.users.arn}")
     private String userContainersTargetGroupArn;
     
+    @Value("${aws.ecr.healthProxyImage}")
+    private String healthProxyImage;
+
     @Value("${aws.cloudwatch.logGroup.users}")
     private String logGroup;
 
@@ -299,7 +302,7 @@ public class EcsService {
         // Build health-proxy sidecar container definition
         ContainerDefinition healthProxyDef = ContainerDefinition.builder()
             .name("health-proxy")
-            .image("257394460825.dkr.ecr.us-east-1.amazonaws.com/health-proxy:latest")
+            .image(healthProxyImage)
             .cpu(64)
             .memory(128)
             .essential(false) // Non-essential so user app failure doesn't stop proxy
