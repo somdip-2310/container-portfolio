@@ -546,99 +546,73 @@ async function checkGitHubConnectionForDeploy() {
     }
 }
 
-// Load GitHub repositories
+// Load GitHub repositories into dropdown
 async function loadGitHubRepos() {
+    const repoSelect = document.getElementById('repoSelect');
+    repoSelect.innerHTML = '<option value="">Loading repositories...</option>';
+    repoSelect.disabled = true;
+
     try {
-        const response = await fetch('/api/github/repos?perPage=50');
+        const response = await fetch('/api/github/repos?perPage=100', {
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
         if (response.ok) {
             githubDeployState.repos = await response.json();
+            populateRepoDropdown();
+        } else {
+            repoSelect.innerHTML = '<option value="">Error loading repositories</option>';
+            console.error('Failed to load repos:', response.status);
         }
     } catch (error) {
         console.error('Error loading repos:', error);
+        repoSelect.innerHTML = '<option value="">Error loading repositories</option>';
+    } finally {
+        repoSelect.disabled = false;
     }
 }
 
-// Search GitHub repositories (debounced)
-let searchTimeout = null;
-function searchGitHubRepos(query) {
-    clearTimeout(searchTimeout);
+// Populate repository dropdown
+function populateRepoDropdown() {
+    const repoSelect = document.getElementById('repoSelect');
+    const repos = githubDeployState.repos;
 
-    const repoList = document.getElementById('repoList');
-
-    if (!query || query.length < 1) {
-        repoList.classList.add('hidden');
+    if (!repos || repos.length === 0) {
+        repoSelect.innerHTML = '<option value="">No repositories found</option>';
         return;
     }
 
-    searchTimeout = setTimeout(async () => {
-        try {
-            let repos = [];
-
-            // Search from cached repos first
-            if (githubDeployState.repos.length > 0) {
-                const lowerQuery = query.toLowerCase();
-                repos = githubDeployState.repos.filter(repo =>
-                    repo.fullName.toLowerCase().includes(lowerQuery) ||
-                    (repo.description && repo.description.toLowerCase().includes(lowerQuery))
-                );
-            }
-
-            // If no cached results or query is longer, search API
-            if (repos.length === 0 && query.length >= 2) {
-                const response = await fetch('/api/github/repos/search?q=' + encodeURIComponent(query));
-                if (response.ok) {
-                    repos = await response.json();
-                }
-            }
-
-            displayRepoList(repos);
-        } catch (error) {
-            console.error('Error searching repos:', error);
-        }
-    }, 300);
+    repoSelect.innerHTML = '<option value="">-- Select a repository --</option>' +
+        repos.map(repo =>
+            `<option value="${repo.fullName}" data-description="${(repo.description || '').replace(/"/g, '&quot;')}" data-private="${repo.private}" data-default-branch="${repo.defaultBranch}">${repo.fullName}${repo.private ? ' (Private)' : ''}</option>`
+        ).join('');
 }
 
-// Display repository list
-function displayRepoList(repos) {
-    const repoList = document.getElementById('repoList');
+// Handle repository dropdown selection
+async function onRepoSelectChange() {
+    const repoSelect = document.getElementById('repoSelect');
+    const selectedOption = repoSelect.options[repoSelect.selectedIndex];
+    const fullName = repoSelect.value;
 
-    if (repos.length === 0) {
-        repoList.innerHTML = '<div class="p-4 text-center text-gray-500">No repositories found</div>';
-        repoList.classList.remove('hidden');
+    if (!fullName) {
+        clearSelectedRepo();
         return;
     }
 
-    repoList.innerHTML = repos.map(repo => `
-        <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
-             onclick="selectRepository('${repo.fullName}', '${(repo.description || '').replace(/'/g, "\\'")}', '${repo.private}', '${repo.defaultBranch}')">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <i class="fab fa-github text-gray-400"></i>
-                    <span class="font-medium text-gray-900 dark:text-white">${repo.fullName}</span>
-                    ${repo.private ? '<span class="px-1.5 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">Private</span>' : ''}
-                </div>
-            </div>
-            ${repo.description ? `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">${repo.description}</p>` : ''}
-        </div>
-    `).join('');
+    const description = selectedOption.getAttribute('data-description') || '';
+    const isPrivate = selectedOption.getAttribute('data-private') === 'true';
+    const defaultBranch = selectedOption.getAttribute('data-default-branch') || 'main';
 
-    repoList.classList.remove('hidden');
-}
-
-// Select a repository
-async function selectRepository(fullName, description, isPrivate, defaultBranch) {
     githubDeployState.selectedRepo = {
         fullName: fullName,
         description: description,
-        isPrivate: isPrivate === 'true',
+        isPrivate: isPrivate,
         defaultBranch: defaultBranch
     };
 
-    // Hide repo list and search
-    document.getElementById('repoList').classList.add('hidden');
-    document.getElementById('repoSearch').value = '';
-
-    // Show selected repo
+    // Show selected repo info
     document.getElementById('selectedRepoName').textContent = fullName;
     document.getElementById('selectedRepoDesc').textContent = description || 'No description';
     document.getElementById('selectedRepo').classList.remove('hidden');
@@ -659,6 +633,10 @@ async function selectRepository(fullName, description, isPrivate, defaultBranch)
 function clearSelectedRepo() {
     githubDeployState.selectedRepo = null;
     githubDeployState.branches = [];
+
+    // Reset dropdown selection
+    const repoSelect = document.getElementById('repoSelect');
+    if (repoSelect) repoSelect.value = '';
 
     document.getElementById('selectedRepo').classList.add('hidden');
     document.getElementById('branchSelectContainer').classList.add('hidden');
@@ -681,7 +659,12 @@ async function loadBranches(fullName, defaultBranch) {
 
     try {
         const [owner, repo] = fullName.split('/');
-        const response = await fetch(`/api/github/repos/${owner}/${repo}/branches`);
+        const response = await fetch(`/api/github/repos/${owner}/${repo}/branches`, {
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
 
         if (response.ok) {
             const branches = await response.json();
@@ -717,7 +700,8 @@ function toggleAdvancedOptions() {
 function updateDeployButtonState() {
     const deployBtn = document.getElementById('deployFromGithubBtn');
     const containerName = document.getElementById('githubContainerName').value.trim();
-    const hasRepo = githubDeployState.selectedRepo !== null;
+    const repoSelect = document.getElementById('repoSelect');
+    const hasRepo = repoSelect && repoSelect.value && githubDeployState.selectedRepo !== null;
     const hasBranch = document.getElementById('deployBranch')?.value;
 
     const isValid = containerName.length >= 2 && hasRepo && hasBranch;
