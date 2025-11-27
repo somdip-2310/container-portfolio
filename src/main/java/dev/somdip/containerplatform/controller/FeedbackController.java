@@ -28,11 +28,11 @@ public class FeedbackController {
     private final EmailService emailService;
     private final UsageTrackingService usageTrackingService;
 
-    // TESTING VALUES: 5 minutes = 0.0833 hours
-    // TODO: Change back to 50.0 for production
-    private static final double FEEDBACK_BONUS_HOURS = 0.0833; // 5 minutes for testing
+    // PRODUCTION VALUES: 50 hours
+    
+    private static final double FEEDBACK_BONUS_HOURS = 50.0; // 50 hours for production
     private static final double BUG_REPORT_MIN_BONUS = 0.0;
-    private static final double BUG_REPORT_MAX_BONUS = 0.0833; // 5 minutes for testing (was 50.0)
+    private static final double BUG_REPORT_MAX_BONUS = 50.0; // 50 hours for production
     
     // Rate limiting constants
     private static final int MAX_FEEDBACK_PER_HOUR = 3;
@@ -178,7 +178,7 @@ public class FeedbackController {
 
                     return ResponseEntity.ok(FeedbackResponse.builder()
                         .success(true)
-                        .message("Thank you for your feedback! You've been awarded 5 bonus minutes.") // TESTING: was "50 bonus hours"
+                        .message("Thank you for your feedback! You've been awarded 50 bonus hours.") // TESTING: was "50 bonus hours"
                         .bonusHoursAwarded(FEEDBACK_BONUS_HOURS)
                         .newTotalBonus(user.getBonusHours())
                         .remainingHours(remainingHours)
@@ -234,7 +234,7 @@ public class FeedbackController {
             // Note: Bonus hours for bug reports are awarded manually after review
             return ResponseEntity.ok(FeedbackResponse.builder()
                 .success(true)
-                .message("Bug report submitted successfully! We'll review it and award bonus minutes (0-5 minutes or extended access) based on the severity and validity.") // TESTING: was "0-50 hours or 1 month"
+                .message("Bug report submitted successfully! We'll review it and award bonus hours (0-50 hours or extended access) based on the severity and validity.") // TESTING: was "0-50 hours or 1 month"
                 .bonusHoursAwarded(0.0)
                 .build());
 
