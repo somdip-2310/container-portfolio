@@ -58,6 +58,11 @@ public class DockerfileGenerator {
         modified = modified.replaceAll("(?i)FROM\\s+mcr\\.microsoft\\.com/dotnet/sdk:7\\.0-alpine", "FROM " + ecrRegistry + "/base-images/dotnet-sdk:7.0-alpine");
         modified = modified.replaceAll("(?i)FROM\\s+mcr\\.microsoft\\.com/dotnet/aspnet:7\\.0-alpine", "FROM " + ecrRegistry + "/base-images/dotnet-aspnet:7.0-alpine");
 
+        // Handle Maven base images
+        modified = modified.replaceAll("(?i)FROM\\s+maven:3\\.9-eclipse-temurin-17", "FROM " + ecrRegistry + "/base-images/maven:3.9-eclipse-temurin-17");
+        modified = modified.replaceAll("(?i)FROM\\s+maven:3-eclipse-temurin-17", "FROM " + ecrRegistry + "/base-images/maven:3.9-eclipse-temurin-17");
+        modified = modified.replaceAll("(?i)FROM\\s+maven:latest", "FROM " + ecrRegistry + "/base-images/maven:3.9-eclipse-temurin-17");
+
         // Handle COPY --from for composer
         modified = modified.replaceAll("(?i)COPY\\s+--from=composer:latest", "COPY --from=" + ecrRegistry + "/base-images/composer:latest");
 

@@ -228,6 +228,28 @@ public class SourceCodeBuildService {
                   - unzip -q source.zip -d /tmp/source
                   - cd /tmp/source
                   - echo Source code extracted
+                  - echo Replacing Docker Hub base images with ECR images...
+                  - ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                  - |
+                    if [ -f Dockerfile ]; then
+                      # Replace Docker Hub images with ECR base images to avoid rate limiting
+                      sed -i "s|FROM maven:3.9-eclipse-temurin-17|FROM ${ECR_REGISTRY}/base-images/maven:3.9-eclipse-temurin-17|gi" Dockerfile
+                      sed -i "s|FROM maven:latest|FROM ${ECR_REGISTRY}/base-images/maven:3.9-eclipse-temurin-17|gi" Dockerfile
+                      sed -i "s|FROM node:18-alpine|FROM ${ECR_REGISTRY}/base-images/node:18-alpine|gi" Dockerfile
+                      sed -i "s|FROM node:18|FROM ${ECR_REGISTRY}/base-images/node:18-alpine|gi" Dockerfile
+                      sed -i "s|FROM python:3.11-slim|FROM ${ECR_REGISTRY}/base-images/python:3.11-slim|gi" Dockerfile
+                      sed -i "s|FROM python:3-slim|FROM ${ECR_REGISTRY}/base-images/python:3.11-slim|gi" Dockerfile
+                      sed -i "s|FROM eclipse-temurin:17-jdk-alpine|FROM ${ECR_REGISTRY}/base-images/eclipse-temurin:17-jdk-alpine|gi" Dockerfile
+                      sed -i "s|FROM eclipse-temurin:17-jre-alpine|FROM ${ECR_REGISTRY}/base-images/eclipse-temurin:17-jre-alpine|gi" Dockerfile
+                      sed -i "s|FROM golang:1.21-alpine|FROM ${ECR_REGISTRY}/base-images/golang:1.21-alpine|gi" Dockerfile
+                      sed -i "s|FROM alpine:latest|FROM ${ECR_REGISTRY}/base-images/alpine:latest|gi" Dockerfile
+                      sed -i "s|FROM nginx:alpine|FROM ${ECR_REGISTRY}/base-images/nginx:alpine|gi" Dockerfile
+                      sed -i "s|FROM php:8.2-fpm-alpine|FROM ${ECR_REGISTRY}/base-images/php:8.2-fpm-alpine|gi" Dockerfile
+                      sed -i "s|FROM ruby:3.2-alpine|FROM ${ECR_REGISTRY}/base-images/ruby:3.2-alpine|gi" Dockerfile
+                      sed -i "s|COPY --from=composer:latest|COPY --from=${ECR_REGISTRY}/base-images/composer:latest|gi" Dockerfile
+                      echo "Dockerfile after base image replacement:"
+                      cat Dockerfile
+                    fi
               build:
                 commands:
                   - echo Build started on `date`
