@@ -489,7 +489,7 @@
                             <i class="fas fa-tag mr-2 text-green-500"></i>Category
                         </label>
                         <select id="feedbackCategory" name="category"
-                                class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
+                                class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-white rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all">
                             <option value="feature" class="text-gray-900 bg-white">Feature Request</option>
                             <option value="usability" class="text-gray-900 bg-white">Usability Improvement</option>
                             <option value="performance" class="text-gray-900 bg-white">Performance Issue</option>
@@ -504,7 +504,7 @@
                         </label>
                         <textarea id="feedbackMessage" name="message" required minlength="20" maxlength="1000" rows="6"
                                   placeholder="Tell us what you think! What features would you like? What can we improve?"
-                                  class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"></textarea>
+                                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-white rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"></textarea>
                         <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
                             <i class="fas fa-info-circle mr-1"></i>Minimum 20 characters, maximum 1000
                         </p>
@@ -551,7 +551,7 @@
                             <span class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                                 <i class="fas fa-trophy mr-1"></i>Earn Rewards
                             </span>
-                            <span class="ml-2 text-gray-700 dark:text-gray-200">0-50 bonus hours or 1 month free!</span>
+                            <span class="ml-2 text-gray-700 dark:text-gray-200">0-50 hr bonus for free tier, 1 month free for starter, based on the decision of the development committee, takes 2-3 working days due to the volume of requests.</span>
                         </p>
                     </div>
                     <button onclick="closeBugReportModal()"
@@ -569,7 +569,7 @@
                         </label>
                         <input type="text" id="bugTitle" name="title" required minlength="10" maxlength="200"
                                placeholder="Brief description of the bug"
-                               class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
+                               class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-white rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
                         <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
                             <i class="fas fa-info-circle mr-1"></i>10-200 characters
                         </p>
@@ -581,7 +581,7 @@
                             <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>Severity
                         </label>
                         <select id="bugSeverity" name="severity"
-                                class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
+                                class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-white rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
                             <option value="low" class="text-gray-900 bg-white">🟢 Low - Minor issue, workaround available</option>
                             <option value="medium" selected class="text-gray-900 bg-white">🟡 Medium - Noticeable issue affecting functionality</option>
                             <option value="high" class="text-gray-900 bg-white">🟠 High - Major issue blocking key features</option>
@@ -596,7 +596,7 @@
                         </label>
                         <textarea id="bugDescription" name="description" required minlength="30" maxlength="2000" rows="5"
                                   placeholder="What happened? What did you expect to happen?"
-                                  class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
+                                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-white rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
                         <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
                             <i class="fas fa-info-circle mr-1"></i>30-2000 characters
                         </p>
@@ -609,7 +609,7 @@
                         </label>
                         <textarea id="bugSteps" name="stepsToReproduce" required minlength="20" maxlength="1000" rows="4"
                                   placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."
-                                  class="w-full px-4 py-3 bg-white/10 dark:bg-gray-900/20 border border-white/20 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
+                                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-white rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"></textarea>
                         <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
                             <i class="fas fa-info-circle mr-1"></i>20-1000 characters
                         </p>

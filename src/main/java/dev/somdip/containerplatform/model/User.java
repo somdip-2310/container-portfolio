@@ -33,6 +33,13 @@ public class User {
     private Double hoursUsed; // Total container hours used (for FREE plan limit)
     private Double bonusHours; // Bonus hours earned (feedback, bug reports, etc.)
     private Boolean feedbackBonusAwarded; // Track if feedback bonus has been awarded
+    
+    // Rate limiting fields for feedback/bug reports
+    private Instant lastFeedbackSubmittedAt; // Last time user submitted feedback
+    private Integer hourlyFeedbackCount; // Feedback count in current hour
+    private Integer dailyFeedbackCount; // Feedback count in current day
+    private Instant hourlyFeedbackResetAt; // When hourly counter resets
+    private Instant dailyFeedbackResetAt; // When daily counter resets
     private Instant usageResetAt; // When usage counter resets (for FREE plan monthly reset)
     private UsageStats usageStats;
     
@@ -268,6 +275,51 @@ public class User {
     public void setFeedbackBonusAwarded(Boolean feedbackBonusAwarded) {
         this.feedbackBonusAwarded = feedbackBonusAwarded;
     }
+    @DynamoDbAttribute("lastFeedbackSubmittedAt")
+    public Instant getLastFeedbackSubmittedAt() {
+        return lastFeedbackSubmittedAt;
+    }
+
+    public void setLastFeedbackSubmittedAt(Instant lastFeedbackSubmittedAt) {
+        this.lastFeedbackSubmittedAt = lastFeedbackSubmittedAt;
+    }
+
+    @DynamoDbAttribute("hourlyFeedbackCount")
+    public Integer getHourlyFeedbackCount() {
+        return hourlyFeedbackCount;
+    }
+
+    public void setHourlyFeedbackCount(Integer hourlyFeedbackCount) {
+        this.hourlyFeedbackCount = hourlyFeedbackCount;
+    }
+
+    @DynamoDbAttribute("dailyFeedbackCount")
+    public Integer getDailyFeedbackCount() {
+        return dailyFeedbackCount;
+    }
+
+    public void setDailyFeedbackCount(Integer dailyFeedbackCount) {
+        this.dailyFeedbackCount = dailyFeedbackCount;
+    }
+
+    @DynamoDbAttribute("hourlyFeedbackResetAt")
+    public Instant getHourlyFeedbackResetAt() {
+        return hourlyFeedbackResetAt;
+    }
+
+    public void setHourlyFeedbackResetAt(Instant hourlyFeedbackResetAt) {
+        this.hourlyFeedbackResetAt = hourlyFeedbackResetAt;
+    }
+
+    @DynamoDbAttribute("dailyFeedbackResetAt")
+    public Instant getDailyFeedbackResetAt() {
+        return dailyFeedbackResetAt;
+    }
+
+    public void setDailyFeedbackResetAt(Instant dailyFeedbackResetAt) {
+        this.dailyFeedbackResetAt = dailyFeedbackResetAt;
+    }
+
 
     public enum UserPlan {
         FREE, STARTER, PRO, BUSINESS, ENTERPRISE

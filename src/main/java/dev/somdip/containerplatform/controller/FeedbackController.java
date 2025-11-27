@@ -33,8 +33,80 @@ public class FeedbackController {
     private static final double FEEDBACK_BONUS_HOURS = 0.0833; // 5 minutes for testing
     private static final double BUG_REPORT_MIN_BONUS = 0.0;
     private static final double BUG_REPORT_MAX_BONUS = 0.0833; // 5 minutes for testing (was 50.0)
+    
+    // Rate limiting constants
+    private static final int MAX_FEEDBACK_PER_HOUR = 3;
+    private static final int MAX_FEEDBACK_PER_DAY = 10;
 
-    @PostMapping("/submit")
+
+    /**
+     * Check if user has exceeded rate limits for feedback submissions
+     * Updates counters and resets them if time windows have expired
+     * 
+     * @param user The user submitting feedback
+     * @return true if rate limit exceeded, false if allowed
+     */
+    private boolean isRateLimitExceeded(User user) {
+        Instant now = Instant.now();
+        
+        // Initialize counters if null
+        if (user.getHourlyFeedbackCount() == null) {
+            user.setHourlyFeedbackCount(0);
+            user.setHourlyFeedbackResetAt(now.plusSeconds(3600)); // 1 hour from now
+        }
+        if (user.getDailyFeedbackCount() == null) {
+            user.setDailyFeedbackCount(0);
+            user.setDailyFeedbackResetAt(now.plusSeconds(86400)); // 24 hours from now
+        }
+        
+        // Reset hourly counter if window expired
+        if (user.getHourlyFeedbackResetAt() != null && now.isAfter(user.getHourlyFeedbackResetAt())) {
+            user.setHourlyFeedbackCount(0);
+            user.setHourlyFeedbackResetAt(now.plusSeconds(3600));
+        }
+        
+        // Reset daily counter if window expired
+        if (user.getDailyFeedbackResetAt() != null && now.isAfter(user.getDailyFeedbackResetAt())) {
+            user.setDailyFeedbackCount(0);
+            user.setDailyFeedbackResetAt(now.plusSeconds(86400));
+        }
+        
+        // Check limits
+        if (user.getHourlyFeedbackCount() >= MAX_FEEDBACK_PER_HOUR) {
+            log.warn("User {} exceeded hourly feedback limit ({}/{})", 
+                user.getEmail(), user.getHourlyFeedbackCount(), MAX_FEEDBACK_PER_HOUR);
+            return true;
+        }
+        
+        if (user.getDailyFeedbackCount() >= MAX_FEEDBACK_PER_DAY) {
+            log.warn("User {} exceeded daily feedback limit ({}/{})", 
+                user.getEmail(), user.getDailyFeedbackCount(), MAX_FEEDBACK_PER_DAY);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Increment feedback submission counters
+     */
+    private void incrementFeedbackCounters(User user) {
+        Instant now = Instant.now();
+        
+        user.setHourlyFeedbackCount(user.getHourlyFeedbackCount() + 1);
+        user.setDailyFeedbackCount(user.getDailyFeedbackCount() + 1);
+        user.setLastFeedbackSubmittedAt(now);
+        user.setUpdatedAt(now);
+        
+        userRepository.save(user);
+        
+        log.info("Updated feedback counters for {}: hourly={}/{}, daily={}/{}", 
+            user.getEmail(), 
+            user.getHourlyFeedbackCount(), MAX_FEEDBACK_PER_HOUR,
+            user.getDailyFeedbackCount(), MAX_FEEDBACK_PER_DAY);
+    }
+
+        @PostMapping("/submit")
     public ResponseEntity<FeedbackResponse> submitFeedback(
             @Valid @RequestBody FeedbackRequest request,
             Authentication authentication) {
@@ -43,6 +115,32 @@ public class FeedbackController {
             String username = authentication.getName();
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Check rate limiting
+            if (isRateLimitExceeded(user)) {
+                long hourlyRemaining = user.getHourlyFeedbackResetAt() != null ? 
+                    (user.getHourlyFeedbackResetAt().getEpochSecond() - Instant.now().getEpochSecond()) / 60 : 0;
+                long dailyRemaining = user.getDailyFeedbackResetAt() != null ? 
+                    (user.getDailyFeedbackResetAt().getEpochSecond() - Instant.now().getEpochSecond()) / 3600 : 0;
+                    
+                String message = String.format(
+                    "Rate limit exceeded. You can submit up to %d feedback per hour and %d per day. " +
+                    "Please try again in %d minutes (hourly) or %d hours (daily).",
+                    MAX_FEEDBACK_PER_HOUR, MAX_FEEDBACK_PER_DAY, hourlyRemaining, dailyRemaining
+                );
+                
+                log.warn("Rate limit exceeded for user {}: hourly={}, daily={}", 
+                    user.getEmail(), user.getHourlyFeedbackCount(), user.getDailyFeedbackCount());
+                    
+                return ResponseEntity.status(429).body(FeedbackResponse.builder()
+                    .success(false)
+                    .message(message)
+                    .bonusHoursAwarded(0.0)
+                    .build());
+            }
+
+            // Increment feedback counters
+            incrementFeedbackCounters(user);
 
             // ALWAYS send feedback email to contact@snapdeploy.dev (every submission)
             log.info("Sending feedback email for user: {} ({})", user.getName(), user.getEmail());
