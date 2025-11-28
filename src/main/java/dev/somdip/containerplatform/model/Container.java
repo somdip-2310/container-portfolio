@@ -73,6 +73,7 @@ public class Container {
 		this.imageTag = imageTag;
 	}
 
+	@DynamoDbSecondaryPartitionKey(indexNames = "SubdomainIndex")
 	public String getSubdomain() {
 		return subdomain;
 	}

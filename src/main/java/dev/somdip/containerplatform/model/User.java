@@ -210,6 +210,7 @@ public class User {
         return apiKey;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "PlanIndex")
     @DynamoDbAttribute("plan")
     public UserPlan getPlan() {
         return plan;
