@@ -61,7 +61,7 @@ public class SecurityConfig {
                                              ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) throws Exception {
         http
             // Note: /api/github/** removed - it uses session auth via webFilterChain for browser requests
-            .securityMatcher("/api/containers/**", "/api/deployments/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/webhooks/**")
+            .securityMatcher("/api/containers/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/webhooks/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception
@@ -88,7 +88,7 @@ public class SecurityConfig {
             .securityMatcher("/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/deployments/**", "/api/source/**", "/api/github/**", "/webhooks/**", "/auth/github/**"))
+                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/source/**", "/api/github/**", "/api/deployments/**", "/webhooks/**", "/auth/github/**"))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/register", "/static/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/forgot-password", "/verify-otp", "/reset-password").permitAll()
@@ -108,6 +108,7 @@ public class SecurityConfig {
                 .requestMatchers("/robots.txt", "/sitemap.xml").permitAll()
                 .requestMatchers("/api/source/**").authenticated()
                 .requestMatchers("/api/github/**").authenticated()  // GitHub API uses session auth
+                .requestMatchers("/api/deployments/**").authenticated()  // Deployment logs uses session auth
                 .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()
             )

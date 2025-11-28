@@ -603,12 +603,57 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
             <h3 id="progressTitle" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Processing</h3>
             <p id="progressMessage" class="text-gray-600 dark:text-gray-400 mb-4">Please wait...</p>
-            
+
             <!-- Progress Bar -->
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
                 <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
             <p id="progressPercent" class="text-sm text-gray-500 dark:text-gray-400 text-center">0%</p>
+        </div>
+    </div>
+
+    <!-- Deployment Logs Modal -->
+    <div id="deploymentLogsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Deployment Progress</h3>
+                    <p id="deploymentContainerName" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="hideDeploymentLogsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <span id="deploymentStatusBadge" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>In Progress
+                    </span>
+                    <span id="deploymentCommitInfo" class="text-xs text-gray-500 dark:text-gray-400"></span>
+                </div>
+            </div>
+
+            <!-- Steps Progress -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="deploymentSteps" class="space-y-4">
+                    <!-- Steps will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <span id="deploymentDuration" class="text-sm text-gray-500 dark:text-gray-400"></span>
+                    <button id="deploymentCloseBtn" onclick="closeDeploymentLogsAndRefresh()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

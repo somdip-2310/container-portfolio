@@ -150,7 +150,25 @@ public class GitHubRepositoryController {
 
         try {
             LinkedRepository linked = repositoryService.linkRepository(userId, request);
-            return ResponseEntity.ok(linked);
+
+            // Trigger initial build and get deployment ID
+            Map<String, Object> response = new HashMap<>();
+            response.put("linked", linked);
+            response.put("repoLinkId", linked.getRepoLinkId());
+
+            try {
+                var deployment = buildService.triggerManualBuild(linked.getRepoLinkId(), userId);
+                if (deployment != null) {
+                    response.put("deploymentId", deployment.getDeploymentId());
+                    response.put("buildTriggered", true);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to trigger initial build: {}", e.getMessage());
+                response.put("buildTriggered", false);
+                response.put("buildError", e.getMessage());
+            }
+
+            return ResponseEntity.ok(response);
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));

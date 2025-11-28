@@ -788,21 +788,29 @@ async function deployFromGitHub() {
             throw new Error(error.error || 'Failed to link repository');
         }
 
-        updateProgressWithMessage(60, 'Build triggered! Waiting for deployment...');
+        const linkResult = await linkResponse.json();
+        updateProgressWithMessage(60, 'Build triggered! Opening deployment logs...');
 
-        // Success - close modal and show message
+        // Success - hide progress modal and deploy modal
         updateProgress(100);
         setTimeout(() => {
             hideProgressModal();
             hideDeployModal();
-            showToast('GitHub repository linked successfully! Build has been triggered.', 'success');
 
             // Reset GitHub form state
             clearSelectedRepo();
             document.getElementById('githubContainerName').value = '';
 
-            // Refresh page after short delay
-            setTimeout(() => location.reload(), 2000);
+            // Check if deployment was triggered and show logs modal
+            if (linkResult.deploymentId && linkResult.buildTriggered) {
+                const commitInfo = githubDeployState.selectedRepo ?
+                    githubDeployState.selectedRepo.fullName + ' @ ' + deployBranch : '';
+                showDeploymentLogsModal(linkResult.deploymentId, containerName, commitInfo);
+            } else {
+                // Fallback: just show toast and refresh
+                showToast('GitHub repository linked successfully! Build has been triggered.', 'success');
+                setTimeout(() => location.reload(), 2000);
+            }
         }, 500);
 
     } catch (error) {
@@ -909,4 +917,270 @@ async function deployNewContainer(event) {
         console.error('Error deploying container:', error);
         showToast('Error deploying container: ' + error.message, 'error');
     }
+}
+
+// =====================================================
+// Deployment Logs Streaming (SSE)
+// =====================================================
+
+// Deployment logs state
+let deploymentLogsState = {
+    eventSource: null,
+    deploymentId: null,
+    startTime: null,
+    steps: {}
+};
+
+// Show deployment logs modal and start SSE stream
+function showDeploymentLogsModal(deploymentId, containerName, commitInfo) {
+    const modal = document.getElementById('deploymentLogsModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    // Set container name
+    document.getElementById('deploymentContainerName').textContent = containerName || '';
+
+    // Set commit info if available
+    const commitInfoEl = document.getElementById('deploymentCommitInfo');
+    if (commitInfo) {
+        commitInfoEl.textContent = commitInfo;
+    } else {
+        commitInfoEl.textContent = '';
+    }
+
+    // Reset state
+    deploymentLogsState.deploymentId = deploymentId;
+    deploymentLogsState.startTime = Date.now();
+    deploymentLogsState.steps = {};
+
+    // Reset UI
+    document.getElementById('deploymentSteps').innerHTML = '';
+    updateDeploymentStatusBadge('IN_PROGRESS');
+    updateDeploymentDuration();
+
+    // Start duration timer
+    const durationInterval = setInterval(() => {
+        if (!deploymentLogsState.deploymentId) {
+            clearInterval(durationInterval);
+            return;
+        }
+        updateDeploymentDuration();
+    }, 1000);
+
+    // Start SSE stream
+    startDeploymentLogStream(deploymentId);
+}
+
+// Hide deployment logs modal
+function hideDeploymentLogsModal() {
+    const modal = document.getElementById('deploymentLogsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Close SSE connection
+    if (deploymentLogsState.eventSource) {
+        deploymentLogsState.eventSource.close();
+        deploymentLogsState.eventSource = null;
+    }
+
+    deploymentLogsState.deploymentId = null;
+}
+
+// Close modal and refresh page
+function closeDeploymentLogsAndRefresh() {
+    hideDeploymentLogsModal();
+    location.reload();
+}
+
+// Start SSE stream for deployment logs
+function startDeploymentLogStream(deploymentId) {
+    // Close existing connection if any
+    if (deploymentLogsState.eventSource) {
+        deploymentLogsState.eventSource.close();
+    }
+
+    const url = '/api/deployments/' + deploymentId + '/stream';
+    const eventSource = new EventSource(url);
+    deploymentLogsState.eventSource = eventSource;
+
+    // Handle initial state
+    eventSource.addEventListener('init', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Deployment init:', data);
+
+        if (data.containerName) {
+            document.getElementById('deploymentContainerName').textContent = data.containerName;
+        }
+
+        if (data.commitSha) {
+            const shortSha = data.commitSha.substring(0, 7);
+            const commitMsg = data.commitMessage ? ': ' + data.commitMessage.substring(0, 50) : '';
+            document.getElementById('deploymentCommitInfo').textContent = shortSha + commitMsg;
+        }
+
+        updateDeploymentStatusBadge(data.status);
+    });
+
+    // Handle step updates
+    eventSource.addEventListener('step', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Step update:', data);
+        updateDeploymentStep(data.stepName, data.status, data.message);
+    });
+
+    // Handle log messages
+    eventSource.addEventListener('log', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Log:', data.message);
+        // Could add log lines to the UI if needed
+    });
+
+    // Handle status changes
+    eventSource.addEventListener('status', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Status update:', data);
+        updateDeploymentStatusBadge(data.status);
+
+        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+            eventSource.close();
+            deploymentLogsState.eventSource = null;
+
+            // Show appropriate message
+            if (data.status === 'COMPLETED') {
+                showToast('Deployment completed successfully!', 'success');
+            } else {
+                showToast('Deployment failed: ' + (data.message || 'Unknown error'), 'error');
+            }
+        }
+    });
+
+    // Handle errors
+    eventSource.onerror = function(error) {
+        console.error('SSE error:', error);
+        // Don't close immediately - the server might reconnect
+        if (eventSource.readyState === EventSource.CLOSED) {
+            console.log('SSE connection closed');
+        }
+    };
+}
+
+// Update a deployment step in the UI
+function updateDeploymentStep(stepName, status, message) {
+    const stepsContainer = document.getElementById('deploymentSteps');
+
+    // Check if step already exists
+    let stepEl = document.getElementById('step-' + stepName);
+
+    if (!stepEl) {
+        // Create new step element
+        stepEl = document.createElement('div');
+        stepEl.id = 'step-' + stepName;
+        stepEl.className = 'flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50';
+        stepsContainer.appendChild(stepEl);
+    }
+
+    // Get icon and color based on status
+    const { icon, colorClass } = getStepStatusStyles(status);
+
+    stepEl.innerHTML = '<div class="flex-shrink-0 mt-0.5">' + icon + '</div>' +
+        '<div class="flex-1 min-w-0">' +
+            '<p class="text-sm font-medium text-gray-900 dark:text-white">' + formatStepName(stepName) + '</p>' +
+            '<p class="text-sm text-gray-500 dark:text-gray-400 truncate">' + (message || '') + '</p>' +
+        '</div>' +
+        '<span class="flex-shrink-0 px-2 py-1 text-xs font-medium rounded-full ' + colorClass + '">' + status + '</span>';
+
+    // Scroll to bottom
+    stepsContainer.scrollTop = stepsContainer.scrollHeight;
+
+    // Store step state
+    deploymentLogsState.steps[stepName] = { status, message };
+}
+
+// Get icon and styles for step status
+function getStepStatusStyles(status) {
+    switch (status) {
+        case 'COMPLETED':
+            return {
+                icon: '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+                colorClass: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+            };
+        case 'FAILED':
+            return {
+                icon: '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+                colorClass: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+            };
+        case 'IN_PROGRESS':
+        default:
+            return {
+                icon: '<svg class="w-5 h-5 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>',
+                colorClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+            };
+    }
+}
+
+// Format step name for display
+function formatStepName(stepName) {
+    const names = {
+        'INITIALIZING': 'Initializing',
+        'AUTHENTICATING': 'Authenticating',
+        'STARTING_BUILD': 'Starting Build',
+        'QUEUED': 'Queued',
+        'PROVISIONING': 'Provisioning',
+        'CLONING': 'Cloning Repository',
+        'INSTALLING': 'Installing Dependencies',
+        'PRE_BUILD': 'Pre-Build',
+        'BUILDING': 'Building Image',
+        'POST_BUILD': 'Post-Build',
+        'PUSHING_IMAGE': 'Pushing Image',
+        'FINALIZING': 'Finalizing',
+        'BUILD_COMPLETE': 'Build Complete',
+        'BUILD_FAILED': 'Build Failed',
+        'DEPLOYING': 'Deploying to ECS',
+        'DEPLOY_FAILED': 'Deploy Failed',
+        'ERROR': 'Error',
+        'TIMEOUT': 'Timeout'
+    };
+    return names[stepName] || stepName;
+}
+
+// Update deployment status badge
+function updateDeploymentStatusBadge(status) {
+    const badge = document.getElementById('deploymentStatusBadge');
+    if (!badge) return;
+
+    switch (status) {
+        case 'COMPLETED':
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            badge.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Completed';
+            break;
+        case 'FAILED':
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            badge.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Failed';
+            break;
+        case 'PENDING':
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            badge.innerHTML = '<i class="fas fa-clock mr-2"></i>Pending';
+            break;
+        case 'IN_PROGRESS':
+        default:
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            badge.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>In Progress';
+            break;
+    }
+}
+
+// Update deployment duration display
+function updateDeploymentDuration() {
+    const durationEl = document.getElementById('deploymentDuration');
+    if (!durationEl || !deploymentLogsState.startTime) return;
+
+    const elapsed = Math.floor((Date.now() - deploymentLogsState.startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+
+    durationEl.textContent = 'Duration: ' + minutes + 'm ' + seconds + 's';
 }

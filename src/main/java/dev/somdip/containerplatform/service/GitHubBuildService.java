@@ -27,6 +27,7 @@ public class GitHubBuildService {
     private final LinkedRepositoryRepository linkedRepoRepository;
     private final EcsService ecsService;
     private final GitHubOAuthService oAuthService;
+    private final DeploymentLogStreamService logStreamService;
 
     @Value("${aws.codebuild.project-name:github-container-build}")
     private String codeBuildProjectName;
@@ -42,13 +43,15 @@ public class GitHubBuildService {
                               DeploymentRepository deploymentRepository,
                               LinkedRepositoryRepository linkedRepoRepository,
                               EcsService ecsService,
-                              GitHubOAuthService oAuthService) {
+                              GitHubOAuthService oAuthService,
+                              DeploymentLogStreamService logStreamService) {
         this.codeBuildClient = codeBuildClient;
         this.containerRepository = containerRepository;
         this.deploymentRepository = deploymentRepository;
         this.linkedRepoRepository = linkedRepoRepository;
         this.ecsService = ecsService;
         this.oAuthService = oAuthService;
+        this.logStreamService = logStreamService;
     }
 
     /**
@@ -67,15 +70,28 @@ public class GitHubBuildService {
         // Create deployment record
         Deployment deployment = createDeployment(container, linkedRepo, commitSha, commitMessage, pusherName);
 
+        // Publish initial step
+        logStreamService.publishStep(deployment.getDeploymentId(), "INITIALIZING", "IN_PROGRESS",
+            "Initializing build for " + linkedRepo.getRepoFullName());
+
         try {
             // Get GitHub access token for cloning private repos
+            logStreamService.publishStep(deployment.getDeploymentId(), "AUTHENTICATING", "IN_PROGRESS",
+                "Authenticating with GitHub...");
+
             String accessToken = oAuthService.getAccessToken(linkedRepo.getUserId());
+
+            logStreamService.publishStep(deployment.getDeploymentId(), "AUTHENTICATING", "COMPLETED",
+                "GitHub authentication successful");
 
             // Build environment variables
             List<EnvironmentVariable> envVars = buildEnvironmentVariables(
                 linkedRepo, container, commitSha, accessToken);
 
             // Start CodeBuild
+            logStreamService.publishStep(deployment.getDeploymentId(), "STARTING_BUILD", "IN_PROGRESS",
+                "Starting AWS CodeBuild job...");
+
             StartBuildRequest buildRequest = StartBuildRequest.builder()
                 .projectName(codeBuildProjectName)
                 .environmentVariablesOverride(envVars)
@@ -85,6 +101,9 @@ public class GitHubBuildService {
             String buildId = buildResponse.build().id();
 
             log.info("CodeBuild started: buildId={}", buildId);
+
+            logStreamService.publishStep(deployment.getDeploymentId(), "STARTING_BUILD", "COMPLETED",
+                "CodeBuild job started: " + buildId.substring(buildId.lastIndexOf(':') + 1));
 
             // Update deployment with build ID (stored in metadata)
             Map<String, String> metadata = deployment.getMetadata();
@@ -107,6 +126,11 @@ public class GitHubBuildService {
 
         } catch (Exception e) {
             log.error("Build failed for {}", linkedRepo.getRepoFullName(), e);
+
+            logStreamService.publishStep(deployment.getDeploymentId(), "ERROR", "FAILED",
+                "Build failed: " + e.getMessage());
+            logStreamService.publishStatus(deployment.getDeploymentId(), Deployment.DeploymentStatus.FAILED,
+                e.getMessage());
 
             deployment.setStatus(Deployment.DeploymentStatus.FAILED);
             deployment.setErrorMessage(e.getMessage());
@@ -133,14 +157,103 @@ public class GitHubBuildService {
         // For now, use a placeholder - in real implementation, fetch from GitHub API
         String commitSha = "manual-" + UUID.randomUUID().toString().substring(0, 8);
 
-        triggerBuild(linkedRepo, commitSha, "Manual deployment triggered", userId);
-
-        // Return the latest deployment (will be in PENDING state initially)
+        // Get container to create deployment record first
         Container container = containerRepository.findById(linkedRepo.getContainerId())
             .orElseThrow(() -> new IllegalStateException("Container not found"));
 
-        return deploymentRepository.findLatestByContainerId(container.getContainerId())
-            .orElse(null);
+        // Create deployment before triggering async build so we can return deploymentId
+        Deployment deployment = createDeployment(container, linkedRepo, commitSha, "Manual deployment triggered", userId);
+
+        // Trigger async build (will update the deployment)
+        triggerBuildAsync(linkedRepo, commitSha, "Manual deployment triggered", userId, deployment.getDeploymentId());
+
+        return deployment;
+    }
+
+    /**
+     * Internal async build trigger that uses existing deployment
+     */
+    @Async
+    protected void triggerBuildAsync(LinkedRepository linkedRepo, String commitSha,
+                                     String commitMessage, String pusherName, String deploymentId) {
+        log.info("Starting async build for deployment: {}", deploymentId);
+
+        Deployment deployment = deploymentRepository.findById(deploymentId)
+            .orElseThrow(() -> new IllegalStateException("Deployment not found: " + deploymentId));
+
+        Container container = containerRepository.findById(linkedRepo.getContainerId())
+            .orElseThrow(() -> new IllegalStateException("Container not found: " + linkedRepo.getContainerId()));
+
+        // Publish initial step
+        logStreamService.publishStep(deploymentId, "INITIALIZING", "IN_PROGRESS",
+            "Initializing build for " + linkedRepo.getRepoFullName());
+
+        try {
+            // Get GitHub access token for cloning private repos
+            logStreamService.publishStep(deploymentId, "AUTHENTICATING", "IN_PROGRESS",
+                "Authenticating with GitHub...");
+
+            String accessToken = oAuthService.getAccessToken(linkedRepo.getUserId());
+
+            logStreamService.publishStep(deploymentId, "AUTHENTICATING", "COMPLETED",
+                "GitHub authentication successful");
+
+            // Build environment variables
+            List<EnvironmentVariable> envVars = buildEnvironmentVariables(
+                linkedRepo, container, commitSha, accessToken);
+
+            // Start CodeBuild
+            logStreamService.publishStep(deploymentId, "STARTING_BUILD", "IN_PROGRESS",
+                "Starting AWS CodeBuild job...");
+
+            StartBuildRequest buildRequest = StartBuildRequest.builder()
+                .projectName(codeBuildProjectName)
+                .environmentVariablesOverride(envVars)
+                .build();
+
+            StartBuildResponse buildResponse = codeBuildClient.startBuild(buildRequest);
+            String buildId = buildResponse.build().id();
+
+            log.info("CodeBuild started: buildId={}", buildId);
+
+            logStreamService.publishStep(deploymentId, "STARTING_BUILD", "COMPLETED",
+                "CodeBuild job started successfully");
+
+            // Update deployment with build ID (stored in metadata)
+            Map<String, String> metadata = deployment.getMetadata();
+            if (metadata == null) {
+                metadata = new HashMap<>();
+            }
+            metadata.put("buildId", buildId);
+            deployment.setMetadata(metadata);
+            deployment.setStatus(Deployment.DeploymentStatus.IN_PROGRESS);
+            deployment.setStartedAt(Instant.now());
+            deploymentRepository.save(deployment);
+
+            // Update linked repo with last deployed info
+            linkedRepo.setLastDeployedAt(Instant.now());
+            linkedRepo.setLastDeployedCommit(commitSha);
+            linkedRepoRepository.save(linkedRepo);
+
+            // Poll for build completion
+            pollBuildStatus(buildId, deployment, container, linkedRepo);
+
+        } catch (Exception e) {
+            log.error("Build failed for {}", linkedRepo.getRepoFullName(), e);
+
+            logStreamService.publishStep(deploymentId, "ERROR", "FAILED",
+                "Build failed: " + e.getMessage());
+            logStreamService.publishStatus(deploymentId, Deployment.DeploymentStatus.FAILED,
+                e.getMessage());
+
+            deployment.setStatus(Deployment.DeploymentStatus.FAILED);
+            deployment.setErrorMessage(e.getMessage());
+            deployment.setCompletedAt(Instant.now());
+            deploymentRepository.save(deployment);
+
+            linkedRepo.setLastError(e.getMessage());
+            linkedRepoRepository.save(linkedRepo);
+        }
     }
 
     private Deployment createDeployment(Container container, LinkedRepository linkedRepo,
@@ -267,6 +380,7 @@ public class GitHubBuildService {
                                   Container container, LinkedRepository linkedRepo) {
         int maxAttempts = 60; // 10 minutes max
         int attempt = 0;
+        String lastPhase = "";
 
         while (attempt < maxAttempts) {
             try {
@@ -285,16 +399,29 @@ public class GitHubBuildService {
 
                 Build build = response.builds().get(0);
                 StatusType status = build.buildStatus();
+                String currentPhase = build.currentPhase();
 
-                log.debug("Build {} status: {}", buildId, status);
+                // Publish phase changes
+                if (currentPhase != null && !currentPhase.equals(lastPhase)) {
+                    lastPhase = currentPhase;
+                    String stepName = mapPhaseToStep(currentPhase);
+                    String message = getPhaseMessage(currentPhase);
+                    logStreamService.publishStep(deployment.getDeploymentId(), stepName, "IN_PROGRESS", message);
+                }
+
+                log.debug("Build {} status: {}, phase: {}", buildId, status, currentPhase);
 
                 if (status == StatusType.SUCCEEDED) {
                     log.info("Build {} succeeded", buildId);
+                    logStreamService.publishStep(deployment.getDeploymentId(), "BUILD_COMPLETE", "COMPLETED",
+                        "Build completed successfully!");
                     handleBuildSuccess(deployment, container, linkedRepo);
                     return;
                 } else if (status == StatusType.FAILED || status == StatusType.FAULT ||
                            status == StatusType.STOPPED || status == StatusType.TIMED_OUT) {
                     log.error("Build {} failed with status: {}", buildId, status);
+                    logStreamService.publishStep(deployment.getDeploymentId(), "BUILD_FAILED", "FAILED",
+                        "Build failed: " + status);
                     handleBuildFailure(deployment, linkedRepo, "Build failed: " + status);
                     return;
                 }
@@ -304,6 +431,8 @@ public class GitHubBuildService {
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                logStreamService.publishStep(deployment.getDeploymentId(), "ERROR", "FAILED",
+                    "Build was interrupted");
                 handleBuildFailure(deployment, linkedRepo, "Build interrupted");
                 return;
             } catch (Exception e) {
@@ -312,7 +441,64 @@ public class GitHubBuildService {
             }
         }
 
+        logStreamService.publishStep(deployment.getDeploymentId(), "TIMEOUT", "FAILED",
+            "Build timed out after 10 minutes");
         handleBuildFailure(deployment, linkedRepo, "Build timed out");
+    }
+
+    private String mapPhaseToStep(String phase) {
+        if (phase == null) return "INITIALIZING";
+        switch (phase.toUpperCase()) {
+            case "SUBMITTED":
+            case "QUEUED":
+                return "QUEUED";
+            case "PROVISIONING":
+                return "PROVISIONING";
+            case "DOWNLOAD_SOURCE":
+                return "CLONING";
+            case "INSTALL":
+                return "INSTALLING";
+            case "PRE_BUILD":
+                return "PRE_BUILD";
+            case "BUILD":
+                return "BUILDING";
+            case "POST_BUILD":
+                return "POST_BUILD";
+            case "UPLOAD_ARTIFACTS":
+                return "PUSHING_IMAGE";
+            case "FINALIZING":
+                return "FINALIZING";
+            default:
+                return phase;
+        }
+    }
+
+    private String getPhaseMessage(String phase) {
+        if (phase == null) return "Starting build...";
+        switch (phase.toUpperCase()) {
+            case "SUBMITTED":
+                return "Build submitted to queue...";
+            case "QUEUED":
+                return "Waiting for build environment...";
+            case "PROVISIONING":
+                return "Provisioning build environment...";
+            case "DOWNLOAD_SOURCE":
+                return "Cloning repository from GitHub...";
+            case "INSTALL":
+                return "Installing dependencies...";
+            case "PRE_BUILD":
+                return "Running pre-build commands...";
+            case "BUILD":
+                return "Building Docker image...";
+            case "POST_BUILD":
+                return "Running post-build commands...";
+            case "UPLOAD_ARTIFACTS":
+                return "Pushing image to container registry...";
+            case "FINALIZING":
+                return "Finalizing build...";
+            default:
+                return "Processing: " + phase;
+        }
     }
 
     private void handleBuildSuccess(Deployment deployment, Container container,
@@ -332,7 +518,13 @@ public class GitHubBuildService {
             containerRepository.save(container);
 
             // Deploy to ECS
+            logStreamService.publishStep(deployment.getDeploymentId(), "DEPLOYING", "IN_PROGRESS",
+                "Deploying to ECS cluster...");
+
             ecsService.deployContainer(container, container.getUserId());
+
+            logStreamService.publishStep(deployment.getDeploymentId(), "DEPLOYING", "COMPLETED",
+                "Deployed to ECS successfully!");
 
             // Update deployment as successful
             deployment.setStatus(Deployment.DeploymentStatus.COMPLETED);
@@ -343,6 +535,10 @@ public class GitHubBuildService {
             }
             deploymentRepository.save(deployment);
 
+            // Publish completion
+            logStreamService.publishStatus(deployment.getDeploymentId(), Deployment.DeploymentStatus.COMPLETED,
+                "Deployment completed successfully!");
+
             // Clear any previous error
             linkedRepo.setLastError(null);
             linkedRepoRepository.save(linkedRepo);
@@ -351,6 +547,8 @@ public class GitHubBuildService {
 
         } catch (Exception e) {
             log.error("Deployment failed after successful build", e);
+            logStreamService.publishStep(deployment.getDeploymentId(), "DEPLOY_FAILED", "FAILED",
+                "Deployment failed: " + e.getMessage());
             handleBuildFailure(deployment, linkedRepo, "Deployment failed: " + e.getMessage());
         }
     }
@@ -363,5 +561,7 @@ public class GitHubBuildService {
 
         linkedRepo.setLastError(error);
         linkedRepoRepository.save(linkedRepo);
+
+        logStreamService.publishStatus(deployment.getDeploymentId(), Deployment.DeploymentStatus.FAILED, error);
     }
 }
