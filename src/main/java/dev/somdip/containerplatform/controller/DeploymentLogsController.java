@@ -46,46 +46,6 @@ public class DeploymentLogsController {
     }
 
     /**
-     * Get deployment status (non-streaming)
-     * GET /api/deployments/{deploymentId}/status
-     */
-    @GetMapping("/{deploymentId}/status")
-    public ResponseEntity<?> getDeploymentStatus(
-            @PathVariable String deploymentId,
-            Authentication authentication) {
-
-        String userId = getUserId(authentication);
-
-        Optional<Deployment> deploymentOpt = deploymentRepository.findById(deploymentId);
-        if (deploymentOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Deployment deployment = deploymentOpt.get();
-        if (!deployment.getUserId().equals(userId)) {
-            return ResponseEntity.status(403).body(Map.of("error", "Unauthorized"));
-        }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("deploymentId", deployment.getDeploymentId());
-        response.put("containerId", deployment.getContainerId());
-        response.put("containerName", deployment.getContainerName());
-        response.put("status", deployment.getStatus().name());
-        response.put("createdAt", deployment.getCreatedAt() != null ? deployment.getCreatedAt().toString() : null);
-        response.put("startedAt", deployment.getStartedAt() != null ? deployment.getStartedAt().toString() : null);
-        response.put("completedAt", deployment.getCompletedAt() != null ? deployment.getCompletedAt().toString() : null);
-        response.put("errorMessage", deployment.getErrorMessage());
-
-        if (deployment.getMetadata() != null) {
-            response.put("commitSha", deployment.getMetadata().get("commitSha"));
-            response.put("commitMessage", deployment.getMetadata().get("commitMessage"));
-            response.put("buildId", deployment.getMetadata().get("buildId"));
-        }
-
-        return ResponseEntity.ok(response);
-    }
-
-    /**
      * Get latest deployment for a container
      * GET /api/deployments/container/{containerId}/latest
      */
