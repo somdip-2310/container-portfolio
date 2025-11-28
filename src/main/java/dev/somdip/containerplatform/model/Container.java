@@ -73,6 +73,7 @@ public class Container {
 		this.imageTag = imageTag;
 	}
 
+	@DynamoDbSecondaryPartitionKey(indexNames = "SubdomainIndex")
 	public String getSubdomain() {
 		return subdomain;
 	}
@@ -274,7 +275,7 @@ public class Container {
     }
 
     public enum ContainerStatus {
-        CREATING, STARTING, RUNNING, STOPPING, STOPPED, RESTARTING, FAILED, UPDATING, DELETING
+        CREATING, STARTING, RUNNING, STOPPING, STOPPED, RESTARTING, FAILED, UPDATING, DELETING, DELETED
     }
 
 

@@ -212,13 +212,15 @@ public class DeploymentTrackingService {
         }
         
         // Mark all pending steps as completed
-        deployment.getSteps().stream()
-            .filter(step -> step.getStatus() == Deployment.DeploymentStep.StepStatus.PENDING ||
-                          step.getStatus() == Deployment.DeploymentStep.StepStatus.IN_PROGRESS)
-            .forEach(step -> {
-                step.setStatus(Deployment.DeploymentStep.StepStatus.COMPLETED);
-                step.setCompletedAt(Instant.now());
-            });
+        if (deployment.getSteps() != null) {
+            deployment.getSteps().stream()
+                .filter(step -> step.getStatus() == Deployment.DeploymentStep.StepStatus.PENDING ||
+                              step.getStatus() == Deployment.DeploymentStep.StepStatus.IN_PROGRESS)
+                .forEach(step -> {
+                    step.setStatus(Deployment.DeploymentStep.StepStatus.COMPLETED);
+                    step.setCompletedAt(Instant.now());
+                });
+        }
         
         deploymentRepository.save(deployment);
         
@@ -243,13 +245,15 @@ public class DeploymentTrackingService {
         }
         
         // Mark current step as failed
-        deployment.getSteps().stream()
-            .filter(step -> step.getStatus() == Deployment.DeploymentStep.StepStatus.IN_PROGRESS)
-            .forEach(step -> {
-                step.setStatus(Deployment.DeploymentStep.StepStatus.FAILED);
-                step.setCompletedAt(Instant.now());
-                step.setErrorMessage(reason);
-            });
+        if (deployment.getSteps() != null) {
+            deployment.getSteps().stream()
+                .filter(step -> step.getStatus() == Deployment.DeploymentStep.StepStatus.IN_PROGRESS)
+                .forEach(step -> {
+                    step.setStatus(Deployment.DeploymentStep.StepStatus.FAILED);
+                    step.setCompletedAt(Instant.now());
+                    step.setErrorMessage(reason);
+                });
+        }
         
         deploymentRepository.save(deployment);
         

@@ -5,6 +5,71 @@
 const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
+// Helper function to extract user-friendly error message from response
+async function getErrorMessage(response) {
+    // Map common HTTP status codes to user-friendly messages
+    const statusMessages = {
+        400: 'Invalid request. Please check your input.',
+        401: 'Session expired. Please log in again.',
+        402: 'Usage limit reached. Please upgrade your plan.',
+        403: 'You do not have permission to perform this action.',
+        404: 'Resource not found.',
+        409: 'Container limit reached or resource conflict.',
+        429: 'Too many requests. Please wait and try again.',
+        500: 'Server error. Please try again later.',
+        502: 'Service temporarily unavailable. Please try again.',
+        503: 'Service temporarily unavailable. Please try again.',
+        504: 'Request timed out. Please try again.'
+    };
+
+    // Check for specific status messages first
+    if (statusMessages[response.status]) {
+        // Try to get more specific error from response body
+        try {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                if (data.error || data.message) {
+                    return data.error || data.message;
+                }
+            }
+        } catch (e) {
+            // Ignore parsing errors, use status message
+        }
+        return statusMessages[response.status];
+    }
+
+    // Try to parse response body
+    try {
+        const contentType = response.headers.get('content-type') || '';
+        const text = await response.text();
+
+        // Check if it's HTML (ALB error page)
+        if (text.includes('<!DOCTYPE') || text.includes('<html') || text.includes('<HTML')) {
+            return 'Server error occurred. Please try again.';
+        }
+
+        // Try to parse as JSON
+        if (contentType.includes('application/json') || text.startsWith('{')) {
+            try {
+                const data = JSON.parse(text);
+                return data.error || data.message || 'Unknown error';
+            } catch (e) {
+                // Not valid JSON
+            }
+        }
+
+        // Return text if it's short and doesn't look like HTML
+        if (text.length < 200 && !text.includes('<')) {
+            return text;
+        }
+
+        return 'An error occurred. Please try again.';
+    } catch (e) {
+        return 'An error occurred. Please try again.';
+    }
+}
+
 // View toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
     const gridView = document.getElementById('gridView');
@@ -88,7 +153,7 @@ async function startContainer(containerId) {
             setTimeout(() => location.reload(), 3000);
         } else {
             hideProgressModal();
-            const error = await response.text();
+            const error = await getErrorMessage(response);
             showToast('Failed to start container: ' + error, 'error');
         }
     } catch (error) {
@@ -128,7 +193,7 @@ async function stopContainer(containerId) {
             showToast('Container stopped successfully. Page will refresh...', 'success');
             setTimeout(() => location.reload(), 1500);
         } else {
-            const error = await response.text();
+            const error = await getErrorMessage(response);
             showToast('Failed to stop container: ' + error, 'error');
         }
     } catch (error) {
@@ -175,7 +240,7 @@ async function deleteContainer(containerId) {
             }, 1000);
         } else {
             hideProgressModal();
-            const error = await response.text();
+            const error = await getErrorMessage(response);
             showToast('Failed to delete container: ' + error, 'error');
         }
     } catch (error) {
@@ -191,6 +256,8 @@ function showDeployModal() {
     if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        // Switch to GitHub tab by default and check connection
+        switchDeployTab('github');
     }
 }
 
@@ -200,36 +267,48 @@ function hideDeployModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        // Reset to docker image tab
-        switchDeployTab('dockerImage');
+        // Reset to github tab (default)
+        switchDeployTab('github');
     }
 }
 
-// Switch between deployment tabs (Docker Image vs Source Code)
+// Switch between deployment tabs (Docker Image, Source Code, GitHub)
 function switchDeployTab(tabName) {
     const dockerImageTab = document.getElementById('dockerImageTab');
     const sourceCodeTab = document.getElementById('sourceCodeTab');
+    const githubTab = document.getElementById('githubTab');
     const dockerImageForm = document.getElementById('deployForm');
     const sourceCodeForm = document.getElementById('sourceCodeForm');
+    const githubForm = document.getElementById('githubForm');
+
+    // Reset all tabs
+    const allTabs = [dockerImageTab, sourceCodeTab, githubTab];
+    const allForms = [dockerImageForm, sourceCodeForm, githubForm];
+
+    allTabs.forEach(tab => {
+        if (tab) {
+            tab.classList.remove('text-purple-600', 'border-purple-600');
+            tab.classList.add('text-gray-500', 'dark:text-gray-400', 'border-transparent');
+        }
+    });
+    allForms.forEach(form => {
+        if (form) form.classList.add('hidden');
+    });
 
     if (tabName === 'dockerImage') {
-        // Show Docker Image tab and form
-        dockerImageTab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
-        dockerImageTab.classList.remove('text-gray-500', 'dark:text-gray-400');
-        sourceCodeTab.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
-        sourceCodeTab.classList.add('text-gray-500', 'dark:text-gray-400');
-
+        dockerImageTab.classList.add('text-purple-600', 'border-purple-600');
+        dockerImageTab.classList.remove('text-gray-500', 'dark:text-gray-400', 'border-transparent');
         dockerImageForm.classList.remove('hidden');
-        sourceCodeForm.classList.add('hidden');
     } else if (tabName === 'sourceCode') {
-        // Show Source Code tab and form
-        sourceCodeTab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
-        sourceCodeTab.classList.remove('text-gray-500', 'dark:text-gray-400');
-        dockerImageTab.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
-        dockerImageTab.classList.add('text-gray-500', 'dark:text-gray-400');
-
+        sourceCodeTab.classList.add('text-purple-600', 'border-purple-600');
+        sourceCodeTab.classList.remove('text-gray-500', 'dark:text-gray-400', 'border-transparent');
         sourceCodeForm.classList.remove('hidden');
-        dockerImageForm.classList.add('hidden');
+    } else if (tabName === 'github') {
+        githubTab.classList.add('text-purple-600', 'border-purple-600');
+        githubTab.classList.remove('text-gray-500', 'dark:text-gray-400', 'border-transparent');
+        githubForm.classList.remove('hidden');
+        // Check GitHub connection status when tab is selected
+        checkGitHubConnectionForDeploy();
     }
 }
 
@@ -490,3 +569,695 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// ==========================================
+// GitHub Deployment Functions
+// ==========================================
+
+// Store state for GitHub deployment
+let githubDeployState = {
+    connected: false,
+    selectedRepo: null,
+    repos: [],
+    branches: []
+};
+
+// Check GitHub connection status for deploy modal
+async function checkGitHubConnectionForDeploy() {
+    try {
+        const response = await fetch('/auth/github/status');
+        const data = await response.json();
+
+        if (data.connected) {
+            githubDeployState.connected = true;
+            document.getElementById('githubNotConnectedDeploy').classList.add('hidden');
+            document.getElementById('githubConnectedDeploy').classList.remove('hidden');
+
+            // Update user info
+            document.getElementById('deployGithubUsername').textContent = data.githubUsername || 'Unknown';
+            if (data.avatarUrl) {
+                document.getElementById('deployGithubAvatar').src = data.avatarUrl;
+            }
+
+            // Load initial repositories
+            loadGitHubRepos();
+        } else {
+            githubDeployState.connected = false;
+            document.getElementById('githubNotConnectedDeploy').classList.remove('hidden');
+            document.getElementById('githubConnectedDeploy').classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error checking GitHub connection:', error);
+        document.getElementById('githubNotConnectedDeploy').classList.remove('hidden');
+        document.getElementById('githubConnectedDeploy').classList.add('hidden');
+    }
+}
+
+// Load GitHub repositories into dropdown
+async function loadGitHubRepos() {
+    const repoSelect = document.getElementById('repoSelect');
+    repoSelect.innerHTML = '<option value="">Loading repositories...</option>';
+    repoSelect.disabled = true;
+
+    try {
+        const response = await fetch('/api/github/repos?perPage=100', {
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
+        if (response.ok) {
+            githubDeployState.repos = await response.json();
+            populateRepoDropdown();
+        } else {
+            repoSelect.innerHTML = '<option value="">Error loading repositories</option>';
+            console.error('Failed to load repos:', response.status);
+        }
+    } catch (error) {
+        console.error('Error loading repos:', error);
+        repoSelect.innerHTML = '<option value="">Error loading repositories</option>';
+    } finally {
+        repoSelect.disabled = false;
+    }
+}
+
+// Populate repository dropdown
+function populateRepoDropdown() {
+    const repoSelect = document.getElementById('repoSelect');
+    const repos = githubDeployState.repos;
+
+    if (!repos || repos.length === 0) {
+        repoSelect.innerHTML = '<option value="">No repositories found</option>';
+        return;
+    }
+
+    repoSelect.innerHTML = '<option value="">-- Select a repository --</option>' +
+        repos.map(repo =>
+            `<option value="${repo.fullName}" data-description="${(repo.description || '').replace(/"/g, '&quot;')}" data-private="${repo.private}" data-default-branch="${repo.defaultBranch}">${repo.fullName}${repo.private ? ' (Private)' : ''}</option>`
+        ).join('');
+}
+
+// Handle repository dropdown selection
+async function onRepoSelectChange() {
+    const repoSelect = document.getElementById('repoSelect');
+    const selectedOption = repoSelect.options[repoSelect.selectedIndex];
+    const fullName = repoSelect.value;
+
+    if (!fullName) {
+        clearSelectedRepo();
+        return;
+    }
+
+    const description = selectedOption.getAttribute('data-description') || '';
+    const isPrivate = selectedOption.getAttribute('data-private') === 'true';
+    const defaultBranch = selectedOption.getAttribute('data-default-branch') || 'main';
+
+    githubDeployState.selectedRepo = {
+        fullName: fullName,
+        description: description,
+        isPrivate: isPrivate,
+        defaultBranch: defaultBranch
+    };
+
+    // Show selected repo info
+    document.getElementById('selectedRepoName').textContent = fullName;
+    document.getElementById('selectedRepoDesc').textContent = description || 'No description';
+    document.getElementById('selectedRepo').classList.remove('hidden');
+
+    // Show branch selection and other options
+    document.getElementById('branchSelectContainer').classList.remove('hidden');
+    document.getElementById('advancedOptionsContainer').classList.remove('hidden');
+    document.getElementById('autoDeployContainer').classList.remove('hidden');
+
+    // Load branches
+    await loadBranches(fullName, defaultBranch);
+
+    // Update deploy button state
+    updateDeployButtonState();
+}
+
+// Clear selected repository
+function clearSelectedRepo() {
+    githubDeployState.selectedRepo = null;
+    githubDeployState.branches = [];
+
+    // Reset dropdown selection
+    const repoSelect = document.getElementById('repoSelect');
+    if (repoSelect) repoSelect.value = '';
+
+    document.getElementById('selectedRepo').classList.add('hidden');
+    document.getElementById('branchSelectContainer').classList.add('hidden');
+    document.getElementById('advancedOptionsContainer').classList.add('hidden');
+    document.getElementById('autoDeployContainer').classList.add('hidden');
+    document.getElementById('advancedOptions').classList.add('hidden');
+
+    // Reset form fields
+    document.getElementById('rootDirectory').value = '';
+    document.getElementById('dockerfilePath').value = '';
+    document.getElementById('autoDeploy').checked = true;
+
+    updateDeployButtonState();
+}
+
+// Load branches for selected repository
+async function loadBranches(fullName, defaultBranch) {
+    const branchSelect = document.getElementById('deployBranch');
+    branchSelect.innerHTML = '<option value="">Loading branches...</option>';
+
+    try {
+        const [owner, repo] = fullName.split('/');
+        const response = await fetch(`/api/github/repos/${owner}/${repo}/branches`, {
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
+
+        if (response.ok) {
+            const branches = await response.json();
+            githubDeployState.branches = branches;
+
+            branchSelect.innerHTML = branches.map(branch =>
+                `<option value="${branch.name}" ${branch.name === defaultBranch ? 'selected' : ''}>${branch.name}</option>`
+            ).join('');
+        } else {
+            branchSelect.innerHTML = `<option value="${defaultBranch}" selected>${defaultBranch}</option>`;
+        }
+    } catch (error) {
+        console.error('Error loading branches:', error);
+        branchSelect.innerHTML = `<option value="${defaultBranch}" selected>${defaultBranch}</option>`;
+    }
+}
+
+// Toggle advanced options
+function toggleAdvancedOptions() {
+    const options = document.getElementById('advancedOptions');
+    const icon = document.getElementById('advancedOptionsIcon');
+
+    if (options.classList.contains('hidden')) {
+        options.classList.remove('hidden');
+        icon.classList.add('rotate-90');
+    } else {
+        options.classList.add('hidden');
+        icon.classList.remove('rotate-90');
+    }
+}
+
+// Update deploy button state
+function updateDeployButtonState() {
+    const deployBtn = document.getElementById('deployFromGithubBtn');
+    const containerName = document.getElementById('githubContainerName').value.trim();
+    const repoSelect = document.getElementById('repoSelect');
+    const hasRepo = repoSelect && repoSelect.value && githubDeployState.selectedRepo !== null;
+    const hasBranch = document.getElementById('deployBranch')?.value;
+
+    const isValid = containerName.length >= 2 && hasRepo && hasBranch;
+    deployBtn.disabled = !isValid;
+}
+
+// Add input listener for container name
+document.addEventListener('DOMContentLoaded', function() {
+    const githubContainerName = document.getElementById('githubContainerName');
+    if (githubContainerName) {
+        githubContainerName.addEventListener('input', updateDeployButtonState);
+    }
+
+    const deployBranch = document.getElementById('deployBranch');
+    if (deployBranch) {
+        deployBranch.addEventListener('change', updateDeployButtonState);
+    }
+});
+
+// Deploy from GitHub
+async function deployFromGitHub() {
+    const containerName = document.getElementById('githubContainerName').value.trim();
+    const deployBranch = document.getElementById('deployBranch').value;
+    const rootDirectory = document.getElementById('rootDirectory').value.trim() || '/';
+    const dockerfilePath = document.getElementById('dockerfilePath').value.trim() || 'Dockerfile';
+    const autoDeploy = document.getElementById('autoDeploy').checked;
+
+    if (!githubDeployState.selectedRepo || !containerName || !deployBranch) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    const deployBtn = document.getElementById('deployFromGithubBtn');
+    deployBtn.disabled = true;
+    deployBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deploying...';
+
+    try {
+        showProgressModal('Deploying from GitHub', 'Creating container...');
+        updateProgress(10);
+
+        // Step 1: Create the container first
+        const containerResponse = await fetch('/web/api/containers', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: containerName,
+                image: 'placeholder:latest', // Will be updated after build
+                port: 8080
+            })
+        });
+
+        if (!containerResponse.ok) {
+            let errorMessage = 'Container creation failed';
+            const responseText = await containerResponse.text();
+            try {
+                const errorData = JSON.parse(responseText);
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch (e) {
+                // Not JSON - only use text if it's not HTML
+                if (responseText && !responseText.startsWith('<')) {
+                    errorMessage = responseText;
+                }
+            }
+            throw new Error(errorMessage);
+        }
+
+        const container = await containerResponse.json();
+        updateProgressWithMessage(30, 'Linking GitHub repository...');
+
+        // Step 2: Link the repository to the container
+        const linkResponse = await fetch('/api/github/link', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                containerId: container.containerId,
+                repoFullName: githubDeployState.selectedRepo.fullName,
+                deployBranch: deployBranch,
+                rootDirectory: rootDirectory,
+                dockerfilePath: dockerfilePath,
+                autoDeploy: autoDeploy
+            })
+        });
+
+        if (!linkResponse.ok) {
+            const error = await linkResponse.json();
+            throw new Error(error.error || 'Failed to link repository');
+        }
+
+        const linkResult = await linkResponse.json();
+        updateProgressWithMessage(60, 'Build triggered! Opening deployment logs...');
+
+        // Success - hide progress modal and deploy modal
+        updateProgress(100);
+        setTimeout(() => {
+            hideProgressModal();
+            hideDeployModal();
+
+            // Reset GitHub form state
+            clearSelectedRepo();
+            document.getElementById('githubContainerName').value = '';
+
+            // Check if deployment was triggered and show logs modal
+            if (linkResult.deploymentId && linkResult.buildTriggered) {
+                const commitInfo = githubDeployState.selectedRepo ?
+                    githubDeployState.selectedRepo.fullName + ' @ ' + deployBranch : '';
+                showDeploymentLogsModal(linkResult.deploymentId, containerName, commitInfo);
+            } else {
+                // Fallback: just show toast and refresh
+                showToast('GitHub repository linked successfully! Build has been triggered.', 'success');
+                setTimeout(() => location.reload(), 2000);
+            }
+        }, 500);
+
+    } catch (error) {
+        hideProgressModal();
+        console.error('Error deploying from GitHub:', error);
+        showToast('Deployment failed: ' + error.message, 'error');
+    } finally {
+        deployBtn.disabled = false;
+        deployBtn.innerHTML = '<i class="fab fa-github mr-2"></i>Deploy from GitHub';
+    }
+}
+
+// Validate container name (shared function)
+function validateContainerName(input) {
+    const value = input.value;
+    const errorEl = document.getElementById(input.id + 'Error');
+
+    // Convert to lowercase
+    input.value = value.toLowerCase();
+
+    // Check pattern
+    const pattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+    const isValid = value.length >= 2 && pattern.test(value);
+
+    if (errorEl) {
+        if (!isValid && value.length > 0) {
+            errorEl.textContent = 'Must start and end with lowercase letter or number, can contain hyphens';
+            errorEl.classList.remove('hidden');
+        } else {
+            errorEl.classList.add('hidden');
+        }
+    }
+
+    // Update deploy button state if on GitHub tab
+    if (input.id === 'githubContainerName') {
+        updateDeployButtonState();
+    }
+
+    return isValid;
+}
+
+// Set quick image (for Docker Image tab)
+function setQuickImage(image, tag, port) {
+    document.getElementById('containerImage').value = image;
+    document.getElementById('imageTag').value = tag;
+    document.getElementById('containerPort').value = port;
+}
+
+// Deploy new container (Docker Image tab)
+async function deployNewContainer(event) {
+    event.preventDefault();
+
+    const containerName = document.getElementById('containerName').value.trim();
+    const image = document.getElementById('containerImage').value.trim();
+    const tag = document.getElementById('imageTag').value.trim() || 'latest';
+    const port = parseInt(document.getElementById('containerPort').value) || 8080;
+
+    if (!containerName || !image) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    const fullImage = image.includes(':') ? image : `${image}:${tag}`;
+
+    try {
+        showProgressModal('Deploying Container', 'Creating container...');
+        updateProgress(10);
+
+        const response = await fetch('/web/api/containers', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: containerName,
+                image: fullImage,
+                port: port
+            })
+        });
+
+        if (response.ok) {
+            updateProgressWithMessage(50, 'Container created, starting...');
+            setTimeout(() => {
+                updateProgress(100);
+                setTimeout(() => {
+                    hideProgressModal();
+                    hideDeployModal();
+                    showToast('Container deployed successfully!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                }, 500);
+            }, 1000);
+        } else if (response.status === 402) {
+            hideProgressModal();
+            showToast('Deployment failed: Your FREE tier hours have been exhausted. Upgrade to PRO for unlimited hours!', 'error');
+        } else {
+            hideProgressModal();
+            const error = await getErrorMessage(response);
+            showToast('Failed to deploy container: ' + error, 'error');
+        }
+    } catch (error) {
+        hideProgressModal();
+        console.error('Error deploying container:', error);
+        showToast('Error deploying container: ' + error.message, 'error');
+    }
+}
+
+// =====================================================
+// Deployment Logs Streaming (SSE)
+// =====================================================
+
+// Deployment logs state
+let deploymentLogsState = {
+    eventSource: null,
+    deploymentId: null,
+    startTime: null,
+    steps: {}
+};
+
+// Show deployment logs modal and start SSE stream
+function showDeploymentLogsModal(deploymentId, containerName, commitInfo) {
+    const modal = document.getElementById('deploymentLogsModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    // Set container name
+    document.getElementById('deploymentContainerName').textContent = containerName || '';
+
+    // Set commit info if available
+    const commitInfoEl = document.getElementById('deploymentCommitInfo');
+    if (commitInfo) {
+        commitInfoEl.textContent = commitInfo;
+    } else {
+        commitInfoEl.textContent = '';
+    }
+
+    // Reset state
+    deploymentLogsState.deploymentId = deploymentId;
+    deploymentLogsState.startTime = Date.now();
+    deploymentLogsState.steps = {};
+
+    // Reset UI
+    document.getElementById('deploymentSteps').innerHTML = '';
+    updateDeploymentStatusBadge('IN_PROGRESS');
+    updateDeploymentDuration();
+
+    // Start duration timer
+    const durationInterval = setInterval(() => {
+        if (!deploymentLogsState.deploymentId) {
+            clearInterval(durationInterval);
+            return;
+        }
+        updateDeploymentDuration();
+    }, 1000);
+
+    // Start SSE stream
+    startDeploymentLogStream(deploymentId);
+}
+
+// Hide deployment logs modal
+function hideDeploymentLogsModal() {
+    const modal = document.getElementById('deploymentLogsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Close SSE connection
+    if (deploymentLogsState.eventSource) {
+        deploymentLogsState.eventSource.close();
+        deploymentLogsState.eventSource = null;
+    }
+
+    deploymentLogsState.deploymentId = null;
+}
+
+// Close modal and refresh page
+function closeDeploymentLogsAndRefresh() {
+    hideDeploymentLogsModal();
+    location.reload();
+}
+
+// Start SSE stream for deployment logs
+function startDeploymentLogStream(deploymentId) {
+    // Close existing connection if any
+    if (deploymentLogsState.eventSource) {
+        deploymentLogsState.eventSource.close();
+    }
+
+    const url = '/api/deployments/' + deploymentId + '/stream';
+    const eventSource = new EventSource(url);
+    deploymentLogsState.eventSource = eventSource;
+
+    // Handle initial state
+    eventSource.addEventListener('init', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Deployment init:', data);
+
+        if (data.containerName) {
+            document.getElementById('deploymentContainerName').textContent = data.containerName;
+        }
+
+        if (data.commitSha) {
+            const shortSha = data.commitSha.substring(0, 7);
+            const commitMsg = data.commitMessage ? ': ' + data.commitMessage.substring(0, 50) : '';
+            document.getElementById('deploymentCommitInfo').textContent = shortSha + commitMsg;
+        }
+
+        updateDeploymentStatusBadge(data.status);
+    });
+
+    // Handle step updates
+    eventSource.addEventListener('step', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Step update:', data);
+        updateDeploymentStep(data.stepName, data.status, data.message);
+    });
+
+    // Handle log messages
+    eventSource.addEventListener('log', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Log:', data.message);
+        // Could add log lines to the UI if needed
+    });
+
+    // Handle status changes
+    eventSource.addEventListener('status', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Status update:', data);
+        updateDeploymentStatusBadge(data.status);
+
+        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+            eventSource.close();
+            deploymentLogsState.eventSource = null;
+
+            // Show appropriate message
+            if (data.status === 'COMPLETED') {
+                showToast('Deployment completed successfully!', 'success');
+            } else {
+                showToast('Deployment failed: ' + (data.message || 'Unknown error'), 'error');
+            }
+        }
+    });
+
+    // Handle errors
+    eventSource.onerror = function(error) {
+        console.error('SSE error:', error);
+        // Don't close immediately - the server might reconnect
+        if (eventSource.readyState === EventSource.CLOSED) {
+            console.log('SSE connection closed');
+        }
+    };
+}
+
+// Update a deployment step in the UI
+function updateDeploymentStep(stepName, status, message) {
+    const stepsContainer = document.getElementById('deploymentSteps');
+
+    // Check if step already exists
+    let stepEl = document.getElementById('step-' + stepName);
+
+    if (!stepEl) {
+        // Create new step element
+        stepEl = document.createElement('div');
+        stepEl.id = 'step-' + stepName;
+        stepEl.className = 'flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50';
+        stepsContainer.appendChild(stepEl);
+    }
+
+    // Get icon and color based on status
+    const { icon, colorClass } = getStepStatusStyles(status);
+
+    stepEl.innerHTML = '<div class="flex-shrink-0 mt-0.5">' + icon + '</div>' +
+        '<div class="flex-1 min-w-0">' +
+            '<p class="text-sm font-medium text-gray-900 dark:text-white">' + formatStepName(stepName) + '</p>' +
+            '<p class="text-sm text-gray-500 dark:text-gray-400 truncate">' + (message || '') + '</p>' +
+        '</div>' +
+        '<span class="flex-shrink-0 px-2 py-1 text-xs font-medium rounded-full ' + colorClass + '">' + status + '</span>';
+
+    // Scroll to bottom
+    stepsContainer.scrollTop = stepsContainer.scrollHeight;
+
+    // Store step state
+    deploymentLogsState.steps[stepName] = { status, message };
+}
+
+// Get icon and styles for step status
+function getStepStatusStyles(status) {
+    switch (status) {
+        case 'COMPLETED':
+            return {
+                icon: '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+                colorClass: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+            };
+        case 'FAILED':
+            return {
+                icon: '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+                colorClass: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+            };
+        case 'IN_PROGRESS':
+        default:
+            return {
+                icon: '<svg class="w-5 h-5 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>',
+                colorClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+            };
+    }
+}
+
+// Format step name for display
+function formatStepName(stepName) {
+    const names = {
+        'INITIALIZING': 'Initializing',
+        'AUTHENTICATING': 'Authenticating',
+        'STARTING_BUILD': 'Starting Build',
+        'QUEUED': 'Queued',
+        'PROVISIONING': 'Provisioning',
+        'CLONING': 'Cloning Repository',
+        'INSTALLING': 'Installing Dependencies',
+        'PRE_BUILD': 'Pre-Build',
+        'BUILDING': 'Building Image',
+        'POST_BUILD': 'Post-Build',
+        'PUSHING_IMAGE': 'Pushing Image',
+        'FINALIZING': 'Finalizing',
+        'BUILD_COMPLETE': 'Build Complete',
+        'BUILD_FAILED': 'Build Failed',
+        'DEPLOYING': 'Deploying to ECS',
+        'DEPLOY_FAILED': 'Deploy Failed',
+        'ERROR': 'Error',
+        'TIMEOUT': 'Timeout'
+    };
+    return names[stepName] || stepName;
+}
+
+// Update deployment status badge
+function updateDeploymentStatusBadge(status) {
+    const badge = document.getElementById('deploymentStatusBadge');
+    if (!badge) return;
+
+    switch (status) {
+        case 'COMPLETED':
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            badge.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Completed';
+            break;
+        case 'FAILED':
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            badge.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Failed';
+            break;
+        case 'PENDING':
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            badge.innerHTML = '<i class="fas fa-clock mr-2"></i>Pending';
+            break;
+        case 'IN_PROGRESS':
+        default:
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            badge.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>In Progress';
+            break;
+    }
+}
+
+// Update deployment duration display
+function updateDeploymentDuration() {
+    const durationEl = document.getElementById('deploymentDuration');
+    if (!durationEl || !deploymentLogsState.startTime) return;
+
+    const elapsed = Math.floor((Date.now() - deploymentLogsState.startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+
+    durationEl.textContent = 'Duration: ' + minutes + 'm ' + seconds + 's';
+}

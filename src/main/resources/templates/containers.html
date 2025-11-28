@@ -9,6 +9,9 @@
     <!-- Main Content -->
     <main class="lg:ml-64 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- FREE Plan Usage Banner -->
+            <div th:replace="~{fragments/base :: freeTierBanner}"></div>
+
             <!-- Page Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
@@ -253,9 +256,14 @@
 
                 <!-- Deployment Type Tabs -->
                 <div class="flex space-x-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+                    <!-- Docker Image tab hidden - feature disabled temporarily -->
                     <button type="button" id="dockerImageTab" onclick="switchDeployTab('dockerImage')"
-                            class="px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600">
+                            class="hidden px-4 py-2 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent">
                         <i class="fas fa-docker mr-2"></i>Docker Image
+                    </button>
+                    <button type="button" id="githubTab" onclick="switchDeployTab('github')"
+                            class="px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600">
+                        <i class="fab fa-github mr-2"></i>GitHub
                     </button>
                     <!-- Source Code tab hidden - feature disabled temporarily -->
                     <button type="button" id="sourceCodeTab" onclick="switchDeployTab('sourceCode')"
@@ -264,8 +272,8 @@
                     </button>
                 </div>
 
-                <!-- Docker Image Form -->
-                <form id="deployForm" onsubmit="deployNewContainer(event)" class="space-y-6">
+                <!-- Docker Image Form (hidden by default) -->
+                <form id="deployForm" onsubmit="deployNewContainer(event)" class="space-y-6 hidden">
                     <!-- Container Name -->
                     <div>
                         <label for="containerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -436,6 +444,157 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- GitHub Repository Form (shown by default) -->
+                <div id="githubForm" class="space-y-6">
+                    <!-- Not Connected State -->
+                    <div id="githubNotConnectedDeploy">
+                        <div class="text-center py-8">
+                            <div class="bg-gray-100 dark:bg-gray-700 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-github text-4xl text-gray-500 dark:text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Connect GitHub to Deploy</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                                Connect your GitHub account to deploy directly from your repositories with automatic builds on push.
+                            </p>
+                            <a href="/auth/github/connect" class="inline-flex items-center bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-lg transition">
+                                <i class="fab fa-github mr-2"></i>
+                                Connect GitHub Account
+                            </a>
+                            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                                <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                    <i class="fas fa-code-branch text-purple-600 dark:text-purple-400 text-xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-900 dark:text-white">Auto Deploy</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Push to deploy automatically</p>
+                                </div>
+                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <i class="fas fa-lock text-blue-600 dark:text-blue-400 text-xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-900 dark:text-white">Private Repos</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Deploy from private repos</p>
+                                </div>
+                                <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                    <i class="fas fa-history text-green-600 dark:text-green-400 text-xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-900 dark:text-white">Build History</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Track all deployments</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connected State - Repository Selection -->
+                    <div id="githubConnectedDeploy" class="hidden">
+                        <!-- Connected User Info -->
+                        <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 mb-6">
+                            <div class="flex items-center space-x-3">
+                                <img id="deployGithubAvatar" src="" alt="GitHub Avatar" class="w-8 h-8 rounded-full">
+                                <span class="font-medium text-gray-900 dark:text-white" id="deployGithubUsername">username</span>
+                                <span class="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">Connected</span>
+                            </div>
+                            <a href="/settings#github" class="text-sm text-purple-600 hover:text-purple-700">Manage</a>
+                        </div>
+
+                        <!-- Container Name -->
+                        <div>
+                            <label for="githubContainerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Container Name *
+                            </label>
+                            <input type="text" id="githubContainerName" name="containerName" required
+                                   pattern="^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+                                   minlength="2"
+                                   maxlength="63"
+                                   placeholder="my-awesome-app"
+                                   oninput="validateContainerName(this)"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <p id="githubContainerNameError" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden"></p>
+                        </div>
+
+                        <!-- Repository Dropdown -->
+                        <div>
+                            <label for="repoSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Select Repository *
+                            </label>
+                            <select id="repoSelect" onchange="onRepoSelectChange()"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Loading repositories...</option>
+                            </select>
+                            <div id="selectedRepo" class="mt-2 hidden">
+                                <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fab fa-github text-xl"></i>
+                                        <div>
+                                            <div class="font-medium text-gray-900 dark:text-white" id="selectedRepoName">owner/repo</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400" id="selectedRepoDesc">Description</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="clearSelectedRepo()" class="text-gray-400 hover:text-red-500">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Branch Selection -->
+                        <div id="branchSelectContainer" class="hidden">
+                            <label for="deployBranch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Deploy Branch *
+                            </label>
+                            <select id="deployBranch"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Loading branches...</option>
+                            </select>
+                        </div>
+
+                        <!-- Advanced Options (Collapsible) -->
+                        <div id="advancedOptionsContainer" class="hidden">
+                            <button type="button" onclick="toggleAdvancedOptions()" class="flex items-center text-sm text-purple-600 hover:text-purple-700 mb-3">
+                                <i id="advancedOptionsIcon" class="fas fa-chevron-right mr-2 transition-transform"></i>
+                                Advanced Options
+                            </button>
+                            <div id="advancedOptions" class="hidden space-y-4 pl-4 border-l-2 border-purple-200 dark:border-purple-800">
+                                <div>
+                                    <label for="rootDirectory" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Root Directory
+                                    </label>
+                                    <input type="text" id="rootDirectory" placeholder="/ (default)"
+                                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <p class="mt-1 text-xs text-gray-500">Subdirectory containing your application</p>
+                                </div>
+                                <div>
+                                    <label for="dockerfilePath" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Dockerfile Path
+                                    </label>
+                                    <input type="text" id="dockerfilePath" placeholder="Dockerfile (default)"
+                                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <p class="mt-1 text-xs text-gray-500">Path to Dockerfile relative to root directory</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Deploy Toggle -->
+                        <div id="autoDeployContainer" class="hidden">
+                            <label class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer">
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Auto Deploy on Push</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">Automatically deploy when you push to the selected branch</div>
+                                </div>
+                                <input type="checkbox" id="autoDeploy" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                            </label>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button type="button" onclick="hideDeployModal()"
+                                    class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                Cancel
+                            </button>
+                            <button type="button" id="deployFromGithubBtn" onclick="deployFromGitHub()" disabled
+                                    class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                <i class="fab fa-github mr-2"></i>
+                                Deploy from GitHub
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -448,12 +607,57 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
             <h3 id="progressTitle" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Processing</h3>
             <p id="progressMessage" class="text-gray-600 dark:text-gray-400 mb-4">Please wait...</p>
-            
+
             <!-- Progress Bar -->
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
                 <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
             <p id="progressPercent" class="text-sm text-gray-500 dark:text-gray-400 text-center">0%</p>
+        </div>
+    </div>
+
+    <!-- Deployment Logs Modal -->
+    <div id="deploymentLogsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Deployment Progress</h3>
+                    <p id="deploymentContainerName" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="hideDeploymentLogsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <span id="deploymentStatusBadge" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>In Progress
+                    </span>
+                    <span id="deploymentCommitInfo" class="text-xs text-gray-500 dark:text-gray-400"></span>
+                </div>
+            </div>
+
+            <!-- Steps Progress -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="deploymentSteps" class="space-y-4">
+                    <!-- Steps will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <span id="deploymentDuration" class="text-sm text-gray-500 dark:text-gray-400"></span>
+                    <button id="deploymentCloseBtn" onclick="closeDeploymentLogsAndRefresh()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

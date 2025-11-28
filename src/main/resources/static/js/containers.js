@@ -2,6 +2,71 @@
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
 
+        // Helper function to extract user-friendly error message from response
+        async function getErrorMessage(response) {
+            // Map common HTTP status codes to user-friendly messages
+            const statusMessages = {
+                400: 'Invalid request. Please check your input.',
+                401: 'Session expired. Please log in again.',
+                402: 'Usage limit reached. Please upgrade your plan.',
+                403: 'You do not have permission to perform this action.',
+                404: 'Resource not found.',
+                409: 'Container limit reached or resource conflict.',
+                429: 'Too many requests. Please wait and try again.',
+                500: 'Server error. Please try again later.',
+                502: 'Service temporarily unavailable. Please try again.',
+                503: 'Service temporarily unavailable. Please try again.',
+                504: 'Request timed out. Please try again.'
+            };
+
+            // Check for specific status messages first
+            if (statusMessages[response.status]) {
+                // Try to get more specific error from response body
+                try {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data.error || data.message) {
+                            return data.error || data.message;
+                        }
+                    }
+                } catch (e) {
+                    // Ignore parsing errors, use status message
+                }
+                return statusMessages[response.status];
+            }
+
+            // Try to parse response body
+            try {
+                const contentType = response.headers.get('content-type') || '';
+                const text = await response.text();
+
+                // Check if it's HTML (ALB error page)
+                if (text.includes('<!DOCTYPE') || text.includes('<html') || text.includes('<HTML')) {
+                    return 'Server error occurred. Please try again.';
+                }
+
+                // Try to parse as JSON
+                if (contentType.includes('application/json') || text.startsWith('{')) {
+                    try {
+                        const data = JSON.parse(text);
+                        return data.error || data.message || 'Unknown error';
+                    } catch (e) {
+                        // Not valid JSON
+                    }
+                }
+
+                // Return text if it's short and doesn't look like HTML
+                if (text.length < 200 && !text.includes('<')) {
+                    return text;
+                }
+
+                return 'An error occurred. Please try again.';
+            } catch (e) {
+                return 'An error occurred. Please try again.';
+            }
+        }
+
         // View toggle functionality
         const gridView = document.getElementById('gridView');
         const listView = document.getElementById('listView');
@@ -60,7 +125,7 @@
 
                 if (response.ok) {
                     updateProgressWithMessage(50, 'Start initiated successfully...');
-                    
+
                     setTimeout(() => {
                         updateProgress(100);
                         setTimeout(() => {
@@ -71,7 +136,7 @@
                     }, 1000);
                 } else {
                     hideProgressModal();
-                    const error = await response.text();
+                    const error = await getErrorMessage(response);
                     showToast('Failed to start container: ' + error, 'error');
                 }
             } catch (error) {
@@ -110,7 +175,7 @@
                     showToast('Container stopped successfully', 'success');
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    const error = await response.text();
+                    const error = await getErrorMessage(response);
                     showToast('Failed to stop container: ' + error, 'error');
                 }
             } catch (error) {
@@ -505,7 +570,7 @@
                     hideDeployModal();
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    const error = await response.text();
+                    const error = await getErrorMessage(response);
                     showNotification('Failed to create container: ' + error, 'error');
                 }
             } catch (error) {
@@ -618,7 +683,7 @@
                     }, 500);
                 } else {
                     hideProgressModal();
-                    const error = await response.text();
+                    const error = await getErrorMessage(response);
                     showToast('Failed to delete container: ' + error, 'error');
                 }
             } catch (error) {

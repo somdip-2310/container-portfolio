@@ -8,6 +8,10 @@
     <title>SnapDeploy - Deploy Docker Containers in 60 Seconds | Modern Container Platform</title>
     <meta name="description" content="Deploy Docker containers in under 60 seconds. Simple, fast, and affordable container hosting platform built on AWS. Start free with 200 hours/month.">
     <meta name="keywords" content="docker hosting, container deployment, docker container hosting, cloud hosting, paas, heroku alternative, aws containers">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="author" content="SnapDeploy">
+    <meta name="theme-color" content="#8B5CF6">
+    <meta name="generator" content="SnapDeploy Platform">
 
     <!-- OpenGraph -->
     <meta property="og:title" content="SnapDeploy - Deploy Docker Containers in 60 Seconds">
@@ -16,12 +20,19 @@
     <meta property="og:url" content="https://snapdeploy.dev/">
     <meta property="og:site_name" content="SnapDeploy">
     <meta property="og:image" content="https://snapdeploy.dev/images/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="SnapDeploy - Deploy Docker Containers in 60 Seconds">
+    <meta property="og:locale" content="en_US">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="SnapDeploy - Deploy Docker Containers in 60 Seconds">
     <meta name="twitter:description" content="Deploy Docker containers in under 60 seconds. Simple, fast, and affordable container hosting platform.">
     <meta name="twitter:image" content="https://snapdeploy.dev/images/og-image.png">
+    <meta name="twitter:image:alt" content="SnapDeploy Container Deployment Platform">
+    <meta name="twitter:creator" content="@snapdeploy">
+    <meta name="twitter:site" content="@snapdeploy">
 
     <!-- Canonical -->
     <link rel="canonical" href="https://snapdeploy.dev/">
@@ -102,8 +113,94 @@
             "@type": "Answer",
             "text": "Upload your source code as a ZIP file or connect your GitHub repository. SnapDeploy automatically detects your framework, builds your application, and deploys it to a container with SSL and a unique URL in under 60 seconds."
           }
+        },
+        {
+          "@type": "Question",
+          "name": "How does SnapDeploy compare to Railway?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SnapDeploy offers faster deployment times (60 seconds vs 2-5 minutes), more generous free tier (200 hours/month), and simpler pricing. Both platforms support Docker containers, but SnapDeploy is optimized specifically for container workloads with AWS infrastructure."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does SnapDeploy support custom domains?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, all SnapDeploy plans including the free tier support custom domains. Simply add your domain in the container settings, update your DNS records, and SnapDeploy automatically provisions and manages SSL certificates via Let's Encrypt."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is SnapDeploy's uptime SLA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SnapDeploy offers a 99.9% uptime SLA for Pro and Business plans. Our infrastructure runs on AWS with multi-AZ redundancy, automatic failover, and 24/7 monitoring to ensure your containers stay online."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I deploy from GitHub automatically?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, SnapDeploy supports GitHub integration with automatic deployments. Connect your repository, select the branch to deploy from, and every push will automatically trigger a new deployment. You can also trigger manual deployments anytime."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does SnapDeploy support environment variables and secrets?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, SnapDeploy supports both environment variables and encrypted secrets. You can configure them per container through the dashboard. Secrets are encrypted at rest and only decrypted at runtime for security."
+          }
         }
       ]
+    }
+    </script>
+
+    <!-- Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "SnapDeploy",
+      "url": "https://snapdeploy.dev",
+      "logo": "https://snapdeploy.dev/images/logo.png",
+      "description": "Modern container deployment platform for developers. Deploy Docker containers in 60 seconds.",
+      "foundingDate": "2024",
+      "sameAs": [
+        "https://twitter.com/snapdeploy",
+        "https://github.com/snapdeploy"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "support@snapdeploy.dev",
+        "availableLanguage": "English"
+      }
+    }
+    </script>
+
+    <!-- WebSite Schema with Search -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SnapDeploy",
+      "url": "https://snapdeploy.dev",
+      "description": "Deploy Docker containers in 60 seconds. Simple, fast, and affordable container hosting.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "SnapDeploy"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://snapdeploy.dev/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
     }
     </script>
 
@@ -135,8 +232,24 @@
                     <a href="/contact" class="text-gray-300 hover:text-white transition">Contact</a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/login" class="text-white hover:text-purple-400 transition">Login</a>
-                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105">Get Started</a>
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-btn" type="button" class="md:hidden text-white hover:text-purple-400 p-2" aria-label="Open menu">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <a href="/login" class="hidden sm:block text-white hover:text-purple-400 transition">Login</a>
+                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105 text-sm sm:text-base">Get Started</a>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-black/90 backdrop-blur-lg border-t border-white/10">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#features" class="block text-gray-300 hover:text-white py-2 transition">Features</a>
+                <a href="#pricing" class="block text-gray-300 hover:text-white py-2 transition">Pricing</a>
+                <a href="/about" class="block text-gray-300 hover:text-white py-2 transition">About</a>
+                <a href="/contact" class="block text-gray-300 hover:text-white py-2 transition">Contact</a>
+                <div class="border-t border-white/10 pt-3 mt-3">
+                    <a href="/login" class="block text-white hover:text-purple-400 py-2 transition">Login</a>
                 </div>
             </div>
         </div>
@@ -279,6 +392,32 @@
 
     <!-- Currency Converter Script -->
     <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                const icon = mobileMenuBtn.querySelector('i');
+                if (mobileMenu.classList.contains('hidden')) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                } else {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                }
+            });
+            // Close menu when clicking a link
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                });
+            });
+        }
+
         let exchangeRate = 83.5; // Fallback rate
         let currentCurrency = 'USD';
 

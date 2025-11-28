@@ -149,8 +149,19 @@ public class UserRepository {
 
     public List<User> findByPlan(User.UserPlan plan) {
         log.debug("Finding users by plan: {}", plan);
-        return getTable().scan().items().stream()
-            .filter(user -> user.getPlan() == plan)
-            .collect(Collectors.toList());
+
+        // Use PlanIndex GSI for efficient lookup instead of table scan
+        DynamoDbIndex<User> planIndex = getTable().index("PlanIndex");
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder().partitionValue(plan.name()).build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .build();
+
+        return StreamSupport.stream(planIndex.query(queryRequest).spliterator(), false)
+                .flatMap(page -> page.items().stream())
+                .collect(Collectors.toList());
     }
 }

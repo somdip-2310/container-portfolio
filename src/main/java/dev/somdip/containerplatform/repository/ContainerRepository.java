@@ -91,20 +91,29 @@ public class ContainerRepository {
 
     public Optional<Container> findBySubdomain(String subdomain) {
         log.debug("Finding container by subdomain: {}", subdomain);
-        
+
+        // Use SubdomainIndex GSI for efficient lookup instead of table scan
+        DynamoDbIndex<Container> subdomainIndex = getTable().index("SubdomainIndex");
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder().partitionValue(subdomain).build());
+
+        // Filter out DELETED containers
         Map<String, AttributeValue> expressionValues = new HashMap<>();
-        expressionValues.put(":subdomain", AttributeValue.builder().s(subdomain).build());
-        
+        expressionValues.put(":deletedStatus", AttributeValue.builder().s("DELETED").build());
+
         Expression filterExpression = Expression.builder()
-                .expression("subdomain = :subdomain")
+                .expression("containerStatus <> :deletedStatus")
                 .expressionValues(expressionValues)
                 .build();
-        
-        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
                 .filterExpression(filterExpression)
+                .limit(1)
                 .build();
-        
-        return StreamSupport.stream(getTable().scan(scanRequest).spliterator(), false)
+
+        return StreamSupport.stream(subdomainIndex.query(queryRequest).spliterator(), false)
                 .flatMap(page -> page.items().stream())
                 .findFirst();
     }
@@ -181,10 +190,11 @@ public class ContainerRepository {
     }
     
     public long countNonDeletedByUserId(String userId) {
-        // Since containers in DELETING status are being deleted, we shouldn't count them
+        // Since containers in DELETING or DELETED status should not be counted
         return findByUserId(userId).stream()
-                .filter(container -> 
-                    container.getStatus() != Container.ContainerStatus.DELETING)
+                .filter(container ->
+                    container.getStatus() != Container.ContainerStatus.DELETING &&
+                    container.getStatus() != Container.ContainerStatus.DELETED)
                 .count();
     }
 }

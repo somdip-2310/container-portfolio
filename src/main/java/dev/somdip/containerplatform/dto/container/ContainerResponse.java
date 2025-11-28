@@ -19,6 +19,7 @@ public class ContainerResponse {
     private Instant createdAt;
     private Instant lastDeployedAt;
     private Long deploymentCount;
+    private String error;
     
     public static ContainerResponse from(Container container) {
         ContainerResponse response = new ContainerResponse();
@@ -38,7 +39,13 @@ public class ContainerResponse {
         response.deploymentCount = container.getDeploymentCount();
         return response;
     }
-    
+
+    public static ContainerResponse error(String errorMessage) {
+        ContainerResponse response = new ContainerResponse();
+        response.error = errorMessage;
+        return response;
+    }
+
     // All getters and setters
     public String getContainerId() { return containerId; }
     public void setContainerId(String containerId) { this.containerId = containerId; }
@@ -87,4 +94,7 @@ public class ContainerResponse {
     
     public Long getDeploymentCount() { return deploymentCount; }
     public void setDeploymentCount(Long deploymentCount) { this.deploymentCount = deploymentCount; }
+
+    public String getError() { return error; }
+    public void setError(String error) { this.error = error; }
 }

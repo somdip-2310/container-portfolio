@@ -521,7 +521,7 @@ public class EcsService {
                     .containerName(container.getContainerName())
                     .containerPort(container.getPort())
                     .build())
-            .healthCheckGracePeriodSeconds(60)
+            .healthCheckGracePeriodSeconds(90)
             .deploymentConfiguration(DeploymentConfiguration.builder()
                 .maximumPercent(200)
                 .minimumHealthyPercent(100)

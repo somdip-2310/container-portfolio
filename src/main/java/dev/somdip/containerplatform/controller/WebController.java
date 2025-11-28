@@ -31,14 +31,35 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 public class WebController {
-	
-    
 
     private final DashboardService dashboardService;
     private final ContainerService containerService;
     private final UserService userService;
     private final MetricsService metricsService;
     private final DeploymentRepository deploymentRepository;
+
+    /**
+     * Helper method to add common model attributes (notifications, usageLimit, user) to all pages
+     */
+    private void addCommonAttributes(Model model, User user) {
+        try {
+            String userId = user.getUserId();
+
+            // Add notifications
+            List<Notification> notifications = dashboardService.getNotifications(userId, 3);
+            model.addAttribute("notifications", notifications);
+            model.addAttribute("notificationCount", notifications.size() + (user.getPlan() == User.UserPlan.FREE ? 1 : 0));
+
+            // Add usage limit info for FREE tier banner
+            UsageLimitDTO usageLimit = dashboardService.getUsageLimitInfo(user);
+            model.addAttribute("usageLimit", usageLimit);
+
+            // Add user
+            model.addAttribute("user", user);
+        } catch (Exception e) {
+            log.warn("Error adding common attributes: {}", e.getMessage());
+        }
+    }
 
     @GetMapping("/")
     public String home() {
@@ -158,23 +179,26 @@ public class WebController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
 
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+
             // Update metrics for all user containers from CloudWatch
             metricsService.updateAllUserContainerMetrics(userId);
 
             // Get user's containers
             List<Container> containers = containerService.getUserContainers(userId);
-            
+
             model.addAttribute("containers", containers);
             model.addAttribute("totalContainers", containers.size());
-            model.addAttribute("runningContainers", 
+            model.addAttribute("runningContainers",
                 containers.stream().filter(c -> "RUNNING".equals(c.getStatus())).count());
-            
+
         } catch (Exception e) {
             log.error("Error loading containers", e);
             model.addAttribute("containers", List.of());
             model.addAttribute("error", "Unable to load containers");
         }
-        
+
         return "containers";
     }
     
@@ -252,6 +276,9 @@ public class WebController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
             String userId = user.getUserId();
 
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+
             List<Deployment> deployments = deploymentRepository.findRecentByUserId(userId, 50);
 
             // Enrich deployments with container names if missing
@@ -296,7 +323,18 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
+        try {
+            String username = authentication.getName();
+            User user = userService.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+        } catch (Exception e) {
+            log.error("Error loading logs page", e);
+        }
+
         // Logs viewer page
         return "logs";
     }
@@ -307,20 +345,72 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
         try {
             String username = authentication.getName();
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-            
+            String userId = user.getUserId();
+
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+
             model.addAttribute("subscriptionPlan", user.getSubscriptionPlan());
             model.addAttribute("subscriptionStatus", user.getSubscriptionStatus());
-            
+
+            // Get actual container usage data
+            List<Container> containers = containerService.getUserContainers(userId);
+            int containerCount = containers.size();
+            int containerLimit = getContainerLimitForPlan(user.getPlan());
+            int containerPercentage = containerLimit > 0 ? (containerCount * 100) / containerLimit : 0;
+            int containersRemaining = Math.max(0, containerLimit - containerCount);
+
+            model.addAttribute("containerCount", containerCount);
+            model.addAttribute("containerLimit", containerLimit);
+            model.addAttribute("containerPercentage", Math.min(containerPercentage, 100));
+            model.addAttribute("containersRemaining", containersRemaining);
+
+            // Get usage limit info which includes hours used
+            UsageLimitDTO usageLimitInfo = dashboardService.getUsageLimitInfo(user);
+            double hoursUsed = usageLimitInfo != null ? usageLimitInfo.getHoursUsed() : 0.0;
+            model.addAttribute("cpuHoursUsed", Math.round(hoursUsed));
+
+            // Bandwidth - get from usageLimit or calculate
+            double bandwidthUsedGb = 0.0;
+            double bandwidthLimitGb = getBandwidthLimitForPlan(user.getPlan());
+            int bandwidthPercentage = bandwidthLimitGb > 0 ? (int) ((bandwidthUsedGb / bandwidthLimitGb) * 100) : 0;
+            double bandwidthRemaining = Math.max(0, bandwidthLimitGb - bandwidthUsedGb);
+
+            model.addAttribute("bandwidthUsedGb", String.format("%.1f", bandwidthUsedGb));
+            model.addAttribute("bandwidthLimitGb", (int) bandwidthLimitGb);
+            model.addAttribute("bandwidthPercentage", Math.min(bandwidthPercentage, 100));
+            model.addAttribute("bandwidthRemaining", String.format("%.1f", bandwidthRemaining));
+
         } catch (Exception e) {
             log.error("Error loading billing", e);
         }
-        
+
         return "billing";
+    }
+
+    private int getContainerLimitForPlan(User.UserPlan plan) {
+        return switch (plan) {
+            case FREE -> 1;
+            case STARTER -> 3;
+            case PRO -> 10;
+            case BUSINESS -> 25;
+            case ENTERPRISE -> 100;
+        };
+    }
+
+    private double getBandwidthLimitForPlan(User.UserPlan plan) {
+        return switch (plan) {
+            case FREE -> 10.0;
+            case STARTER -> 50.0;
+            case PRO -> 200.0;
+            case BUSINESS -> 500.0;
+            case ENTERPRISE -> 2000.0;
+        };
     }
 
     
@@ -351,18 +441,19 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
         try {
             String username = authentication.getName();
             User user = userService.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            model.addAttribute("user", user);
-            
+
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+
         } catch (Exception e) {
             log.error("Error loading settings", e);
         }
-        
+
         return "settings";
     }
     
@@ -393,7 +484,18 @@ public class WebController {
         if (authentication == null) {
             return "redirect:/login";
         }
-        
+
+        try {
+            String username = authentication.getName();
+            User user = userService.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+        } catch (Exception e) {
+            log.error("Error loading support page", e);
+        }
+
         return "support";
     }
     
@@ -426,6 +528,17 @@ public class WebController {
     public String domains(Model model, Authentication authentication) {
         if (authentication == null) {
             return "redirect:/login";
+        }
+
+        try {
+            String username = authentication.getName();
+            User user = userService.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Add common attributes (notifications, usageLimit, user)
+            addCommonAttributes(model, user);
+        } catch (Exception e) {
+            log.error("Error loading domains page", e);
         }
 
         // Domain management page
