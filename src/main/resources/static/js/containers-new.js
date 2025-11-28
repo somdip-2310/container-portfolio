@@ -191,6 +191,8 @@ function showDeployModal() {
     if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        // Switch to GitHub tab by default and check connection
+        switchDeployTab('github');
     }
 }
 
@@ -200,8 +202,8 @@ function hideDeployModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        // Reset to docker image tab
-        switchDeployTab('dockerImage');
+        // Reset to github tab (default)
+        switchDeployTab('github');
     }
 }
 

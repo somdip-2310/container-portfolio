@@ -253,12 +253,13 @@
 
                 <!-- Deployment Type Tabs -->
                 <div class="flex space-x-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+                    <!-- Docker Image tab hidden - feature disabled temporarily -->
                     <button type="button" id="dockerImageTab" onclick="switchDeployTab('dockerImage')"
-                            class="px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600">
+                            class="hidden px-4 py-2 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent">
                         <i class="fas fa-docker mr-2"></i>Docker Image
                     </button>
                     <button type="button" id="githubTab" onclick="switchDeployTab('github')"
-                            class="px-4 py-2 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent">
+                            class="px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600">
                         <i class="fab fa-github mr-2"></i>GitHub
                     </button>
                     <!-- Source Code tab hidden - feature disabled temporarily -->
@@ -268,8 +269,8 @@
                     </button>
                 </div>
 
-                <!-- Docker Image Form -->
-                <form id="deployForm" onsubmit="deployNewContainer(event)" class="space-y-6">
+                <!-- Docker Image Form (hidden by default) -->
+                <form id="deployForm" onsubmit="deployNewContainer(event)" class="space-y-6 hidden">
                     <!-- Container Name -->
                     <div>
                         <label for="containerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -441,8 +442,8 @@
                     </div>
                 </form>
 
-                <!-- GitHub Repository Form -->
-                <div id="githubForm" class="space-y-6 hidden">
+                <!-- GitHub Repository Form (shown by default) -->
+                <div id="githubForm" class="space-y-6">
                     <!-- Not Connected State -->
                     <div id="githubNotConnectedDeploy">
                         <div class="text-center py-8">

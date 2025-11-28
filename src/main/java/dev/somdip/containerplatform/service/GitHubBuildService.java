@@ -526,6 +526,12 @@ public class GitHubBuildService {
 
             ecsService.deployContainer(container, container.getUserId());
 
+            // Update container status to RUNNING after successful deployment
+            // The EcsService sets serviceArn, taskArn, etc. but doesn't save to DB
+            container.setStatus(Container.ContainerStatus.RUNNING);
+            containerRepository.save(container);
+            log.info("Container {} status updated to RUNNING", container.getContainerId());
+
             logStreamService.publishStep(deployment.getDeploymentId(), "DEPLOYING", "COMPLETED",
                 "Deployed to ECS successfully!");
 
