@@ -60,7 +60,8 @@ public class SecurityConfig {
                                              JwtAuthenticationFilter jwtAuthenticationFilter,
                                              ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) throws Exception {
         http
-            .securityMatcher("/api/containers/**", "/api/deployments/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/api/github/**", "/webhooks/**")
+            // Note: /api/github/** removed - it uses session auth via webFilterChain for browser requests
+            .securityMatcher("/api/containers/**", "/api/deployments/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/webhooks/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception
@@ -106,6 +107,7 @@ public class SecurityConfig {
                 .requestMatchers("/for/**", "/pricing").permitAll()
                 .requestMatchers("/robots.txt", "/sitemap.xml").permitAll()
                 .requestMatchers("/api/source/**").authenticated()
+                .requestMatchers("/api/github/**").authenticated()  // GitHub API uses session auth
                 .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()
             )
