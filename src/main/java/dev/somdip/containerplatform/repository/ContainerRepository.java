@@ -91,19 +91,20 @@ public class ContainerRepository {
 
     public Optional<Container> findBySubdomain(String subdomain) {
         log.debug("Finding container by subdomain: {}", subdomain);
-        
+
         Map<String, AttributeValue> expressionValues = new HashMap<>();
         expressionValues.put(":subdomain", AttributeValue.builder().s(subdomain).build());
-        
+        expressionValues.put(":deletedStatus", AttributeValue.builder().s("DELETED").build());
+
         Expression filterExpression = Expression.builder()
-                .expression("subdomain = :subdomain")
+                .expression("subdomain = :subdomain AND containerStatus <> :deletedStatus")
                 .expressionValues(expressionValues)
                 .build();
-        
+
         ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
                 .filterExpression(filterExpression)
                 .build();
-        
+
         return StreamSupport.stream(getTable().scan(scanRequest).spliterator(), false)
                 .flatMap(page -> page.items().stream())
                 .findFirst();

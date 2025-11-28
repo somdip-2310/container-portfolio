@@ -86,13 +86,16 @@ public class WebApiController {
                 .body(ContainerResponse.from(container));
         } catch (IllegalArgumentException e) {
             log.error("Invalid request: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                .body(ContainerResponse.error(e.getMessage()));
         } catch (IllegalStateException e) {
             log.error("Container limit reached: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ContainerResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Unexpected error creating container: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ContainerResponse.error("An unexpected error occurred"));
         }
     }
 
