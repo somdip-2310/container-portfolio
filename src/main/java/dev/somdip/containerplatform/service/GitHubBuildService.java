@@ -508,13 +508,16 @@ public class GitHubBuildService {
             Map<String, String> metadata = deployment.getMetadata();
             String commitSha = metadata != null ? metadata.get("commitSha") : "unknown";
 
-            // Get the built image URI
+            // Get the built image URI - set image and imageTag separately for ECS compatibility
             String imageTag = commitSha.substring(0, Math.min(7, commitSha.length()));
             String ecrRepo = ecrRepositoryPrefix + "/user-" + container.getUserId();
-            String imageUri = ecrRegistry + "/" + ecrRepo + ":" + imageTag;
+            String imageBase = ecrRegistry + "/" + ecrRepo;
+            String imageUri = imageBase + ":" + imageTag;
 
-            // Update container with new image
-            container.setImage(imageUri);
+            // Update container with image (without tag) and imageTag separately
+            // EcsService combines them as image + ":" + imageTag
+            container.setImage(imageBase);
+            container.setImageTag(imageTag);
             containerRepository.save(container);
 
             // Deploy to ECS
