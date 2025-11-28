@@ -135,8 +135,24 @@
                     <a href="/contact" class="text-gray-300 hover:text-white transition">Contact</a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/login" class="text-white hover:text-purple-400 transition">Login</a>
-                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105">Get Started</a>
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-btn" type="button" class="md:hidden text-white hover:text-purple-400 p-2" aria-label="Open menu">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <a href="/login" class="hidden sm:block text-white hover:text-purple-400 transition">Login</a>
+                    <a href="/register" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105 text-sm sm:text-base">Get Started</a>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-black/90 backdrop-blur-lg border-t border-white/10">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#features" class="block text-gray-300 hover:text-white py-2 transition">Features</a>
+                <a href="#pricing" class="block text-gray-300 hover:text-white py-2 transition">Pricing</a>
+                <a href="/about" class="block text-gray-300 hover:text-white py-2 transition">About</a>
+                <a href="/contact" class="block text-gray-300 hover:text-white py-2 transition">Contact</a>
+                <div class="border-t border-white/10 pt-3 mt-3">
+                    <a href="/login" class="block text-white hover:text-purple-400 py-2 transition">Login</a>
                 </div>
             </div>
         </div>
@@ -279,6 +295,32 @@
 
     <!-- Currency Converter Script -->
     <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                const icon = mobileMenuBtn.querySelector('i');
+                if (mobileMenu.classList.contains('hidden')) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                } else {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                }
+            });
+            // Close menu when clicking a link
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                });
+            });
+        }
+
         let exchangeRate = 83.5; // Fallback rate
         let currentCurrency = 'USD';
 
