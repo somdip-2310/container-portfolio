@@ -760,8 +760,14 @@ async function deployFromGitHub() {
         });
 
         if (!containerResponse.ok) {
-            const error = await containerResponse.text();
-            throw new Error('Failed to create container: ' + error);
+            let errorMessage = 'Unknown error';
+            try {
+                const errorData = await containerResponse.json();
+                errorMessage = errorData.error || errorData.message || 'Container creation failed';
+            } catch (e) {
+                errorMessage = await containerResponse.text() || 'Container creation failed';
+            }
+            throw new Error(errorMessage);
         }
 
         const container = await containerResponse.json();

@@ -182,10 +182,11 @@ public class ContainerRepository {
     }
     
     public long countNonDeletedByUserId(String userId) {
-        // Since containers in DELETING status are being deleted, we shouldn't count them
+        // Since containers in DELETING or DELETED status should not be counted
         return findByUserId(userId).stream()
-                .filter(container -> 
-                    container.getStatus() != Container.ContainerStatus.DELETING)
+                .filter(container ->
+                    container.getStatus() != Container.ContainerStatus.DELETING &&
+                    container.getStatus() != Container.ContainerStatus.DELETED)
                 .count();
     }
 }
