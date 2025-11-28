@@ -259,6 +259,7 @@ public class AsyncBuildExecutor {
         int maxAttempts = 60; // 10 minutes max
         int attempt = 0;
         String lastPhase = "";
+        String lastStepName = "";
 
         while (attempt < maxAttempts) {
             try {
@@ -281,16 +282,27 @@ public class AsyncBuildExecutor {
 
                 // Publish phase changes
                 if (currentPhase != null && !currentPhase.equals(lastPhase)) {
+                    // Mark the previous step as COMPLETED before starting new one
+                    if (!lastStepName.isEmpty()) {
+                        logStreamService.publishStep(deployment.getDeploymentId(), lastStepName, "COMPLETED",
+                            getPhaseCompletedMessage(lastPhase));
+                    }
+
                     lastPhase = currentPhase;
-                    String stepName = mapPhaseToStep(currentPhase);
+                    lastStepName = mapPhaseToStep(currentPhase);
                     String message = getPhaseMessage(currentPhase);
-                    logStreamService.publishStep(deployment.getDeploymentId(), stepName, "IN_PROGRESS", message);
+                    logStreamService.publishStep(deployment.getDeploymentId(), lastStepName, "IN_PROGRESS", message);
                 }
 
                 log.debug("Build {} status: {}, phase: {}", buildId, status, currentPhase);
 
                 if (status == StatusType.SUCCEEDED) {
                     log.info("Build {} succeeded", buildId);
+                    // Mark the last step as completed
+                    if (!lastStepName.isEmpty()) {
+                        logStreamService.publishStep(deployment.getDeploymentId(), lastStepName, "COMPLETED",
+                            getPhaseCompletedMessage(lastPhase));
+                    }
                     logStreamService.publishStep(deployment.getDeploymentId(), "BUILD_COMPLETE", "COMPLETED",
                         "Build completed successfully!");
                     handleBuildSuccess(deployment, container, linkedRepo);
@@ -298,6 +310,11 @@ public class AsyncBuildExecutor {
                 } else if (status == StatusType.FAILED || status == StatusType.FAULT ||
                            status == StatusType.STOPPED || status == StatusType.TIMED_OUT) {
                     log.error("Build {} failed with status: {}", buildId, status);
+                    // Mark the last step as failed
+                    if (!lastStepName.isEmpty()) {
+                        logStreamService.publishStep(deployment.getDeploymentId(), lastStepName, "FAILED",
+                            "Failed at: " + lastPhase);
+                    }
                     logStreamService.publishStep(deployment.getDeploymentId(), "BUILD_FAILED", "FAILED",
                         "Build failed: " + status);
                     handleBuildFailure(deployment, linkedRepo, "Build failed: " + status);
@@ -322,6 +339,34 @@ public class AsyncBuildExecutor {
         logStreamService.publishStep(deployment.getDeploymentId(), "TIMEOUT", "FAILED",
             "Build timed out after 10 minutes");
         handleBuildFailure(deployment, linkedRepo, "Build timed out");
+    }
+
+    private String getPhaseCompletedMessage(String phase) {
+        if (phase == null) return "Step completed";
+        switch (phase.toUpperCase()) {
+            case "SUBMITTED":
+                return "Build submitted";
+            case "QUEUED":
+                return "Build environment ready";
+            case "PROVISIONING":
+                return "Build environment provisioned";
+            case "DOWNLOAD_SOURCE":
+                return "Repository cloned successfully";
+            case "INSTALL":
+                return "Dependencies installed";
+            case "PRE_BUILD":
+                return "Pre-build commands completed";
+            case "BUILD":
+                return "Docker image built successfully";
+            case "POST_BUILD":
+                return "Post-build commands completed";
+            case "UPLOAD_ARTIFACTS":
+                return "Image pushed to registry";
+            case "FINALIZING":
+                return "Build finalized";
+            default:
+                return "Step completed: " + phase;
+        }
     }
 
     private String mapPhaseToStep(String phase) {

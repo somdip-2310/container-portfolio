@@ -8,6 +8,9 @@
     <!-- Main Content -->
     <main class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-gray-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- FREE Plan Usage Banner -->
+            <div th:replace="~{fragments/base :: freeTierBanner}"></div>
+
             <!-- Page Header -->
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Billing & Usage</h1>
@@ -72,14 +75,14 @@
                     </div>
                     <div class="mb-2">
                         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                            <span>3 of 5 used</span>
-                            <span>60%</span>
+                            <span th:text="${containerCount != null ? containerCount : 0} + ' of ' + ${containerLimit != null ? containerLimit : 1} + ' used'">0 of 1 used</span>
+                            <span th:text="${containerPercentage != null ? containerPercentage : 0} + '%'">0%</span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" style="width: 60%"></div>
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" th:style="'width: ' + ${containerPercentage != null ? containerPercentage : 0} + '%'"></div>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">2 more containers available</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3" th:text="${containersRemaining != null ? containersRemaining : 1} + ' more container(s) available'">1 more container(s) available</p>
                 </div>
 
                 <!-- Bandwidth Usage -->
@@ -90,14 +93,14 @@
                     </div>
                     <div class="mb-2">
                         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                            <span>45.2 GB of 100 GB</span>
-                            <span>45%</span>
+                            <span th:text="${bandwidthUsedGb != null ? bandwidthUsedGb : '0.0'} + ' GB of ' + ${bandwidthLimitGb != null ? bandwidthLimitGb : 10} + ' GB'">0.0 GB of 10 GB</span>
+                            <span th:text="${bandwidthPercentage != null ? bandwidthPercentage : 0} + '%'">0%</span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" th:style="'width: ' + ${bandwidthPercentage != null ? bandwidthPercentage : 0} + '%'"></div>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">54.8 GB remaining this month</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3" th:text="${bandwidthRemaining != null ? bandwidthRemaining : '10.0'} + ' GB remaining this month'">10.0 GB remaining this month</p>
                 </div>
 
                 <!-- CPU Hours -->
@@ -108,12 +111,12 @@
                     </div>
                     <div class="mb-2">
                         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                            <span>720 hours used</span>
+                            <span th:text="${cpuHoursUsed != null ? cpuHoursUsed : 0} + ' hours used'">0 hours used</span>
                             <span>This month</span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">720h</div>
+                        <div class="text-2xl font-bold text-gray-900 dark:text-white" th:text="${cpuHoursUsed != null ? cpuHoursUsed : 0} + 'h'">0h</div>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Equivalent to 1 month runtime</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Based on container runtime this billing period</p>
                 </div>
             </div>
 

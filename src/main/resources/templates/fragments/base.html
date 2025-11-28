@@ -110,12 +110,12 @@
 
     <!-- Header Fragment -->
     <header th:fragment="header" class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo and Navigation -->
                 <div class="flex items-center">
                     <a href="/dashboard" class="flex items-center">
-                        <i class="fas fa-bolt text-purple-600 text-2xl mr-3"></i>
+                        <i class="fas fa-cube text-purple-600 text-2xl mr-3"></i>
                         <span class="font-bold text-xl bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">SnapDeploy</span>
                     </a>
                     
@@ -549,8 +549,16 @@
                         const storageUsed = usage.storageUsedGb || 0;
                         const storageLimit = usage.storageLimitGb;
                         const storagePercentage = storageLimit > 0 ? (storageUsed / storageLimit) * 100 : 0;
-                        
-                        storageUsageEl.textContent = storageUsed + 'GB/' + storageLimit + 'GB';
+
+                        // Show in MB if less than 1 GB, otherwise show in GB
+                        let storageDisplay;
+                        if (storageUsed < 1) {
+                            const storageMB = Math.round(storageUsed * 1024);
+                            storageDisplay = storageMB + 'MB/' + storageLimit + 'GB';
+                        } else {
+                            storageDisplay = storageUsed.toFixed(1) + 'GB/' + storageLimit + 'GB';
+                        }
+                        storageUsageEl.textContent = storageDisplay;
                         storageUsageBarEl.style.width = Math.min(storagePercentage, 100) + '%';
                         
                         // Change color based on usage
@@ -583,4 +591,101 @@
                 loadResourceUsage();
             }
         </script>
+    </div>
+
+    <!-- FREE Plan Usage Banner Fragment -->
+    <div th:fragment="freeTierBanner" th:if="${usageLimit != null && usageLimit.planName == 'FREE'}"
+         class="relative overflow-hidden rounded-2xl shadow-2xl mb-8 backdrop-blur-xl border transition-all duration-300 hover:shadow-3xl"
+         th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-gradient-to-br from-red-500/10 via-red-600/5 to-red-700/10 border-red-500/30' :
+                         (usageLimit.warningLevel == 'critical' ? 'bg-gradient-to-br from-orange-500/10 via-orange-600/5 to-orange-700/10 border-orange-500/30' :
+                         (usageLimit.warningLevel == 'warning' ? 'bg-gradient-to-br from-yellow-500/10 via-yellow-600/5 to-yellow-700/10 border-yellow-500/30' : 'bg-gradient-to-br from-blue-500/10 via-purple-600/5 to-blue-700/10 border-blue-500/30'))}">
+
+        <!-- Animated Background Glow -->
+        <div class="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full blur-3xl opacity-20 animate-pulse"
+             th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-red-500' :
+                             (usageLimit.warningLevel == 'critical' ? 'bg-orange-500' :
+                             (usageLimit.warningLevel == 'warning' ? 'bg-yellow-500' : 'bg-purple-500'))}"></div>
+
+        <div class="relative p-8">
+            <div class="flex items-center justify-between flex-wrap gap-6">
+                <div class="flex-1 min-w-0">
+                    <!-- Header with Icon -->
+                    <div class="flex items-center mb-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl backdrop-blur-sm mr-4"
+                             th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-red-500/20' :
+                                             (usageLimit.warningLevel == 'critical' ? 'bg-orange-500/20' :
+                                             (usageLimit.warningLevel == 'warning' ? 'bg-yellow-500/20' : 'bg-blue-500/20'))}">
+                            <i th:class="${usageLimit.warningLevel == 'exceeded' ? 'fas fa-exclamation-triangle text-red-600 dark:text-red-400' :
+                                         (usageLimit.warningLevel == 'critical' ? 'fas fa-exclamation-circle text-orange-600 dark:text-orange-400' :
+                                         (usageLimit.warningLevel == 'warning' ? 'fas fa-exclamation-circle text-yellow-600 dark:text-yellow-400' : 'fas fa-infinity text-blue-600 dark:text-blue-400'))}"
+                               class="text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-700 dark:text-red-300' :
+                                          (usageLimit.warningLevel == 'critical' ? 'text-orange-700 dark:text-orange-300' :
+                                          (usageLimit.warningLevel == 'warning' ? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300'))}"
+                                    class="text-2xl font-bold" th:text="${usageLimit.primaryMessage}">FREE Plan Usage</h3>
+                            <p th:class="${usageLimit.warningLevel == 'exceeded' ? 'text-red-600 dark:text-red-400' :
+                                         (usageLimit.warningLevel == 'critical' ? 'text-orange-600 dark:text-orange-400' :
+                                         (usageLimit.warningLevel == 'warning' ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'))}"
+                               class="text-sm mt-1" th:text="${usageLimit.secondaryMessage}">
+                                Perfect for learning, building side projects, and testing in production.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar with Gradient -->
+                    <div class="w-full bg-white/10 backdrop-blur-sm rounded-full h-3 mb-4 overflow-hidden">
+                        <div class="h-3 rounded-full transition-all duration-500 ease-out relative"
+                             th:classappend="${usageLimit.warningLevel == 'exceeded' ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                                             (usageLimit.warningLevel == 'critical' ? 'bg-gradient-to-r from-orange-500 to-orange-600' :
+                                             (usageLimit.warningLevel == 'warning' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-blue-500 to-purple-600'))}"
+                             th:style="'width: ' + ${usageLimit.percentageUsed > 100 ? 100 : usageLimit.percentageUsed} + '%'">
+                            <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                        </div>
+                    </div>
+
+                    <!-- Usage Stats -->
+                    <div class="flex justify-between items-center flex-wrap gap-3">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Hours Used</p>
+                                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                    <span th:text="${#numbers.formatDecimal(usageLimit.hoursUsed, 1, 1)}">20</span> /
+                                    <span th:text="${#numbers.formatDecimal(usageLimit.totalLimit, 0, 0)}">200</span>
+                                </p>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Progress</p>
+                                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                    <span th:text="${#numbers.formatDecimal(usageLimit.percentageUsed, 1, 1)}">10</span>%
+                                </p>
+                            </div>
+                        </div>
+                        <div th:if="${usageLimit.bonusHours > 0}"
+                             class="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 px-4 py-2 rounded-lg">
+                            <p class="text-xs text-green-700 dark:text-green-300 mb-1">
+                                <i class="fas fa-gift mr-1"></i>Bonus Hours
+                            </p>
+                            <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                                +<span th:text="${#numbers.formatDecimal(usageLimit.bonusHours, 0, 0)}">50</span> hours
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col gap-3 min-w-fit">
+                    <button onclick="window.location.href='/billing'"
+                            class="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center whitespace-nowrap">
+                        <div class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                        <i class="fas fa-crown mr-2 relative"></i>
+                        <span class="relative">Upgrade to PRO</span>
+                    </button>
+                    <a href="/support" class="text-sm text-center text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                        <i class="fas fa-gift mr-1"></i>Earn Bonus Hours
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
