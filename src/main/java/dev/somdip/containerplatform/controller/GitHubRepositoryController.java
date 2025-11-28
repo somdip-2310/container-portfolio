@@ -9,6 +9,7 @@ import dev.somdip.containerplatform.service.GitHubOAuthService;
 import dev.somdip.containerplatform.service.GitHubRepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -172,6 +173,10 @@ public class GitHubRepositoryController {
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error linking repository: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "An unexpected error occurred: " + e.getMessage()));
         }
     }
 
