@@ -219,18 +219,51 @@ public class EcsService {
             if (!response.services().isEmpty()) {
                 software.amazon.awssdk.services.ecs.model.Service service = response.services().get(0);
 
-                // More lenient stability check:
-                // 1. Running count meets desired count
-                // 2. At least one PRIMARY deployment exists (new deployment is active)
+                // CRITICAL: Check for circuit breaker failure FIRST
+                // This catches containers that crash on startup (missing env vars, etc.)
+                for (software.amazon.awssdk.services.ecs.model.Deployment deployment : service.deployments()) {
+                    if ("PRIMARY".equals(deployment.status())) {
+                        String rolloutState = deployment.rolloutState() != null ?
+                            deployment.rolloutState().toString() : "UNKNOWN";
+
+                        if ("FAILED".equals(rolloutState)) {
+                            String reason = deployment.rolloutStateReason() != null ?
+                                deployment.rolloutStateReason() : "Unknown failure";
+                            log.error("Circuit breaker triggered! Deployment failed: {}", reason);
+                            throw new RuntimeException("ECS deployment circuit breaker triggered: " + reason);
+                        }
+
+                        // If rollout is COMPLETED, we can proceed
+                        if ("COMPLETED".equals(rolloutState)) {
+                            long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
+                            log.info("Service rollout COMPLETED after {}s with {} running tasks",
+                                elapsedSeconds, service.runningCount());
+                            return;
+                        }
+                    }
+                }
+
+                // Check for running tasks (for IN_PROGRESS rollouts)
                 boolean hasRunningTasks = service.runningCount() >= service.desiredCount() && service.desiredCount() > 0;
                 boolean hasPrimaryDeployment = service.deployments().stream()
                     .anyMatch(d -> "PRIMARY".equals(d.status()));
 
                 if (hasRunningTasks && hasPrimaryDeployment) {
-                    long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
-                    log.info("Service is stable after {}s with {} running tasks (Deployments: {})",
-                        elapsedSeconds, service.runningCount(), service.deployments().size());
-                    return;
+                    // Additional check: Verify tasks aren't in a crash loop
+                    // Wait a bit more to ensure container doesn't immediately crash
+                    int failedTasks = service.deployments().stream()
+                        .filter(d -> "PRIMARY".equals(d.status()))
+                        .mapToInt(d -> d.failedTasks())
+                        .sum();
+
+                    if (failedTasks > 0) {
+                        log.warn("Service has {} failed tasks, continuing to monitor...", failedTasks);
+                    } else {
+                        long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
+                        log.info("Service is stable after {}s with {} running tasks (Deployments: {})",
+                            elapsedSeconds, service.runningCount(), service.deployments().size());
+                        return;
+                    }
                 }
 
                 long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
