@@ -27,6 +27,9 @@ public class DynamoDbConfig {
     @Value("${aws.dynamodb.tables.payment-transactions}")
     private String paymentTransactionsTableName;
 
+    @Value("${aws.dynamodb.tables.payment-methods}")
+    private String paymentMethodsTableName;
+
     @Bean
     public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient dynamoDbClient) {
         log.info("Creating DynamoDB Enhanced Client");
@@ -53,5 +56,10 @@ public class DynamoDbConfig {
     @Bean(name = "paymentTransactionsTableName")
     public String paymentTransactionsTableName() {
         return paymentTransactionsTableName;
+    }
+
+    @Bean(name = "paymentMethodsTableName")
+    public String paymentMethodsTableName() {
+        return paymentMethodsTableName;
     }
 }
