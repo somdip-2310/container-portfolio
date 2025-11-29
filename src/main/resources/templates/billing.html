@@ -22,41 +22,82 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <h2 class="text-2xl font-bold mb-2">
-                            <span th:text="${subscriptionPlan != null ? subscriptionPlan : 'Free'}">Free</span> Plan
+                            <span th:text="${subscriptionPlan != null ? subscriptionPlan : 'FREE'}">FREE</span> Plan
                         </h2>
                         <p class="text-purple-100 mb-4">
-                            Status: <span class="font-semibold" th:text="${subscriptionStatus != null ? subscriptionStatus : 'Active'}">Active</span>
+                            Status: <span class="font-semibold" th:text="${subscriptionStatus != null ? subscriptionStatus : 'ACTIVE'}">ACTIVE</span>
                         </p>
+                        <!-- Dynamic plan benefits based on subscriptionPlan -->
                         <div class="space-y-2 text-sm">
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span>1 Container</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span>256 MB RAM/container</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span>500 MB Storage</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span>10 GB Bandwidth</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span>Subdomain</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span>Community Support</span>
-                            </div>
+                            <!-- FREE Plan Benefits -->
+                            <th:block th:if="${subscriptionPlan == null || subscriptionPlan == 'FREE'}">
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>1 Container</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>256 MB RAM/container</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>5 GB Storage</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>10 GB Bandwidth</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Subdomain</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Community Support</span></div>
+                            </th:block>
+                            <!-- STARTER Plan Benefits -->
+                            <th:block th:if="${subscriptionPlan == 'STARTER'}">
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>3 Containers</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>512 MB RAM/container</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>2 GB Storage</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>50 GB Bandwidth</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>1 Custom Domain</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Email Support (24hr)</span></div>
+                            </th:block>
+                            <!-- PRO Plan Benefits -->
+                            <th:block th:if="${subscriptionPlan == 'PRO'}">
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>8 Containers</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>1 GB RAM/container</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>10 GB Storage</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>200 GB Bandwidth</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>5 Custom Domains</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Priority Support (4hr)</span></div>
+                            </th:block>
+                            <!-- BUSINESS Plan Benefits -->
+                            <th:block th:if="${subscriptionPlan == 'BUSINESS'}">
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>20 Containers</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>2 GB RAM/container</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>50 GB Storage</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>1 TB Bandwidth</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Unlimited Domains</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>24/7 Support (1hr)</span></div>
+                            </th:block>
+                            <!-- ENTERPRISE Plan Benefits -->
+                            <th:block th:if="${subscriptionPlan == 'ENTERPRISE'}">
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Custom Containers</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Up to 16 GB RAM</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Custom Storage</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Custom Bandwidth</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Unlimited Domains</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>Dedicated Support</span></div>
+                            </th:block>
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-4xl font-bold mb-2">Free</div>
-                        <div class="text-purple-100 text-sm">Forever</div>
+                        <!-- Dynamic pricing based on plan -->
+                        <th:block th:if="${subscriptionPlan == null || subscriptionPlan == 'FREE'}">
+                            <div class="text-4xl font-bold mb-2">Free</div>
+                            <div class="text-purple-100 text-sm">Forever</div>
+                        </th:block>
+                        <th:block th:if="${subscriptionPlan == 'STARTER'}">
+                            <div class="text-4xl font-bold mb-2">$39<span class="text-lg">/mo</span></div>
+                            <div class="text-purple-100 text-sm">~₹3,500/mo</div>
+                        </th:block>
+                        <th:block th:if="${subscriptionPlan == 'PRO'}">
+                            <div class="text-4xl font-bold mb-2">$89<span class="text-lg">/mo</span></div>
+                            <div class="text-purple-100 text-sm">~₹7,950/mo</div>
+                        </th:block>
+                        <th:block th:if="${subscriptionPlan == 'BUSINESS'}">
+                            <div class="text-4xl font-bold mb-2">$169<span class="text-lg">/mo</span></div>
+                            <div class="text-purple-100 text-sm">~₹15,100/mo</div>
+                        </th:block>
+                        <th:block th:if="${subscriptionPlan == 'ENTERPRISE'}">
+                            <div class="text-4xl font-bold mb-2">Custom</div>
+                            <div class="text-purple-100 text-sm">Contact Sales</div>
+                        </th:block>
                         <button onclick="showUpgradeModal()"
                                 class="mt-4 bg-white text-purple-600 hover:bg-purple-50 font-semibold py-2 px-6 rounded-lg transition">
                             Upgrade Plan
@@ -125,74 +166,34 @@
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Billing History</h3>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div id="billingHistoryContainer" class="overflow-x-auto">
+                    <!-- Loading state -->
+                    <div id="billingHistoryLoading" class="p-8 text-center">
+                        <i class="fas fa-spinner fa-spin text-purple-500 text-2xl"></i>
+                        <p class="mt-2 text-gray-500 dark:text-gray-400">Loading billing history...</p>
+                    </div>
+                    <!-- Empty state -->
+                    <div id="billingHistoryEmpty" class="hidden p-8 text-center">
+                        <i class="fas fa-receipt text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400">No billing history yet</p>
+                        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Your payment transactions will appear here</p>
+                    </div>
+                    <!-- Table -->
+                    <table id="billingHistoryTable" class="w-full hidden">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Invoice</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Jan 1, 2024</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Free Plan - January 2024</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">$0.00</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
-                                        Paid
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <button class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
-                                        <i class="fas fa-download mr-1"></i>
-                                        Download
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Dec 1, 2023</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Free Plan - December 2023</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">$0.00</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
-                                        Paid
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <button class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
-                                        <i class="fas fa-download mr-1"></i>
-                                        Download
-                                    </button>
-                                </td>
-                            </tr>
+                        <tbody id="billingHistoryBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Payment Method -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method</h3>
-                <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded">
-                            <i class="fas fa-credit-card text-2xl text-gray-600 dark:text-gray-400"></i>
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900 dark:text-white">No payment method</div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">You're on the free plan</div>
-                        </div>
-                    </div>
-                    <button onclick="addPaymentMethod()"
-                            class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                        Add Payment Method
-                    </button>
-                </div>
-            </div>
         </div>
     </main>
 
@@ -226,7 +227,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <!-- Free Plan -->
-                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col" th:classappend="${subscriptionPlan == null || subscriptionPlan == 'FREE'} ? 'ring-2 ring-purple-500' : ''">
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">FREE TIER</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Free</div>
                         <p class="text-xs text-gray-500 mb-4">Trial users, Students</p>
@@ -238,11 +239,12 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Subdomain</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Community Support</span></li>
                         </ul>
-                        <button class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm" disabled>Current Plan</button>
+                        <button th:if="${subscriptionPlan == null || subscriptionPlan == 'FREE'}" class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed" disabled>Current Plan</button>
+                        <button th:unless="${subscriptionPlan == null || subscriptionPlan == 'FREE'}" class="w-full bg-gray-400 text-white font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed" disabled>Downgrade N/A</button>
                     </div>
 
                     <!-- Starter Plan -->
-                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col" th:classappend="${subscriptionPlan == 'STARTER'} ? 'ring-2 ring-purple-500' : ''">
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">STARTER</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                             <span class="monthly-price" data-usd="39">$39</span>
@@ -260,13 +262,14 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">1 Custom Domain</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Email (24hr)</span></li>
                         </ul>
-                        <button onclick="initiatePayment('STARTER')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Starter</button>
+                        <button th:if="${subscriptionPlan == 'STARTER'}" class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed" disabled>Current Plan</button>
+                        <button th:unless="${subscriptionPlan == 'STARTER'}" onclick="initiateUpgrade('STARTER')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Starter</button>
                     </div>
 
                     <!-- Pro Plan -->
-                    <div class="border-2 border-purple-600 rounded-lg p-6 relative flex flex-col">
+                    <div class="border-2 border-purple-600 rounded-lg p-6 relative flex flex-col" th:classappend="${subscriptionPlan == 'PRO'} ? 'ring-2 ring-purple-500' : ''">
                         <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">⭐ POPULAR</span>
+                            <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</span>
                         </div>
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">PRO</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
@@ -285,11 +288,12 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">5 Custom Domains</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Priority (4hr)</span></li>
                         </ul>
-                        <button onclick="initiatePayment('PRO')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Pro</button>
+                        <button th:if="${subscriptionPlan == 'PRO'}" class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed" disabled>Current Plan</button>
+                        <button th:unless="${subscriptionPlan == 'PRO'}" onclick="initiateUpgrade('PRO')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Pro</button>
                     </div>
 
                     <!-- Business Plan -->
-                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col" th:classappend="${subscriptionPlan == 'BUSINESS'} ? 'ring-2 ring-purple-500' : ''">
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">BUSINESS</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                             <span class="monthly-price" data-usd="169">$169</span>
@@ -307,11 +311,12 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Unlimited Domains</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">24/7 Support (1hr)</span></li>
                         </ul>
-                        <button onclick="initiatePayment('BUSINESS')" class="w-full bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Business</button>
+                        <button th:if="${subscriptionPlan == 'BUSINESS'}" class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed" disabled>Current Plan</button>
+                        <button th:unless="${subscriptionPlan == 'BUSINESS'}" onclick="initiateUpgrade('BUSINESS')" class="w-full bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Business</button>
                     </div>
 
                     <!-- Enterprise Plan -->
-                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col">
+                    <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col" th:classappend="${subscriptionPlan == 'ENTERPRISE'} ? 'ring-2 ring-purple-500' : ''">
                         <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">ENTERPRISE</h4>
                         <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Custom</div>
                         <p class="text-xs text-gray-500 mb-4">Large enterprise</p>
@@ -323,35 +328,17 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Unlimited Domains</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Dedicated Support</span></li>
                         </ul>
-                        <button onclick="contactSales()" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition text-sm">Contact Sales</button>
+                        <button th:if="${subscriptionPlan == 'ENTERPRISE'}" class="w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed" disabled>Current Plan</button>
+                        <button th:unless="${subscriptionPlan == 'ENTERPRISE'}" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition text-sm">Contact Sales</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Razorpay Checkout SDK -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-    <script th:inline="javascript">
+    <script>
         let exchangeRate = 83.5; // Fallback rate
         let currentBillingPeriod = 'monthly';
-
-        // CSRF token for API calls
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
-
-        // Razorpay configuration
-        const razorpayKeyId = /*[[${@environment.getProperty('razorpay.key.id')}]]*/ 'rzp_test_RlQVkwHFJu9xDA';
-        const userEmail = /*[[${user.email}]]*/ '';
-
-        // Plan pricing in INR paise (100 paise = 1 INR) - matches Razorpay plans
-        // Discounts: Quarterly = 10% off, Annual = 17% off
-        const planPricing = {
-            'STARTER': { monthly: 350000, quarterly: 945000, annual: 3486000, name: 'Starter Plan' },
-            'PRO': { monthly: 795000, quarterly: 2146500, annual: 7918200, name: 'Pro Plan' },
-            'BUSINESS': { monthly: 1510000, quarterly: 4077000, annual: 15039600, name: 'Business Plan' }
-        };
 
         // Fetch live exchange rate on page load
         async function fetchExchangeRate() {
@@ -390,149 +377,10 @@
             document.getElementById('upgradeModal').classList.add('hidden');
         }
 
-        function addPaymentMethod() {
-            showUpgradeModal();
-        }
-
-        function contactSales() {
-            window.location.href = '/contact?subject=Enterprise%20Plan%20Inquiry';
-        }
-
-        // Initiate Razorpay payment
-        async function initiatePayment(plan) {
-            const pricing = planPricing[plan];
-            if (!pricing) {
-                showNotification('Invalid plan selected', 'error');
-                return;
-            }
-
-            const billingPeriodKey = currentBillingPeriod === 'annual' ? 'annual' :
-                                     currentBillingPeriod === 'quarterly' ? 'quarterly' : 'monthly';
-            const amount = pricing[billingPeriodKey];
-
-            try {
-                // Show loading state
-                showNotification('Creating payment order...', 'info');
-
-                // Create order on server
-                const response = await fetch('/api/payments/orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        planName: plan,
-                        billingCycle: currentBillingPeriod
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to create order');
-                }
-
-                const orderData = await response.json();
-
-                // Open Razorpay checkout
-                const options = {
-                    key: razorpayKeyId,
-                    amount: orderData.amount,
-                    currency: orderData.currency || 'INR',
-                    name: 'SnapDeploy',
-                    description: `${pricing.name} - ${currentBillingPeriod}`,
-                    order_id: orderData.razorpayOrderId,
-                    handler: function(response) {
-                        // Verify payment on server
-                        verifyPayment(response, plan);
-                    },
-                    prefill: {
-                        email: userEmail
-                    },
-                    theme: {
-                        color: '#7c3aed'
-                    },
-                    modal: {
-                        ondismiss: function() {
-                            showNotification('Payment cancelled', 'warning');
-                        }
-                    }
-                };
-
-                const rzp = new Razorpay(options);
-                rzp.on('payment.failed', function(response) {
-                    showNotification('Payment failed: ' + response.error.description, 'error');
-                });
-                rzp.open();
-
-            } catch (error) {
-                console.error('Payment error:', error);
-                showNotification('Failed to initiate payment. Please try again.', 'error');
-            }
-        }
-
-        // Verify payment after successful Razorpay checkout
-        async function verifyPayment(razorpayResponse, plan) {
-            try {
-                showNotification('Verifying payment...', 'info');
-
-                const response = await fetch('/api/payments/verify', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        razorpayOrderId: razorpayResponse.razorpay_order_id,
-                        razorpayPaymentId: razorpayResponse.razorpay_payment_id,
-                        razorpaySignature: razorpayResponse.razorpay_signature,
-                        plan: plan
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showNotification('Payment successful! Your plan has been upgraded.', 'success');
-                    hideUpgradeModal();
-                    // Reload page to show new plan
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    showNotification('Payment verification failed. Please contact support.', 'error');
-                }
-
-            } catch (error) {
-                console.error('Verification error:', error);
-                showNotification('Failed to verify payment. Please contact support.', 'error');
-            }
-        }
-
-        // Show notification toast
-        function showNotification(message, type) {
-            // Remove existing notifications
-            const existing = document.querySelector('.payment-notification');
-            if (existing) existing.remove();
-
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                warning: 'bg-yellow-500',
-                info: 'bg-blue-500'
-            };
-
-            const notification = document.createElement('div');
-            notification.className = `payment-notification fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                notification.classList.add('opacity-0');
-                setTimeout(() => notification.remove(), 300);
-            }, 5000);
+        function initiateUpgrade(plan) {
+            // Get the billing period and redirect to subscription API
+            const billingPeriod = currentBillingPeriod.toUpperCase();
+            window.location.href = `/api/subscription/checkout?plan=${plan}&billingPeriod=${billingPeriod}`;
         }
 
         function switchBilling(period) {
@@ -569,9 +417,99 @@
             updateAllInrDisplays();
         }
 
+        // Billing History Functions
+        async function fetchBillingHistory() {
+            const loadingEl = document.getElementById('billingHistoryLoading');
+            const emptyEl = document.getElementById('billingHistoryEmpty');
+            const tableEl = document.getElementById('billingHistoryTable');
+            const bodyEl = document.getElementById('billingHistoryBody');
+
+            try {
+                const response = await fetch('/api/payments/history');
+                if (!response.ok) throw new Error('Failed to fetch billing history');
+
+                const transactions = await response.json();
+                loadingEl.classList.add('hidden');
+
+                if (!transactions || transactions.length === 0) {
+                    emptyEl.classList.remove('hidden');
+                    return;
+                }
+
+                // Sort by createdAt descending
+                transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                // Render transactions
+                bodyEl.innerHTML = transactions.map(tx => renderTransactionRow(tx)).join('');
+                tableEl.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error fetching billing history:', error);
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+            }
+        }
+
+        function renderTransactionRow(tx) {
+            const date = new Date(tx.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            const amount = tx.currency === 'INR'
+                ? `₹${(tx.amount / 100).toLocaleString('en-IN')}`
+                : `$${(tx.amount / 100).toFixed(2)}`;
+
+            const description = tx.description || `${tx.planName || 'Subscription'} Plan`;
+
+            const statusClasses = getStatusClasses(tx.status);
+            const statusText = formatStatus(tx.status);
+
+            return `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">${amount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium ${statusClasses} rounded">${statusText}</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function getStatusClasses(status) {
+            switch (status) {
+                case 'CAPTURED':
+                    return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+                case 'REFUNDED':
+                case 'PARTIALLY_REFUNDED':
+                    return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
+                case 'FAILED':
+                    return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+                case 'AUTHORIZED':
+                case 'CREATED':
+                    return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+                default:
+                    return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+            }
+        }
+
+        function formatStatus(status) {
+            switch (status) {
+                case 'CAPTURED': return 'Paid';
+                case 'REFUNDED': return 'Refunded';
+                case 'PARTIALLY_REFUNDED': return 'Partial Refund';
+                case 'FAILED': return 'Failed';
+                case 'AUTHORIZED': return 'Processing';
+                case 'CREATED': return 'Pending';
+                default: return status;
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             fetchExchangeRate();
+            fetchBillingHistory();
         });
     </script>
 </body>
