@@ -203,19 +203,37 @@ public class DeploymentLogStreamService {
             if (!response.builds().isEmpty()) {
                 Build build = response.builds().get(0);
 
-                // Get current build phase
-                String currentPhase = build.currentPhase();
-                String phaseStatus = build.buildStatus().toString();
+                // Iterate through all phases and update their individual statuses
+                if (build.phases() != null) {
+                    for (var phase : build.phases()) {
+                        String phaseName = phase.phaseTypeAsString();
+                        String phaseStatus = phase.phaseStatusAsString();
 
-                // Map CodeBuild phases to user-friendly steps
-                String stepName = mapPhaseToStep(currentPhase);
-                String stepMessage = getPhaseMessage(currentPhase, phaseStatus);
+                        // Skip phases that haven't started yet
+                        if (phaseStatus == null || phaseName == null) {
+                            continue;
+                        }
 
-                // Publish step update
-                publishStep(deploymentId, stepName, phaseStatus, stepMessage);
+                        String stepName = mapPhaseToStep(phaseName);
+                        String stepMessage = getPhaseCompletionMessage(phaseName, phaseStatus);
 
-                // Check for completion
+                        // Map phase status to step status
+                        String stepStatus;
+                        if ("SUCCEEDED".equals(phaseStatus)) {
+                            stepStatus = "COMPLETED";
+                        } else if ("FAILED".equals(phaseStatus) || "FAULT".equals(phaseStatus) || "STOPPED".equals(phaseStatus)) {
+                            stepStatus = "FAILED";
+                        } else {
+                            stepStatus = "IN_PROGRESS";
+                        }
+
+                        publishStep(deploymentId, stepName, stepStatus, stepMessage);
+                    }
+                }
+
+                // Check for overall build completion
                 if (build.buildStatus() == StatusType.SUCCEEDED) {
+                    publishStep(deploymentId, "BUILD_COMPLETE", "COMPLETED", "Build completed successfully!");
                     publishStep(deploymentId, "DEPLOYING", "IN_PROGRESS", "Deploying to ECS...");
                 } else if (build.buildStatus() == StatusType.FAILED ||
                            build.buildStatus() == StatusType.FAULT ||
@@ -226,6 +244,44 @@ public class DeploymentLogStreamService {
             }
         } catch (Exception e) {
             log.error("Error polling CodeBuild for deployment: {}", deploymentId, e);
+        }
+    }
+
+    /**
+     * Get completion message for a phase
+     */
+    private String getPhaseCompletionMessage(String phase, String status) {
+        if (!"SUCCEEDED".equals(status)) {
+            return getPhaseMessage(phase, status);
+        }
+
+        if (phase == null) return "Completed";
+
+        switch (phase.toUpperCase()) {
+            case "SUBMITTED":
+                return "Build submitted";
+            case "QUEUED":
+                return "Build ready";
+            case "PROVISIONING":
+                return "Build environment provisioned";
+            case "DOWNLOAD_SOURCE":
+                return "Repository cloned successfully";
+            case "INSTALL":
+                return "Dependencies installed";
+            case "PRE_BUILD":
+                return "Pre-build commands completed";
+            case "BUILD":
+                return "Docker image built successfully";
+            case "POST_BUILD":
+                return "Post-build commands completed";
+            case "UPLOAD_ARTIFACTS":
+                return "Image pushed to registry";
+            case "FINALIZING":
+                return "Build finalized";
+            case "COMPLETED":
+                return "Build completed successfully!";
+            default:
+                return "Step completed: " + phase;
         }
     }
 
