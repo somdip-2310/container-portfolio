@@ -762,11 +762,12 @@ public class EcsService {
     private String fetchContainerErrorLogs(String containerId) {
         try {
             log.info("Fetching error logs for failed container: {}", containerId);
-            String errorLogs = logStreamingService.getErrorLogs(containerId, 50);
-            if (errorLogs != null && !errorLogs.isEmpty()) {
+            String errorLogs = logStreamingService.getLatestLogs(containerId, 50);
+            if (errorLogs != null && !errorLogs.isEmpty() && !errorLogs.equals("No logs available for this container yet.")) {
                 log.debug("Retrieved {} characters of error logs for container {}", errorLogs.length(), containerId);
+                return errorLogs;
             }
-            return errorLogs;
+            return null;
         } catch (Exception e) {
             log.warn("Failed to fetch error logs for container {}: {}", containerId, e.getMessage());
             return null;
