@@ -337,6 +337,10 @@
         let exchangeRate = 83.5; // Fallback rate
         let currentBillingPeriod = 'monthly';
 
+        // CSRF token for API calls
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
         // Razorpay configuration
         const razorpayKeyId = /*[[${@environment.getProperty('razorpay.key.id')}]]*/ 'rzp_test_RlQVkwHFJu9xDA';
         const userEmail = /*[[${user.email}]]*/ '';
@@ -415,6 +419,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
                     },
                     credentials: 'same-origin',
                     body: JSON.stringify({
@@ -475,6 +480,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
                     },
                     credentials: 'same-origin',
                     body: JSON.stringify({
