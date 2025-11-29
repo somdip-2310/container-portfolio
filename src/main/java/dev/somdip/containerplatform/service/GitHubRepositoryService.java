@@ -175,6 +175,13 @@ public class GitHubRepositoryService {
     }
 
     /**
+     * Get linked repository by repoLinkId
+     */
+    public Optional<LinkedRepository> getLinkedRepositoryById(String repoLinkId) {
+        return linkedRepoRepository.findById(repoLinkId);
+    }
+
+    /**
      * Get all linked repositories for a user
      */
     public List<LinkedRepository> getUserLinkedRepositories(String userId) {

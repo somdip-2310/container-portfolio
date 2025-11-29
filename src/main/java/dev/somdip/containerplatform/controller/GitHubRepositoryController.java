@@ -1,8 +1,10 @@
 package dev.somdip.containerplatform.controller;
 
+import dev.somdip.containerplatform.dto.EnvVarSuggestion;
 import dev.somdip.containerplatform.dto.github.*;
 import dev.somdip.containerplatform.model.LinkedRepository;
 import dev.somdip.containerplatform.security.CustomUserDetails;
+import dev.somdip.containerplatform.service.EnvironmentVariableDetectorService;
 import dev.somdip.containerplatform.service.GitHubApiService;
 import dev.somdip.containerplatform.service.GitHubBuildService;
 import dev.somdip.containerplatform.service.GitHubOAuthService;
@@ -27,15 +29,18 @@ public class GitHubRepositoryController {
     private final GitHubOAuthService oAuthService;
     private final GitHubRepositoryService repositoryService;
     private final GitHubBuildService buildService;
+    private final EnvironmentVariableDetectorService envVarDetectorService;
 
     public GitHubRepositoryController(GitHubApiService apiService,
                                        GitHubOAuthService oAuthService,
                                        GitHubRepositoryService repositoryService,
-                                       GitHubBuildService buildService) {
+                                       GitHubBuildService buildService,
+                                       EnvironmentVariableDetectorService envVarDetectorService) {
         this.apiService = apiService;
         this.oAuthService = oAuthService;
         this.repositoryService = repositoryService;
         this.buildService = buildService;
+        this.envVarDetectorService = envVarDetectorService;
     }
 
     /**
@@ -297,6 +302,92 @@ public class GitHubRepositoryController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Detect environment variables from a repository before linking
+     * GET /api/github/repos/{owner}/{repo}/detect-env-vars?branch=main&rootDir=/
+     */
+    @GetMapping("/repos/{owner}/{repo}/detect-env-vars")
+    public ResponseEntity<?> detectEnvVarsFromRepo(
+            @PathVariable String owner,
+            @PathVariable String repo,
+            @RequestParam(defaultValue = "main") String branch,
+            @RequestParam(defaultValue = "") String rootDir,
+            @RequestParam(defaultValue = "Dockerfile") String dockerfilePath,
+            Authentication authentication) {
+
+        String userId = getUserId(authentication);
+
+        if (!oAuthService.isConnected(userId)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            List<EnvVarSuggestion> suggestions = envVarDetectorService.detectFromRepository(
+                userId, owner, repo, branch, rootDir, dockerfilePath);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("suggestions", suggestions);
+            response.put("count", suggestions.size());
+            response.put("hasRequired", suggestions.stream().anyMatch(EnvVarSuggestion::isRequired));
+            response.put("hasSecrets", suggestions.stream().anyMatch(EnvVarSuggestion::isSecret));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error detecting env vars for {}/{}: {}", owner, repo, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to detect environment variables: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Detect environment variables from a linked repository
+     * GET /api/github/link/{repoLinkId}/detect-env-vars
+     */
+    @GetMapping("/link/{repoLinkId}/detect-env-vars")
+    public ResponseEntity<?> detectEnvVarsFromLinkedRepo(
+            @PathVariable String repoLinkId,
+            Authentication authentication) {
+
+        String userId = getUserId(authentication);
+
+        try {
+            var linkedRepoOpt = repositoryService.getLinkedRepositoryById(repoLinkId);
+            if (linkedRepoOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            LinkedRepository linkedRepo = linkedRepoOpt.get();
+            if (!linkedRepo.getUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Not authorized to access this repository"));
+            }
+
+            List<EnvVarSuggestion> suggestions = envVarDetectorService.detectFromRepository(
+                userId,
+                linkedRepo.getRepoOwner(),
+                linkedRepo.getRepoName(),
+                linkedRepo.getDeployBranch(),
+                linkedRepo.getRootDirectory() != null ? linkedRepo.getRootDirectory() : "",
+                linkedRepo.getDockerfilePath() != null ? linkedRepo.getDockerfilePath() : "Dockerfile");
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("suggestions", suggestions);
+            response.put("count", suggestions.size());
+            response.put("hasRequired", suggestions.stream().anyMatch(EnvVarSuggestion::isRequired));
+            response.put("hasSecrets", suggestions.stream().anyMatch(EnvVarSuggestion::isSecret));
+            response.put("repoLinkId", repoLinkId);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error detecting env vars for linked repo {}: {}", repoLinkId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to detect environment variables: " + e.getMessage()));
         }
     }
 
