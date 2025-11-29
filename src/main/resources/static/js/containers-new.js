@@ -1129,8 +1129,13 @@ function startDeploymentLogStream(deploymentId) {
             // Show appropriate message
             if (data.status === 'COMPLETED') {
                 showToast('Deployment completed successfully!', 'success');
+                // Auto-close modal after showing success state for 2 seconds
+                setTimeout(() => {
+                    closeDeploymentLogsAndRefresh();
+                }, 2000);
             } else {
                 showToast('Deployment failed: ' + (data.message || 'Unknown error'), 'error');
+                // Keep modal open on failure so user can see what went wrong
             }
         }
     });
@@ -1181,11 +1186,14 @@ function updateDeploymentStep(stepName, status, message) {
 function getStepStatusStyles(status) {
     switch (status) {
         case 'COMPLETED':
+        case 'SUCCEEDED':
             return {
                 icon: '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
                 colorClass: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
             };
         case 'FAILED':
+        case 'FAULT':
+        case 'STOPPED':
             return {
                 icon: '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
                 colorClass: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
@@ -1206,17 +1214,19 @@ function formatStepName(stepName) {
         'AUTHENTICATING': 'Authenticating',
         'STARTING_BUILD': 'Starting Build',
         'QUEUED': 'Queued',
-        'PROVISIONING': 'Provisioning',
+        'PROVISIONING': 'Provisioning Build Environment',
         'CLONING': 'Cloning Repository',
         'INSTALLING': 'Installing Dependencies',
+        'INSTALLING_DEPENDENCIES': 'Installing Dependencies',
         'PRE_BUILD': 'Pre-Build',
-        'BUILDING': 'Building Image',
+        'BUILDING': 'Building Docker Image',
         'POST_BUILD': 'Post-Build',
-        'PUSHING_IMAGE': 'Pushing Image',
-        'FINALIZING': 'Finalizing',
+        'PUSHING_IMAGE': 'Pushing Image to Registry',
+        'FINALIZING': 'Finalizing Build',
+        'COMPLETED': 'Build Complete',
         'BUILD_COMPLETE': 'Build Complete',
         'BUILD_FAILED': 'Build Failed',
-        'DEPLOYING': 'Deploying to ECS',
+        'DEPLOYING': 'Deploying Container',
         'DEPLOY_FAILED': 'Deploy Failed',
         'ERROR': 'Error',
         'TIMEOUT': 'Timeout'
