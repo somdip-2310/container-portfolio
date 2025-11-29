@@ -441,7 +441,7 @@
                     currency: orderData.currency || 'INR',
                     name: 'SnapDeploy',
                     description: `${pricing.name} - ${currentBillingPeriod}`,
-                    order_id: orderData.orderId,
+                    order_id: orderData.razorpayOrderId,
                     handler: function(response) {
                         // Verify payment on server
                         verifyPayment(response, plan);
