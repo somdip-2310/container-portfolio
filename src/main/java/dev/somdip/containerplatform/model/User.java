@@ -2,14 +2,12 @@ package dev.somdip.containerplatform.model;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
-
 import java.time.Instant;
 import java.util.Set;
 
-
 @DynamoDbBean
 public class User {
-    
+
     private String userId;
     private String email;
     private String passwordHash;
@@ -24,6 +22,18 @@ public class User {
     private Instant lastLoginAt;
     private String stripeCustomerId;
     private String stripeSubscriptionId;
+
+    // Razorpay Payment Fields
+    private String razorpayCustomerId;
+    private String razorpaySubscriptionId;
+    private String defaultPaymentMethodId;
+    private String billingCycle; // monthly, yearly
+    private String paymentCurrency;
+    private PaymentStatus paymentStatus;
+    private Instant subscriptionStartDate;
+    private Instant subscriptionEndDate;
+    private Instant nextBillingDate;
+    private Long lastAmountPaid; // Amount in paise
     private Boolean emailVerified;
     private String emailVerificationToken;
     private String passwordResetToken;
@@ -33,7 +43,7 @@ public class User {
     private Double hoursUsed; // Total container hours used (for FREE plan limit)
     private Double bonusHours; // Bonus hours earned (feedback, bug reports, etc.)
     private Boolean feedbackBonusAwarded; // Track if feedback bonus has been awarded
-    
+
     // Rate limiting fields for feedback/bug reports
     private Instant lastFeedbackSubmittedAt; // Last time user submitted feedback
     private Integer hourlyFeedbackCount; // Feedback count in current hour
@@ -42,157 +52,246 @@ public class User {
     private Instant dailyFeedbackResetAt; // When daily counter resets
     private Instant usageResetAt; // When usage counter resets (for FREE plan monthly reset)
     private UsageStats usageStats;
-    
-    
 
     public String getPasswordHash() {
-		return passwordHash;
-	}
+        return passwordHash;
+    }
 
-	public void setPasswordHash(String passwordHash) {
-		this.passwordHash = passwordHash;
-	}
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public String getFullName() {
-		return fullName;
-	}
+    public String getFullName() {
+        return fullName;
+    }
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-	// Alias for getUsername() - commonly used in views
-	public String getName() {
-		return username != null ? username : fullName;
-	}
+    // Alias for getUsername() - commonly used in views
+    public String getName() {
+        return username != null ? username : fullName;
+    }
 
-	// Alias for getPlan() - subscription plan
-	public UserPlan getSubscriptionPlan() {
-		return plan;
-	}
+    // Alias for getPlan() - subscription plan
+    public UserPlan getSubscriptionPlan() {
+        return plan;
+    }
 
-	// Alias for getStatus() - subscription status
-	public UserStatus getSubscriptionStatus() {
-		return status;
-	}
+    // Alias for getStatus() - subscription status
+    public UserStatus getSubscriptionStatus() {
+        return status;
+    }
 
-	public Instant getLastLoginAt() {
-		return lastLoginAt;
-	}
+    public Instant getLastLoginAt() {
+        return lastLoginAt;
+    }
 
-	public void setLastLoginAt(Instant lastLoginAt) {
-		this.lastLoginAt = lastLoginAt;
-	}
+    public void setLastLoginAt(Instant lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
+    }
 
-	public String getStripeCustomerId() {
-		return stripeCustomerId;
-	}
+    public String getStripeCustomerId() {
+        return stripeCustomerId;
+    }
 
-	public void setStripeCustomerId(String stripeCustomerId) {
-		this.stripeCustomerId = stripeCustomerId;
-	}
+    public void setStripeCustomerId(String stripeCustomerId) {
+        this.stripeCustomerId = stripeCustomerId;
+    }
 
-	public String getStripeSubscriptionId() {
-		return stripeSubscriptionId;
-	}
+    public String getStripeSubscriptionId() {
+        return stripeSubscriptionId;
+    }
 
-	public void setStripeSubscriptionId(String stripeSubscriptionId) {
-		this.stripeSubscriptionId = stripeSubscriptionId;
-	}
+    public void setStripeSubscriptionId(String stripeSubscriptionId) {
+        this.stripeSubscriptionId = stripeSubscriptionId;
+    }
 
-	public Boolean getEmailVerified() {
-		return emailVerified;
-	}
+    // Razorpay Getters and Setters
+    @DynamoDbAttribute("razorpayCustomerId")
+    public String getRazorpayCustomerId() {
+        return razorpayCustomerId;
+    }
 
-	public void setEmailVerified(Boolean emailVerified) {
-		this.emailVerified = emailVerified;
-	}
+    public void setRazorpayCustomerId(String razorpayCustomerId) {
+        this.razorpayCustomerId = razorpayCustomerId;
+    }
 
-	public String getEmailVerificationToken() {
-		return emailVerificationToken;
-	}
+    @DynamoDbAttribute("razorpaySubscriptionId")
+    public String getRazorpaySubscriptionId() {
+        return razorpaySubscriptionId;
+    }
 
-	public void setEmailVerificationToken(String emailVerificationToken) {
-		this.emailVerificationToken = emailVerificationToken;
-	}
+    public void setRazorpaySubscriptionId(String razorpaySubscriptionId) {
+        this.razorpaySubscriptionId = razorpaySubscriptionId;
+    }
 
-	public String getPasswordResetToken() {
-		return passwordResetToken;
-	}
+    @DynamoDbAttribute("defaultPaymentMethodId")
+    public String getDefaultPaymentMethodId() {
+        return defaultPaymentMethodId;
+    }
 
-	public void setPasswordResetToken(String passwordResetToken) {
-		this.passwordResetToken = passwordResetToken;
-	}
+    public void setDefaultPaymentMethodId(String defaultPaymentMethodId) {
+        this.defaultPaymentMethodId = defaultPaymentMethodId;
+    }
 
-	public Instant getPasswordResetExpiry() {
-		return passwordResetExpiry;
-	}
+    @DynamoDbAttribute("billingCycle")
+    public String getBillingCycle() {
+        return billingCycle;
+    }
 
-	public void setPasswordResetExpiry(Instant passwordResetExpiry) {
-		this.passwordResetExpiry = passwordResetExpiry;
-	}
+    public void setBillingCycle(String billingCycle) {
+        this.billingCycle = billingCycle;
+    }
 
-	public Integer getContainerCount() {
-		return containerCount;
-	}
+    @DynamoDbAttribute("paymentCurrency")
+    public String getPaymentCurrency() {
+        return paymentCurrency;
+    }
 
-	public void setContainerCount(Integer containerCount) {
-		this.containerCount = containerCount;
-	}
+    public void setPaymentCurrency(String paymentCurrency) {
+        this.paymentCurrency = paymentCurrency;
+    }
 
-	public Long getTotalDeployments() {
-		return totalDeployments;
-	}
+    @DynamoDbAttribute("paymentStatus")
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
 
-	public void setTotalDeployments(Long totalDeployments) {
-		this.totalDeployments = totalDeployments;
-	}
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
 
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+    @DynamoDbAttribute("subscriptionStartDate")
+    public Instant getSubscriptionStartDate() {
+        return subscriptionStartDate;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public void setSubscriptionStartDate(Instant subscriptionStartDate) {
+        this.subscriptionStartDate = subscriptionStartDate;
+    }
 
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
+    @DynamoDbAttribute("subscriptionEndDate")
+    public Instant getSubscriptionEndDate() {
+        return subscriptionEndDate;
+    }
 
-	public void setPlan(UserPlan plan) {
-		this.plan = plan;
-	}
+    public void setSubscriptionEndDate(Instant subscriptionEndDate) {
+        this.subscriptionEndDate = subscriptionEndDate;
+    }
 
-	public void setStatus(UserStatus status) {
-		this.status = status;
-	}
+    @DynamoDbAttribute("nextBillingDate")
+    public Instant getNextBillingDate() {
+        return nextBillingDate;
+    }
 
-	public void setRoles(Set<String> roles) {
-		this.roles = roles;
-	}
+    public void setNextBillingDate(Instant nextBillingDate) {
+        this.nextBillingDate = nextBillingDate;
+    }
 
-	public void setCreatedAt(Instant createdAt) {
-		this.createdAt = createdAt;
-	}
+    @DynamoDbAttribute("lastAmountPaid")
+    public Long getLastAmountPaid() {
+        return lastAmountPaid;
+    }
 
-	public void setUpdatedAt(Instant updatedAt) {
-		this.updatedAt = updatedAt;
-	}
+    public void setLastAmountPaid(Long lastAmountPaid) {
+        this.lastAmountPaid = lastAmountPaid;
+    }
 
-	public void setUsageStats(UsageStats usageStats) {
-		this.usageStats = usageStats;
-	}
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
 
-	@DynamoDbPartitionKey
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public String getEmailVerificationToken() {
+        return emailVerificationToken;
+    }
+
+    public void setEmailVerificationToken(String emailVerificationToken) {
+        this.emailVerificationToken = emailVerificationToken;
+    }
+
+    public String getPasswordResetToken() {
+        return passwordResetToken;
+    }
+
+    public void setPasswordResetToken(String passwordResetToken) {
+        this.passwordResetToken = passwordResetToken;
+    }
+
+    public Instant getPasswordResetExpiry() {
+        return passwordResetExpiry;
+    }
+
+    public void setPasswordResetExpiry(Instant passwordResetExpiry) {
+        this.passwordResetExpiry = passwordResetExpiry;
+    }
+
+    public Integer getContainerCount() {
+        return containerCount;
+    }
+
+    public void setContainerCount(Integer containerCount) {
+        this.containerCount = containerCount;
+    }
+
+    public Long getTotalDeployments() {
+        return totalDeployments;
+    }
+
+    public void setTotalDeployments(Long totalDeployments) {
+        this.totalDeployments = totalDeployments;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public void setPlan(UserPlan plan) {
+        this.plan = plan;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public void setUsageStats(UsageStats usageStats) {
+        this.usageStats = usageStats;
+    }
+
+    @DynamoDbPartitionKey
     @DynamoDbAttribute("userId")
     public String getUserId() {
         return userId;
@@ -210,7 +309,6 @@ public class User {
         return apiKey;
     }
 
-    @DynamoDbSecondaryPartitionKey(indexNames = "PlanIndex")
     @DynamoDbAttribute("plan")
     public UserPlan getPlan() {
         return plan;
@@ -276,6 +374,7 @@ public class User {
     public void setFeedbackBonusAwarded(Boolean feedbackBonusAwarded) {
         this.feedbackBonusAwarded = feedbackBonusAwarded;
     }
+
     @DynamoDbAttribute("lastFeedbackSubmittedAt")
     public Instant getLastFeedbackSubmittedAt() {
         return lastFeedbackSubmittedAt;
@@ -321,7 +420,6 @@ public class User {
         this.dailyFeedbackResetAt = dailyFeedbackResetAt;
     }
 
-
     public enum UserPlan {
         FREE, STARTER, PRO, BUSINESS, ENTERPRISE
     }
@@ -330,7 +428,10 @@ public class User {
         ACTIVE, INACTIVE, SUSPENDED, PENDING_VERIFICATION
     }
 
-    
+    public enum PaymentStatus {
+        ACTIVE, PENDING, PAST_DUE, CANCELLED, HALTED, PAUSED, CREATED
+    }
+
     @DynamoDbBean
     public static class UsageStats {
         private Long totalCpuHours;
@@ -338,42 +439,54 @@ public class User {
         private Long totalBandwidthGb;
         private Long totalStorageGb;
         private Instant periodStart;
+        private Instant periodEnd;
+
         public Long getTotalCpuHours() {
-			return totalCpuHours;
-		}
-		public void setTotalCpuHours(Long totalCpuHours) {
-			this.totalCpuHours = totalCpuHours;
-		}
-		public Long getTotalMemoryGbHours() {
-			return totalMemoryGbHours;
-		}
-		public void setTotalMemoryGbHours(Long totalMemoryGbHours) {
-			this.totalMemoryGbHours = totalMemoryGbHours;
-		}
-		public Long getTotalBandwidthGb() {
-			return totalBandwidthGb;
-		}
-		public void setTotalBandwidthGb(Long totalBandwidthGb) {
-			this.totalBandwidthGb = totalBandwidthGb;
-		}
-		public Long getTotalStorageGb() {
-			return totalStorageGb;
-		}
-		public void setTotalStorageGb(Long totalStorageGb) {
-			this.totalStorageGb = totalStorageGb;
-		}
-		public Instant getPeriodStart() {
-			return periodStart;
-		}
-		public void setPeriodStart(Instant periodStart) {
-			this.periodStart = periodStart;
-		}
-		public Instant getPeriodEnd() {
-			return periodEnd;
-		}
-		public void setPeriodEnd(Instant periodEnd) {
-			this.periodEnd = periodEnd;
-		}
-		private Instant periodEnd;
+            return totalCpuHours;
+        }
+
+        public void setTotalCpuHours(Long totalCpuHours) {
+            this.totalCpuHours = totalCpuHours;
+        }
+
+        public Long getTotalMemoryGbHours() {
+            return totalMemoryGbHours;
+        }
+
+        public void setTotalMemoryGbHours(Long totalMemoryGbHours) {
+            this.totalMemoryGbHours = totalMemoryGbHours;
+        }
+
+        public Long getTotalBandwidthGb() {
+            return totalBandwidthGb;
+        }
+
+        public void setTotalBandwidthGb(Long totalBandwidthGb) {
+            this.totalBandwidthGb = totalBandwidthGb;
+        }
+
+        public Long getTotalStorageGb() {
+            return totalStorageGb;
+        }
+
+        public void setTotalStorageGb(Long totalStorageGb) {
+            this.totalStorageGb = totalStorageGb;
+        }
+
+        public Instant getPeriodStart() {
+            return periodStart;
+        }
+
+        public void setPeriodStart(Instant periodStart) {
+            this.periodStart = periodStart;
+        }
+
+        public Instant getPeriodEnd() {
+            return periodEnd;
+        }
+
+        public void setPeriodEnd(Instant periodEnd) {
+            this.periodEnd = periodEnd;
+        }
     }
 }
