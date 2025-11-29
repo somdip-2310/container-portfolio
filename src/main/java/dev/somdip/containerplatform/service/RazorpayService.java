@@ -47,7 +47,8 @@ public class RazorpayService {
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String planName = request.getPlanName().toUpperCase();
-        int amount = razorpayConfig.getPriceInPaise(planName);
+        String billingCycle = request.getBillingCycle() != null ? request.getBillingCycle() : "monthly";
+        int amount = razorpayConfig.getPriceInPaise(planName, billingCycle);
         String currency = request.getCurrency() != null ? request.getCurrency() : razorpayConfig.getCurrency();
 
         if (amount == 0) {
@@ -63,7 +64,7 @@ public class RazorpayService {
             JSONObject notes = new JSONObject();
             notes.put("userId", userId);
             notes.put("planName", planName);
-            notes.put("billingCycle", request.getBillingCycle() != null ? request.getBillingCycle() : "monthly");
+            notes.put("billingCycle", billingCycle);
             orderRequest.put("notes", notes);
 
             Order order = razorpayClient.orders.create(orderRequest);
@@ -77,10 +78,10 @@ public class RazorpayService {
             transaction.setAmount((long) amount);
             transaction.setCurrency(currency);
             transaction.setPlanName(planName);
-            transaction.setDescription(planName + " Plan - " + (request.getBillingCycle() != null ? request.getBillingCycle() : "Monthly"));
+            transaction.setDescription(planName + " Plan - " + billingCycle);
 
             Map<String, String> metadata = new HashMap<>();
-            metadata.put("billingCycle", request.getBillingCycle() != null ? request.getBillingCycle() : "monthly");
+            metadata.put("billingCycle", billingCycle);
             transaction.setMetadata(metadata);
 
             transactionRepository.save(transaction);

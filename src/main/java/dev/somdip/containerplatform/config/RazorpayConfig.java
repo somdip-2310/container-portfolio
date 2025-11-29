@@ -98,4 +98,33 @@ public class RazorpayConfig {
         }
         return planPrices.getOrDefault(planName.toUpperCase(), 0);
     }
+
+    /**
+     * Calculate price based on plan and billing cycle
+     * - Monthly: base price
+     * - Quarterly: 3 months with 10% discount
+     * - Annual: 12 months with ~17% discount (equivalent to ~10 months)
+     */
+    public int getPriceInPaise(String planName, String billingCycle) {
+        int monthlyPrice = getPriceInPaise(planName);
+        if (monthlyPrice == 0) {
+            return 0;
+        }
+
+        if (billingCycle == null) {
+            billingCycle = "monthly";
+        }
+
+        switch (billingCycle.toLowerCase()) {
+            case "quarterly":
+                // 3 months with 10% discount = 3 * 0.9 = 2.7x monthly
+                return (int) (monthlyPrice * 3 * 0.9);
+            case "annual":
+                // 12 months with ~17% discount = 12 * 0.83 ≈ 9.96x monthly
+                return (int) (monthlyPrice * 12 * 0.83);
+            case "monthly":
+            default:
+                return monthlyPrice;
+        }
+    }
 }
