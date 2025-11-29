@@ -1295,12 +1295,16 @@ function startDeploymentLogStream(deploymentId) {
             // Show appropriate message
             if (data.status === 'COMPLETED') {
                 showToast('Deployment completed successfully!', 'success');
+                hideErrorLogs(); // Hide error logs section on success
                 // Auto-close modal after showing success state for 2 seconds
                 setTimeout(() => {
                     closeDeploymentLogsAndRefresh();
                 }, 2000);
             } else {
-                showToast('Deployment failed: ' + (data.message || 'Unknown error'), 'error');
+                // Show error logs in the modal
+                const errorMessage = data.message || 'Unknown error';
+                showErrorLogs(errorMessage);
+                showToast('Deployment failed. Check error details below.', 'error');
                 // Keep modal open on failure so user can see what went wrong
             }
         }
@@ -1436,4 +1440,72 @@ function updateDeploymentDuration() {
     const seconds = elapsed % 60;
 
     durationEl.textContent = 'Duration: ' + minutes + 'm ' + seconds + 's';
+}
+
+// =====================================================
+// Error Logs Display Functions
+// =====================================================
+
+// Show error logs in the deployment modal
+function showErrorLogs(errorMessage) {
+    const errorLogsSection = document.getElementById('deploymentErrorLogs');
+    const errorLogsContent = document.getElementById('errorLogsContent');
+
+    if (errorLogsSection && errorLogsContent) {
+        // Store the error message for copy functionality
+        deploymentLogsState.errorMessage = errorMessage;
+
+        // Format the error message - handle multiline logs
+        let formattedMessage = errorMessage;
+
+        // Check if message contains container logs separator
+        if (errorMessage.includes('--- Container Logs ---')) {
+            const parts = errorMessage.split('--- Container Logs ---');
+            const mainError = parts[0].trim();
+            const containerLogs = parts[1] ? parts[1].trim() : '';
+
+            formattedMessage = '=== Error ===\n' + mainError;
+            if (containerLogs) {
+                formattedMessage += '\n\n=== Container Logs ===\n' + containerLogs;
+            }
+        }
+
+        errorLogsContent.textContent = formattedMessage;
+        errorLogsSection.classList.remove('hidden');
+
+        // Scroll to show error logs
+        errorLogsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Hide error logs section
+function hideErrorLogs() {
+    const errorLogsSection = document.getElementById('deploymentErrorLogs');
+    if (errorLogsSection) {
+        errorLogsSection.classList.add('hidden');
+    }
+    deploymentLogsState.errorMessage = null;
+}
+
+// Copy error logs to clipboard
+function copyErrorLogs() {
+    const errorMessage = deploymentLogsState.errorMessage;
+    if (!errorMessage) {
+        showToast('No error logs to copy', 'warning');
+        return;
+    }
+
+    navigator.clipboard.writeText(errorMessage).then(() => {
+        showToast('Error logs copied to clipboard', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = errorMessage;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('Error logs copied to clipboard', 'success');
+    });
 }

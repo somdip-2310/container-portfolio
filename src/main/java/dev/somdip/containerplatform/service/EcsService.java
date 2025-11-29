@@ -20,12 +20,13 @@ import java.util.stream.Collectors;
 @Service
 public class EcsService {
     private static final Logger log = LoggerFactory.getLogger(EcsService.class);
-    
+
     private final EcsClient ecsClient;
     private final ElasticLoadBalancingV2Client elbClient;
     private final TargetGroupService targetGroupService;
     private final DeploymentRepository deploymentRepository;
     private final ContainerRepository containerRepository;
+    private final LogStreamingService logStreamingService;
     
     @Value("${aws.ecs.cluster}")
     private String clusterName;
@@ -63,16 +64,18 @@ public class EcsService {
     @Value("${aws.ecs.deployment.timeout.seconds:900}")
     private int deploymentTimeoutSeconds;
 
-    public EcsService(EcsClient ecsClient, 
+    public EcsService(EcsClient ecsClient,
                      ElasticLoadBalancingV2Client elbClient,
                      TargetGroupService targetGroupService,
                      DeploymentRepository deploymentRepository,
-                     ContainerRepository containerRepository) {
+                     ContainerRepository containerRepository,
+                     LogStreamingService logStreamingService) {
         this.ecsClient = ecsClient;
         this.elbClient = elbClient;
         this.targetGroupService = targetGroupService;
         this.deploymentRepository = deploymentRepository;
         this.containerRepository = containerRepository;
+        this.logStreamingService = logStreamingService;
     }
     
     public Deployment deployContainer(Container container, String userId) {
@@ -130,14 +133,22 @@ public class EcsService {
             
         } catch (Exception e) {
             log.error("Failed to deploy container: {}", container.getContainerId(), e);
-            
+
             // Mark deployment as failed
             deployment.setStatus(Deployment.DeploymentStatus.FAILED);
-            deployment.setErrorMessage(e.getMessage());
             deployment.setErrorCode(e.getClass().getSimpleName());
             deployment.setCompletedAt(Instant.now());
+
+            // Fetch container error logs to help with debugging
+            String errorLogs = fetchContainerErrorLogs(container.getContainerId());
+            String fullErrorMessage = e.getMessage();
+            if (errorLogs != null && !errorLogs.isEmpty() && !errorLogs.startsWith("No logs")) {
+                fullErrorMessage = e.getMessage() + "\n\n--- Container Logs ---\n" + errorLogs;
+            }
+            deployment.setErrorMessage(fullErrorMessage);
+
             deploymentRepository.save(deployment);
-            
+
             throw new RuntimeException("ECS deployment failed", e);
         }
     }
@@ -734,7 +745,7 @@ public class EcsService {
         if (task == null || task.attachments() == null || task.attachments().isEmpty()) {
             return null;
         }
-        
+
         return task.attachments().stream()
             .filter(att -> "ElasticNetworkInterface".equals(att.type()))
             .flatMap(att -> att.details().stream())
@@ -742,5 +753,23 @@ public class EcsService {
             .map(detail -> detail.value())
             .findFirst()
             .orElse(null);
+    }
+
+    /**
+     * Fetches error logs from CloudWatch when deployment fails.
+     * This helps users understand why their container failed to start.
+     */
+    private String fetchContainerErrorLogs(String containerId) {
+        try {
+            log.info("Fetching error logs for failed container: {}", containerId);
+            String errorLogs = logStreamingService.getErrorLogs(containerId, 50);
+            if (errorLogs != null && !errorLogs.isEmpty()) {
+                log.debug("Retrieved {} characters of error logs for container {}", errorLogs.length(), containerId);
+            }
+            return errorLogs;
+        } catch (Exception e) {
+            log.warn("Failed to fetch error logs for container {}: {}", containerId, e.getMessage());
+            return null;
+        }
     }
 }
