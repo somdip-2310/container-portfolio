@@ -60,8 +60,8 @@ public class SecurityConfig {
                                              JwtAuthenticationFilter jwtAuthenticationFilter,
                                              ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) throws Exception {
         http
-            // Note: /api/github/** removed - it uses session auth via webFilterChain for browser requests
-            .securityMatcher("/api/containers/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/api/payments/**", "/webhooks/**")
+            // Note: /api/github/** and /api/payments/** removed - they use session auth via webFilterChain for browser requests
+            .securityMatcher("/api/containers/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/webhooks/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception
@@ -73,7 +73,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/health/**").permitAll()
                 .requestMatchers("/webhooks/github").permitAll()  // GitHub webhooks
                 .requestMatchers("/webhooks/razorpay").permitAll()  // Razorpay payment webhooks
-                .requestMatchers("/api/payments/**").authenticated()  // Payment API requires auth
                 .requestMatchers("/api/**").authenticated()
             );
 
@@ -111,6 +110,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/source/**").authenticated()
                 .requestMatchers("/api/github/**").authenticated()  // GitHub API uses session auth
                 .requestMatchers("/api/deployments/**").authenticated()  // Deployment logs uses session auth
+                .requestMatchers("/api/payments/**").authenticated()  // Payment API uses session auth for browser
                 .requestMatchers("/web/api/**").authenticated()
                 .anyRequest().authenticated()
             )
