@@ -3,12 +3,12 @@ package dev.somdip.containerplatform.controller;
 import dev.somdip.containerplatform.dto.payment.*;
 import dev.somdip.containerplatform.model.PaymentTransaction;
 import dev.somdip.containerplatform.repository.PaymentTransactionRepository;
+import dev.somdip.containerplatform.security.CustomUserDetails;
 import dev.somdip.containerplatform.service.RazorpayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,10 +32,10 @@ public class PaymentController {
 
     @PostMapping("/orders")
     public ResponseEntity<CreateOrderResponse> createOrder(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CreateOrderRequest request) {
         try {
-            String userId = userDetails.getUsername();
+            String userId = userDetails.getUserId();
             CreateOrderResponse response = razorpayService.createOrder(userId, request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -49,10 +49,10 @@ public class PaymentController {
 
     @PostMapping("/verify")
     public ResponseEntity<Map<String, Object>> verifyPayment(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody VerifyPaymentRequest request) {
         try {
-            String userId = userDetails.getUsername();
+            String userId = userDetails.getUserId();
             PaymentTransaction transaction = razorpayService.verifyAndCapturePayment(userId, request);
 
             Map<String, Object> response = new HashMap<>();
@@ -76,10 +76,10 @@ public class PaymentController {
 
     @PostMapping("/subscriptions")
     public ResponseEntity<SubscriptionResponse> createSubscription(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CreateSubscriptionRequest request) {
         try {
-            String userId = userDetails.getUsername();
+            String userId = userDetails.getUserId();
             SubscriptionResponse response = razorpayService.createSubscription(userId, request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -93,9 +93,9 @@ public class PaymentController {
 
     @PostMapping("/subscriptions/cancel")
     public ResponseEntity<Map<String, Object>> cancelSubscription(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            String userId = userDetails.getUsername();
+            String userId = userDetails.getUserId();
             razorpayService.cancelSubscription(userId);
 
             Map<String, Object> response = new HashMap<>();
@@ -117,9 +117,9 @@ public class PaymentController {
 
     @GetMapping("/history")
     public ResponseEntity<List<PaymentTransaction>> getPaymentHistory(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            String userId = userDetails.getUsername();
+            String userId = userDetails.getUserId();
             List<PaymentTransaction> transactions = transactionRepository.findByUserId(userId);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
@@ -130,12 +130,12 @@ public class PaymentController {
 
     @PostMapping("/refunds")
     public ResponseEntity<Map<String, Object>> requestRefund(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String transactionId,
             @RequestParam(required = false) Long amount,
             @RequestParam(required = false) String reason) {
         try {
-            String userId = userDetails.getUsername();
+            String userId = userDetails.getUserId();
 
             // Verify transaction belongs to user
             PaymentTransaction transaction = transactionRepository.findById(transactionId)
