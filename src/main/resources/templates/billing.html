@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/base :: head('Billing')}"></head>
-<!-- Razorpay Checkout SDK -->
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <body>
     <header th:replace="~{fragments/base :: header}"></header>
     <aside th:replace="~{fragments/base :: sidebar}"></aside>
@@ -331,6 +329,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Razorpay Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script th:inline="javascript">
         let exchangeRate = 83.5; // Fallback rate
