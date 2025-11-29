@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/base :: head('Billing')}"></head>
+<!-- Razorpay Checkout SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <body>
     <header th:replace="~{fragments/base :: header}"></header>
     <aside th:replace="~{fragments/base :: sidebar}"></aside>
@@ -260,7 +262,7 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">1 Custom Domain</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Email (24hr)</span></li>
                         </ul>
-                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Starter</button>
+                        <button onclick="initiatePayment('STARTER')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Starter</button>
                     </div>
 
                     <!-- Pro Plan -->
@@ -285,7 +287,7 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">5 Custom Domains</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Priority (4hr)</span></li>
                         </ul>
-                        <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Pro</button>
+                        <button onclick="initiatePayment('PRO')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Pro</button>
                     </div>
 
                     <!-- Business Plan -->
@@ -307,7 +309,7 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Unlimited Domains</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">24/7 Support (1hr)</span></li>
                         </ul>
-                        <button class="w-full bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Business</button>
+                        <button onclick="initiatePayment('BUSINESS')" class="w-full bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded-lg transition text-sm">Upgrade to Business</button>
                     </div>
 
                     <!-- Enterprise Plan -->
@@ -323,16 +325,27 @@
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Unlimited Domains</span></li>
                             <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i><span class="text-gray-600 dark:text-gray-400">Dedicated Support</span></li>
                         </ul>
-                        <button class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition text-sm">Contact Sales</button>
+                        <button onclick="contactSales()" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 font-medium py-2 px-4 rounded-lg transition text-sm">Contact Sales</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
         let exchangeRate = 83.5; // Fallback rate
         let currentBillingPeriod = 'monthly';
+
+        // Razorpay configuration
+        const razorpayKeyId = /*[[${@environment.getProperty('razorpay.key.id')}]]*/ 'rzp_test_RlQVkwHFJu9xDA';
+        const userEmail = /*[[${#authentication.principal.username}]]*/ '';
+
+        // Plan pricing in INR paise (100 paise = 1 INR)
+        const planPricing = {
+            'STARTER': { monthly: 325000, quarterly: 877500, annual: 3300000, name: 'Starter Plan' },
+            'PRO': { monthly: 742500, quarterly: 2002500, annual: 7500000, name: 'Pro Plan' },
+            'BUSINESS': { monthly: 1410000, quarterly: 3807000, annual: 14200000, name: 'Business Plan' }
+        };
 
         // Fetch live exchange rate on page load
         async function fetchExchangeRate() {
@@ -372,7 +385,146 @@
         }
 
         function addPaymentMethod() {
-            alert('Payment method setup would be handled by a payment processor like Stripe.');
+            showUpgradeModal();
+        }
+
+        function contactSales() {
+            window.location.href = '/contact?subject=Enterprise%20Plan%20Inquiry';
+        }
+
+        // Initiate Razorpay payment
+        async function initiatePayment(plan) {
+            const pricing = planPricing[plan];
+            if (!pricing) {
+                showNotification('Invalid plan selected', 'error');
+                return;
+            }
+
+            const billingPeriodKey = currentBillingPeriod === 'annual' ? 'annual' :
+                                     currentBillingPeriod === 'quarterly' ? 'quarterly' : 'monthly';
+            const amount = pricing[billingPeriodKey];
+
+            try {
+                // Show loading state
+                showNotification('Creating payment order...', 'info');
+
+                // Create order on server
+                const response = await fetch('/api/payments/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        plan: plan,
+                        billingPeriod: currentBillingPeriod
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create order');
+                }
+
+                const orderData = await response.json();
+
+                // Open Razorpay checkout
+                const options = {
+                    key: razorpayKeyId,
+                    amount: orderData.amount,
+                    currency: orderData.currency || 'INR',
+                    name: 'SnapDeploy',
+                    description: `${pricing.name} - ${currentBillingPeriod}`,
+                    order_id: orderData.orderId,
+                    handler: function(response) {
+                        // Verify payment on server
+                        verifyPayment(response, plan);
+                    },
+                    prefill: {
+                        email: userEmail
+                    },
+                    theme: {
+                        color: '#7c3aed'
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            showNotification('Payment cancelled', 'warning');
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function(response) {
+                    showNotification('Payment failed: ' + response.error.description, 'error');
+                });
+                rzp.open();
+
+            } catch (error) {
+                console.error('Payment error:', error);
+                showNotification('Failed to initiate payment. Please try again.', 'error');
+            }
+        }
+
+        // Verify payment after successful Razorpay checkout
+        async function verifyPayment(razorpayResponse, plan) {
+            try {
+                showNotification('Verifying payment...', 'info');
+
+                const response = await fetch('/api/payments/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        razorpayOrderId: razorpayResponse.razorpay_order_id,
+                        razorpayPaymentId: razorpayResponse.razorpay_payment_id,
+                        razorpaySignature: razorpayResponse.razorpay_signature,
+                        plan: plan
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Payment successful! Your plan has been upgraded.', 'success');
+                    hideUpgradeModal();
+                    // Reload page to show new plan
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showNotification('Payment verification failed. Please contact support.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Verification error:', error);
+                showNotification('Failed to verify payment. Please contact support.', 'error');
+            }
+        }
+
+        // Show notification toast
+        function showNotification(message, type) {
+            // Remove existing notifications
+            const existing = document.querySelector('.payment-notification');
+            if (existing) existing.remove();
+
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `payment-notification fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('opacity-0');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
         }
 
         function switchBilling(period) {

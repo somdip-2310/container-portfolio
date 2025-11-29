@@ -61,7 +61,7 @@ public class SecurityConfig {
                                              ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) throws Exception {
         http
             // Note: /api/github/** removed - it uses session auth via webFilterChain for browser requests
-            .securityMatcher("/api/containers/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/webhooks/**")
+            .securityMatcher("/api/containers/**", "/api/metrics/**", "/api/logs/**", "/api/auth/**", "/api/health/**", "/api/payments/**", "/webhooks/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception
@@ -72,6 +72,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/health/**").permitAll()
                 .requestMatchers("/webhooks/github").permitAll()  // GitHub webhooks
+                .requestMatchers("/webhooks/razorpay").permitAll()  // Razorpay payment webhooks
+                .requestMatchers("/api/payments/**").authenticated()  // Payment API requires auth
                 .requestMatchers("/api/**").authenticated()
             );
 
@@ -88,7 +90,7 @@ public class SecurityConfig {
             .securityMatcher("/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/source/**", "/api/github/**", "/api/deployments/**", "/webhooks/**", "/auth/github/**"))
+                .ignoringRequestMatchers("/api/auth/**", "/api/containers/**", "/api/source/**", "/api/github/**", "/api/deployments/**", "/api/payments/**", "/webhooks/**", "/auth/github/**"))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/register", "/static/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/forgot-password", "/verify-otp", "/reset-password").permitAll()
