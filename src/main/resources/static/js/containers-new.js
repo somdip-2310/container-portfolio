@@ -788,7 +788,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Deploy from GitHub
+// State for environment variables
+let envVarsState = {
+    detectedEnvVars: [],
+    userEnvVars: {}
+};
+
+// Deploy from GitHub - now checks for env vars first
 async function deployFromGitHub() {
     const containerName = document.getElementById('githubContainerName').value.trim();
     const deployBranch = document.getElementById('deployBranch').value;
@@ -803,7 +809,166 @@ async function deployFromGitHub() {
 
     const deployBtn = document.getElementById('deployFromGithubBtn');
     deployBtn.disabled = true;
+    deployBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking environment variables...';
+
+    try {
+        // Step 0: Detect environment variables from the repository
+        const [owner, repo] = githubDeployState.selectedRepo.fullName.split('/');
+        const envVarsResponse = await fetch('/api/github/repos/' + owner + '/' + repo + '/detect-env-vars?branch=' + deployBranch + '&rootDir=' + encodeURIComponent(rootDirectory) + '&dockerfilePath=' + encodeURIComponent(dockerfilePath), {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        });
+
+        if (envVarsResponse.ok) {
+            const envVarsData = await envVarsResponse.json();
+            envVarsState.detectedEnvVars = envVarsData.suggestions || [];
+
+            // If there are required env vars or secrets, show the modal
+            if (envVarsData.hasRequired || envVarsData.hasSecrets || envVarsState.detectedEnvVars.length > 0) {
+                deployBtn.disabled = false;
+                deployBtn.innerHTML = '<i class="fab fa-github mr-2"></i>Deploy from GitHub';
+                showEnvVarsModal(containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy);
+                return;
+            }
+        }
+
+        // No env vars detected or detection failed - proceed with deployment
+        deployBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deploying...';
+        await executeDeployment(containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy, {});
+
+    } catch (error) {
+        console.error('Error in deployment flow:', error);
+        showToast('Deployment failed: ' + error.message, 'error');
+        deployBtn.disabled = false;
+        deployBtn.innerHTML = '<i class="fab fa-github mr-2"></i>Deploy from GitHub';
+    }
+}
+
+// Show environment variables modal
+function showEnvVarsModal(containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy) {
+    // Store deployment params for later use
+    envVarsState.deploymentParams = { containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy };
+
+    // Create modal HTML
+    const modalHtml = '<div id="envVarsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">' +
+        '<div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">' +
+        '<div class="p-6 border-b border-gray-200 dark:border-gray-700">' +
+        '<h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-key mr-2 text-yellow-500"></i>Environment Variables Detected</h3>' +
+        '<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">We detected these environment variables in your repository. Please provide values for the required ones.</p>' +
+        '</div>' +
+        '<div class="p-6 overflow-y-auto max-h-[50vh]">' +
+        '<div id="envVarsList"></div>' +
+        '</div>' +
+        '<div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">' +
+        '<button onclick="closeEnvVarsModal()" class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>' +
+        '<button onclick="proceedWithEnvVars()" class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"><i class="fas fa-rocket mr-2"></i>Deploy</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Populate env vars list
+    const listContainer = document.getElementById('envVarsList');
+    let html = '';
+
+    // Sort: required first, then by name
+    const sortedVars = [...envVarsState.detectedEnvVars].sort((a, b) => {
+        if (a.required !== b.required) return b.required - a.required;
+        if (a.isSecret !== b.isSecret) return b.isSecret - a.isSecret;
+        return a.name.localeCompare(b.name);
+    });
+
+    sortedVars.forEach((envVar, index) => {
+        const isSecret = envVar.isSecret;
+        const isRequired = envVar.required;
+        const inputType = isSecret ? 'password' : 'text';
+        const requiredBadge = isRequired ? '<span class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 rounded">Required</span>' : '';
+        const secretBadge = isSecret ? '<span class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300 rounded"><i class="fas fa-lock mr-1"></i>Secret</span>' : '';
+        const frameworkBadge = envVar.framework && envVar.framework !== 'GENERIC' ? '<span class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded">' + envVar.framework + '</span>' : '';
+        const description = envVar.description ? '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">' + envVar.description + '</p>' : '';
+
+        html += '<div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">' +
+            '<label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">' +
+            '<span class="font-mono">' + envVar.name + '</span>' + requiredBadge + secretBadge + frameworkBadge +
+            '</label>' +
+            description +
+            '<input type="' + inputType + '" id="envVar_' + index + '" data-name="' + envVar.name + '" ' +
+            'class="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" ' +
+            'placeholder="' + (envVar.defaultValue || 'Enter value') + '" ' +
+            'value="' + (envVar.defaultValue && !isSecret ? envVar.defaultValue : '') + '"' +
+            (isRequired ? ' required' : '') + '>' +
+            '</div>';
+    });
+
+    if (sortedVars.length === 0) {
+        html = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No environment variables detected.</p>';
+    }
+
+    listContainer.innerHTML = html;
+}
+
+// Close env vars modal
+function closeEnvVarsModal() {
+    const modal = document.getElementById('envVarsModal');
+    if (modal) {
+        modal.remove();
+    }
+    envVarsState.detectedEnvVars = [];
+    envVarsState.userEnvVars = {};
+}
+
+// Proceed with deployment after env vars
+async function proceedWithEnvVars() {
+    // Collect env var values from inputs
+    const envVars = {};
+    let hasAllRequired = true;
+    const missingVars = [];
+
+    envVarsState.detectedEnvVars.forEach((envVar, index) => {
+        const input = document.getElementById('envVar_' + index);
+        if (input) {
+            const value = input.value.trim();
+            if (value) {
+                envVars[envVar.name] = value;
+            } else if (envVar.required) {
+                hasAllRequired = false;
+                missingVars.push(envVar.name);
+            }
+        }
+    });
+
+    if (!hasAllRequired) {
+        showToast('Please fill in all required environment variables: ' + missingVars.join(', '), 'error');
+        return;
+    }
+
+    // Close modal and proceed with deployment
+    closeEnvVarsModal();
+
+    const { containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy } = envVarsState.deploymentParams;
+
+    const deployBtn = document.getElementById('deployFromGithubBtn');
+    deployBtn.disabled = true;
     deployBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deploying...';
+
+    try {
+        await executeDeployment(containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy, envVars);
+    } catch (error) {
+        console.error('Error in deployment:', error);
+        showToast('Deployment failed: ' + error.message, 'error');
+        deployBtn.disabled = false;
+        deployBtn.innerHTML = '<i class="fab fa-github mr-2"></i>Deploy from GitHub';
+    }
+}
+
+// Execute the actual deployment
+async function executeDeployment(containerName, deployBranch, rootDirectory, dockerfilePath, autoDeploy, envVars) {
+    const deployBtn = document.getElementById('deployFromGithubBtn');
 
     try {
         showProgressModal('Deploying from GitHub', 'Creating container...');
@@ -820,7 +985,8 @@ async function deployFromGitHub() {
             body: JSON.stringify({
                 name: containerName,
                 image: 'placeholder:latest', // Will be updated after build
-                port: 8080
+                port: 8080,
+                environmentVariables: envVars // Include detected environment variables
             })
         });
 
