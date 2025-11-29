@@ -1185,6 +1185,12 @@ function showDeploymentLogsModal(deploymentId, containerName, commitInfo) {
     // Set container name
     document.getElementById('deploymentContainerName').textContent = containerName || '';
 
+    // Set deployment ID for reference
+    const deploymentIdEl = document.getElementById('deploymentIdDisplay');
+    if (deploymentIdEl) {
+        deploymentIdEl.textContent = deploymentId ? 'ID: ' + deploymentId : '';
+    }
+
     // Set commit info if available
     const commitInfoEl = document.getElementById('deploymentCommitInfo');
     if (commitInfo) {

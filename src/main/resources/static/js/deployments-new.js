@@ -79,6 +79,7 @@ function showDeploymentModal(deploymentId, deployment, isLoading) {
                         <div>
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Deployment Details</h3>
                             <p id="modalContainerName" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                            <p id="modalDeploymentId" class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono"></p>
                         </div>
                         <button onclick="hideDeploymentModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,6 +129,12 @@ function showDeploymentModal(deploymentId, deployment, isLoading) {
 
     // Update header
     modalContainerName.textContent = deployment.containerName || 'Unknown Container';
+
+    // Set deployment ID for reference
+    const modalDeploymentId = document.getElementById('modalDeploymentId');
+    if (modalDeploymentId) {
+        modalDeploymentId.textContent = deploymentId ? 'ID: ' + deploymentId : '';
+    }
 
     // Build content
     const statusClass = getStatusClass(deployment.status);
