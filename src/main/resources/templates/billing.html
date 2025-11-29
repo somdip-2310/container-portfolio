@@ -340,11 +340,12 @@
         const razorpayKeyId = /*[[${@environment.getProperty('razorpay.key.id')}]]*/ 'rzp_test_RlQVkwHFJu9xDA';
         const userEmail = /*[[${#authentication.principal.username}]]*/ '';
 
-        // Plan pricing in INR paise (100 paise = 1 INR)
+        // Plan pricing in INR paise (100 paise = 1 INR) - matches Razorpay plans
+        // Discounts: Quarterly = 10% off, Annual = 17% off
         const planPricing = {
-            'STARTER': { monthly: 325000, quarterly: 877500, annual: 3300000, name: 'Starter Plan' },
-            'PRO': { monthly: 742500, quarterly: 2002500, annual: 7500000, name: 'Pro Plan' },
-            'BUSINESS': { monthly: 1410000, quarterly: 3807000, annual: 14200000, name: 'Business Plan' }
+            'STARTER': { monthly: 350000, quarterly: 945000, annual: 3486000, name: 'Starter Plan' },
+            'PRO': { monthly: 795000, quarterly: 2146500, annual: 7918200, name: 'Pro Plan' },
+            'BUSINESS': { monthly: 1510000, quarterly: 4077000, annual: 15039600, name: 'Business Plan' }
         };
 
         // Fetch live exchange rate on page load
