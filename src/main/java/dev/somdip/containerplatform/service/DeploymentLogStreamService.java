@@ -231,6 +231,7 @@ public class DeploymentLogStreamService {
 
     /**
      * Map CodeBuild phase to user-friendly step name
+     * IMPORTANT: Keep in sync with AsyncBuildExecutor.mapPhaseToStep()
      */
     private String mapPhaseToStep(String phase) {
         if (phase == null) return "INITIALIZING";
@@ -238,25 +239,25 @@ public class DeploymentLogStreamService {
         switch (phase.toUpperCase()) {
             case "SUBMITTED":
             case "QUEUED":
-                return "INITIALIZING";
+                return "QUEUED";
             case "PROVISIONING":
                 return "PROVISIONING";
             case "DOWNLOAD_SOURCE":
                 return "CLONING";
             case "INSTALL":
-                return "INSTALLING_DEPENDENCIES";
+                return "INSTALLING";
             case "PRE_BUILD":
                 return "PRE_BUILD";
             case "BUILD":
                 return "BUILDING";
             case "POST_BUILD":
-                return "PUSHING_IMAGE";
+                return "POST_BUILD";
             case "UPLOAD_ARTIFACTS":
                 return "PUSHING_IMAGE";
             case "FINALIZING":
                 return "FINALIZING";
             case "COMPLETED":
-                return "COMPLETED";
+                return "BUILD_COMPLETE";
             default:
                 return phase;
         }
