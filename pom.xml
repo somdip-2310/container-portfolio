@@ -147,6 +147,20 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
+        <!-- Razorpay Payment Gateway -->
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.4.6</version>
+        </dependency>
+
+        <!-- JSON (required by Razorpay) -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+        </dependency>
+
         <!-- SendGrid for Email -->
         <dependency>
             <groupId>com.sendgrid</groupId>
