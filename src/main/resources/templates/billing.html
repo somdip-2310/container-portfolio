@@ -339,7 +339,7 @@
 
         // Razorpay configuration
         const razorpayKeyId = /*[[${@environment.getProperty('razorpay.key.id')}]]*/ 'rzp_test_RlQVkwHFJu9xDA';
-        const userEmail = /*[[${#authentication.principal.username}]]*/ '';
+        const userEmail = /*[[${user.email}]]*/ '';
 
         // Plan pricing in INR paise (100 paise = 1 INR) - matches Razorpay plans
         // Discounts: Quarterly = 10% off, Annual = 17% off
